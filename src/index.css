@@ -1,0 +1,13 @@
+/* Importa Tailwind v4 (esto incluye preflight + utilities) */
+@import "tailwindcss";
+
+/* (Opcional pero recomendado) apúntale a los archivos del tema de HeroUI
+   para que Tailwind detecte sus utilidades/variables al generar el CSS. 
+   Ajusta la ruta relativa según dónde esté tu index.css: */
+@source "../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
+
+/* Activa el plugin de HeroUI que creaste en src/hero.ts */
+@plugin "./hero.ts";
+
+/* Si usas dark por clase, esta variante ayuda con HeroUI */
+@custom-variant dark (&:is(.dark *));
