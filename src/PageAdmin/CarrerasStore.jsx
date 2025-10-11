@@ -177,7 +177,7 @@ const CarrerasStore = () => {
                     <div className="col-span-12 md:col-span-8">
                       <Input
                         type="text"
-                        label="Nombre"
+                        label="Nombre de la carrera"
                         value={name}
                         onChange={(e) => {
                           const v = e.target.value;

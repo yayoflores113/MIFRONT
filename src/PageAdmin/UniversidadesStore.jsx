@@ -156,7 +156,7 @@ const UniversidadesStore = () => {
                         isRequired
                       />
                     </div>
-                    <div className="col-span-12 md:col-span-4">
+                    <div className="col-span-12 md:col-span-4 hidden">
                       <Input
                         label="Orden"
                         value={orden}

@@ -194,7 +194,7 @@ const CursosUpdate = () => {
                     <div className="col-span-12 md:col-span-3">
                       <Input
                         type="number"
-                        label="Career ID"
+                        label="Carrera (ID)"
                         value={String(career_id)}
                         onChange={(e) => setCareerId(e.target.value)}
                         isRequired
@@ -205,7 +205,7 @@ const CursosUpdate = () => {
                     <div className="col-span-12 md:col-span-9">
                       <Input
                         type="text"
-                        label="Título"
+                        label="Nombre del curso"
                         value={title}
                         onChange={(e) => {
                           const v = e.target.value;
@@ -257,7 +257,7 @@ const CursosUpdate = () => {
                     <div className="col-span-12 md:col-span-6">
                       <Input
                         type="text"
-                        label="Provider"
+                        label="Provedor (Universidad)"
                         value={provider}
                         onChange={(e) => setProvider(e.target.value)}
                         variant="bordered"
@@ -267,7 +267,7 @@ const CursosUpdate = () => {
                     <div className="col-span-12 md:col-span-6">
                       <Input
                         type="text"
-                        label="Topic"
+                        label="Materia (Tema)"
                         value={topic}
                         onChange={(e) => setTopic(e.target.value)}
                         variant="bordered"

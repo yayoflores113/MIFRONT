@@ -1,4 +1,3 @@
-// UniversidadesAll.jsx — mismo diseño que UserAll.jsx, sin cambiar tu lógica
 import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import { Link } from "react-router-dom";
@@ -120,7 +119,6 @@ const UniversidadesAll = () => {
                     <TableColumn>ESTADO</TableColumn>
                     <TableColumn>CIUDAD</TableColumn>
                     <TableColumn>WEBSITE</TableColumn>
-                    <TableColumn>DESCRIPCIÓN</TableColumn>
                     <TableColumn>AÑO DE FUNDACIÓN</TableColumn>
                     <TableColumn className="text-right">ACCIÓN</TableColumn>
                   </TableHeader>
@@ -128,7 +126,7 @@ const UniversidadesAll = () => {
                   <TableBody emptyContent="Sin registros">
                     {!universities ? (
                       <TableRow>
-                        <TableCell colSpan={12}>...loading</TableCell>
+                        <TableCell colSpan={11}>...loading</TableCell>
                       </TableRow>
                     ) : (
                       universities.map((u) => (
@@ -162,9 +160,6 @@ const UniversidadesAll = () => {
                             >
                               {u.website}
                             </a>
-                          </TableCell>
-                          <TableCell className="max-w-[320px] whitespace-pre-wrap">
-                            {u.description}
                           </TableCell>
                           <TableCell>{u.established_year}</TableCell>
                           <TableCell>

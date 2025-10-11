@@ -286,7 +286,7 @@ const Home = () => {
             {[
               {
                 id: 1,
-                name: "Marrufo",
+                name: "Marta",
                 role: "El master de los masters",
                 company: "en la UTM",
                 avatar: "https://img.heroui.chat/image/avatar?w=150&h=150&u=1",
@@ -295,7 +295,7 @@ const Home = () => {
               },
               {
                 id: 2,
-                name: "Flores",
+                name: "Flor",
                 role: "UX Designer",
                 company: "Googlesss",
                 avatar: "https://img.heroui.chat/image/avatar?w=150&h=150&u=2",
@@ -304,7 +304,7 @@ const Home = () => {
               },
               {
                 id: 3,
-                name: "Victor",
+                name: "Raul",
                 role: "Data Scientist",
                 company: "Microsoft",
                 avatar: "https://img.heroui.chat/image/avatar?w=150&h=150&u=3",
