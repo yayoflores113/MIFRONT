@@ -4,11 +4,26 @@ import { useNavigate } from "react-router-dom";
 import AuthUser from "./AuthUser";
 import { Input, Button, Image } from "@heroui/react";
 
+// ⟵ Base de API para catálogos (no interfiere con tu lógica existente)
+const API = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api";
+
 const Register = () => {
   const { getToken } = AuthUser();
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
+
+  // ⟵ Nuevos estados (solo agregados)
+  const [birthDate, setBirthDate] = useState("");
+  const [universityId, setUniversityId] = useState("");
+  const [matricula, setMatricula] = useState("");
+  const [countryId, setCountryId] = useState("");
+
+  // ⟵ Catálogos y búsqueda local para Universidad
+  const [universities, setUniversities] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [queryUni, setQueryUni] = useState("");
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,10 +33,54 @@ const Register = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ⟵ Carga de catálogos (nuevo useEffect independiente, no toca el tuyo)
+  useEffect(() => {
+    const loadCatalogs = async () => {
+      try {
+        const [unisRes, ctrsRes] = await Promise.all([
+          fetch(`${API}/v1/public/universities/5000`),
+          fetch(`${API}/v1/public/countries`),
+        ]);
+        const [unis, ctrs] = await Promise.all([
+          unisRes.json(),
+          ctrsRes.json(),
+        ]);
+
+        const uniData = (Array.isArray(unis) ? unis : []).map((u) => ({
+          id: u?.id ?? u?.ID ?? u?.Id,
+          name: u?.name ?? u?.nombre ?? u?.Name,
+        }));
+        setUniversities(uniData.filter((u) => u.id && u.name));
+        setCountries(Array.isArray(ctrs) ? ctrs : []);
+      } catch (e) {
+        // Silencioso para no alterar tu UX; el form sigue usable
+        console.error("No fue posible cargar catálogos", e);
+      }
+    };
+    loadCatalogs();
+  }, []);
+
+  // ⟵ Filtro local por nombre de universidad (búsqueda client-side)
+  const filteredUniversities = queryUni.trim()
+    ? universities.filter((u) =>
+        (u.name || "").toLowerCase().includes(queryUni.trim().toLowerCase())
+      )
+    : universities;
+
   const submitRegistro = async (e) => {
     e.preventDefault();
 
-    Config.getRegister({ name, email, password }).then(({ data }) => {
+    // ⟵ Mantengo tu misma llamada y flujo; solo PASO campos extra
+    Config.getRegister({
+      name,
+      email,
+      password,
+      // nuevos campos (serán ignorados si el backend no los usa aún)
+      birth_date: birthDate || null,
+      university_id: universityId || null,
+      matricula: matricula || null,
+      country_id: countryId || null,
+    }).then(({ data }) => {
       if (data.success) {
         navigate("/login");
       }
@@ -60,10 +119,11 @@ const Register = () => {
               className="mt-8 flex flex-col gap-5"
               onSubmit={submitRegistro}
             >
+              {/* Nombre completo (ya usabas 'name') */}
               <Input
                 type="text"
                 name="name"
-                label="Nombre"
+                label="Nombre completo"
                 labelPlacement="outside"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -75,6 +135,22 @@ const Register = () => {
                 }}
               />
 
+              {/* Fecha de nacimiento (nuevo) */}
+              <Input
+                type="date"
+                name="birth_date"
+                label="Fecha de nacimiento"
+                labelPlacement="outside"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+                autoComplete="bday"
+                classNames={{
+                  inputWrapper:
+                    "bg-content2/60 ring-1 ring-default-200 focus-within:ring-2 focus-within:ring-[#2CBFF0]",
+                }}
+              />
+
+              {/* Email */}
               <Input
                 type="email"
                 name="email"
@@ -90,10 +166,11 @@ const Register = () => {
                 }}
               />
 
+              {/* Contraseña */}
               <Input
                 type="password"
                 name="password"
-                label="Password"
+                label="Contraseña"
                 labelPlacement="outside"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -104,6 +181,57 @@ const Register = () => {
                     "bg-content2/60 ring-1 ring-default-200 focus-within:ring-2 focus-within:ring-[#2CBFF0]",
                 }}
               />
+
+              {/* Universidad/Campus (nuevo): búsqueda local + dropdown */}
+              <div className="flex flex-col gap-2">
+                <select
+                  name="university_id"
+                  value={universityId}
+                  onChange={(e) => setUniversityId(e.target.value)}
+                  className="h-11 rounded-medium px-3 ring-1 ring-default-200 focus:outline-none focus:ring-2 focus:ring-[#2CBFF0] bg-white text-sm"
+                >
+                  <option value="">Selecciona tu universidad</option>
+                  {filteredUniversities.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Matrícula (nuevo) */}
+              <Input
+                type="text"
+                name="matricula"
+                label="Matrícula"
+                labelPlacement="outside"
+                value={matricula}
+                onChange={(e) => setMatricula(e.target.value)}
+                maxLength={30}
+                placeholder="Ej. A01234567"
+                classNames={{
+                  inputWrapper:
+                    "bg-content2/60 ring-1 ring-default-200 focus-within:ring-2 focus-within:ring-[#2CBFF0]",
+                }}
+              />
+
+              {/* País/Región (nuevo) */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm">País / Región</label>
+                <select
+                  name="country_id"
+                  value={countryId}
+                  onChange={(e) => setCountryId(e.target.value)}
+                  className="h-11 rounded-medium px-3 ring-1 ring-default-200 focus:outline-none focus:ring-2 focus:ring-[#2CBFF0] bg-white text-sm"
+                >
+                  <option value="">Selecciona tu país</option>
+                  {countries.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} {c.code ? `(${c.code})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               <Button
                 type="submit"
