@@ -6,32 +6,32 @@ import LayoutAdmin from "./layouts/LayoutAdmin";
 import LayoutClient from "./layouts/LayoutClient";
 
 // PUBLIC
-import Home from "./pagePublic/Home";
+import Home from "./pagepublic/Home";
 import ProtectedRoutes from "./PageAuth/ProtectedRoutes";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Universities from "./pagePublic/Universities";
-import Universitie from "./pagePublic/Universitie";
-import Careers from "./pagePublic/Careers";
-import Career from "./pagePublic/Career";
-import Courses from "./pagePublic/Courses";
-import Course from "./pagePublic/Course";
-import Plan from "./pagePublic/Plan";
-import TestRunner from "./pagePublic/TestRunner";
-import Recommendations from "./pagePublic/Recommendations";
-import NotFound from "./pagePublic/NoFound";
+import Universities from "./pagepublic/Universities";
+import Universitie from "./pagepublic/Universitie";
+import Careers from "./pagepublic/Careers";
+import Career from "./pagepublic/Career";
+import Courses from "./pagepublic/Courses";
+import Course from "./pagepublic/Course";
+import Plan from "./pagepublic/Plan";
+import TestRunner from "./pagepublic/TestRunner";
+import Recommendations from "./pagepublic/Recommendations";
+import NotFound from "./pagepublic/NoFound";
 // Metabase
-import MetaBase from "./pagePublic/MetaBase";
-import MetaBaseDashboard from "./pagePublic/MetaBaseDashboard";
+import MetaBase from "./pagepublic/MetaBase";
+import MetaBaseDashboard from "./pagepublic/MetaBaseDashboard";
 
 // Test
-import Test from "./pagePublic/Test";
-import TestQuestion from "./pagePublic/TestQuestion";
-import TestResults from "./pagePublic/TestResults";
-import OpenRouterChat from "./pagePublic/OpenRouterChat";
+import Test from "./pagepublic/Test";
+import TestQuestion from "./pagepublic/TestQuestion";
+import TestResults from "./pagepublic/TestResults";
+import OpenRouterChat from "./pagepublic/OpenRouterChat";
 
 // Learning Paths
-import LearningPaths from "./pagePublic/LearningPaths";
-import LearningPathDetail from "./pagePublic/LearningPathDetail";
+import LearningPaths from "./pagepublic/LearningPaths";
+import LearningPathDetail from "./pagepublic/LearningPathDetail";
 
 // AUTH
 import Login from "./PageAuth/Login";
