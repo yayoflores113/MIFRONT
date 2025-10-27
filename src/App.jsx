@@ -10,7 +10,7 @@ import Home from "./pagepublic/Home";
 import ProtectedRoutes from "./pageauth/ProtectedRoutes";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Universities from "./pagepublic/universities";
-import Universitie from "./pagepublic/universitie";
+import Universitie from "./pagepublic/universities";
 import Careers from "./pagepublic/careers";
 import Career from "./pagepublic/career";
 import Courses from "./pagepublic/courses";
