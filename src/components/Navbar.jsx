@@ -187,6 +187,23 @@ const Navbar = () => {
           </Link>
         </NavbarItem>
 
+        <NavbarItem isActive={pathname === "/learning-paths"}>
+          <Link
+            href="/learning-paths"
+            aria-current={pathname === "/learning-paths" ? "page" : undefined}
+            className={`group relative text-[#181818]/80 hover:text-[#181818] transition-colors ${
+              isActive("/learning-paths") && "text-[#181818]"
+            }`}
+          >
+            Rutas de Aprendizaje
+            <span
+              className={`pointer-events-none absolute -bottom-1 left-0 h-[2px] w-0 bg-[#2CBFF0] transition-[width] duration-200 group-hover:w-full ${
+                isActive("/learning-paths") && "w-full"
+              }`}
+            />
+          </Link>
+        </NavbarItem>
+
         <NavbarItem isActive={pathname === "/plans"}>
           <Link
             href="/plans"
@@ -269,6 +286,19 @@ const Navbar = () => {
             }`}
           >
             Cursos
+          </Link>
+        </NavbarMenuItem>
+
+        <NavbarMenuItem isActive={pathname === "/learning-paths"}>
+          <Link
+            href="/learning-paths"
+            size="lg"
+            aria-current={pathname === "/learning-paths" ? "page" : undefined}
+            className={`block rounded-lg px-2 py-2 text-[#181818]/90 hover:bg-black/5 ${
+              isActive("/learning-paths") && "bg-black/[0.04] font-medium"
+            }`}
+          >
+            Rutas de Aprendizaje
           </Link>
         </NavbarMenuItem>
 

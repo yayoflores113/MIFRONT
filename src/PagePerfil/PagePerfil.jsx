@@ -1,5 +1,5 @@
-// PagePerfil.jsx
-import React from "react";
+// PagePerfil.jsx - Versión Dinámica con datos reales del usuario
+import React, { useEffect, useState } from "react";
 import {
   Avatar,
   Button,
@@ -49,7 +49,36 @@ import {
 
 const PagePerfil = () => {
   // ----------------------------
-  // Mock data (puedes conectar a tu API luego)
+  // ESTADO Y DATOS REALES DEL USUARIO
+  // ----------------------------
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState("universities");
+
+  // Obtener usuario desde sessionStorage
+  useEffect(() => {
+    const getUser = () => {
+      try {
+        const userData = sessionStorage.getItem("user");
+        if (userData) {
+          return JSON.parse(userData);
+        }
+        return null;
+      } catch (error) {
+        console.error("Error al obtener usuario:", error);
+        return null;
+      }
+    };
+
+    const userData = getUser();
+    if (userData) {
+      setUser(userData);
+    }
+    setLoading(false);
+  }, []);
+
+  // ----------------------------
+  // Mock data temporal (hasta implementar endpoints reales)
   // ----------------------------
   const universitiesData = [
     {
@@ -76,30 +105,6 @@ const PagePerfil = () => {
       specialty: "Tecnología e Innovación",
       imageUrl: "https://img.heroui.chat/image/places?w=800&h=400&u=3",
     },
-    {
-      id: 4,
-      name: "Universidad de São Paulo",
-      city: "São Paulo",
-      country: "Brasil",
-      specialty: "Ciencias Sociales y Humanidades",
-      imageUrl: "https://img.heroui.chat/image/places?w=800&h=400&u=4",
-    },
-    {
-      id: 5,
-      name: "Universidad de Buenos Aires",
-      city: "Buenos Aires",
-      country: "Argentina",
-      specialty: "Economía y Negocios",
-      imageUrl: "https://img.heroui.chat/image/places?w=800&h=400&u=5",
-    },
-    {
-      id: 6,
-      name: "Universidad de Chile",
-      city: "Santiago",
-      country: "Chile",
-      specialty: "Derecho y Ciencias Políticas",
-      imageUrl: "https://img.heroui.chat/image/places?w=800&h=400&u=6",
-    },
   ];
 
   const savedCoursesData = [
@@ -124,28 +129,6 @@ const PagePerfil = () => {
       duration: 36,
       rating: 4.9,
       imageUrl: "https://img.heroui.chat/image/ai?w=800&h=400&u=2",
-    },
-    {
-      id: 3,
-      title: "Diseño UX/UI para Aplicaciones Móviles",
-      institution: "Escuela de Diseño Digital",
-      topic: "Diseño UX/UI",
-      level: "Intermedio",
-      difficulty: 3,
-      duration: 18,
-      rating: 4.5,
-      imageUrl: "https://img.heroui.chat/image/ai?w=800&h=400&u=3",
-    },
-    {
-      id: 4,
-      title: "Ciencia de Datos con Python",
-      institution: "Academia de Análisis de Datos",
-      topic: "Ciencia de Datos",
-      level: "Avanzado",
-      difficulty: 5,
-      duration: 42,
-      rating: 4.8,
-      imageUrl: "https://img.heroui.chat/image/ai?w=800&h=400&u=4",
     },
   ];
 
@@ -174,17 +157,6 @@ const PagePerfil = () => {
       completionDate: "15/04/2023",
       certificateAvailable: true,
     },
-    {
-      id: 3,
-      title: "Introducción a la Ciencia de Datos",
-      institution: "Data Institute",
-      topic: "Ciencia de Datos",
-      level: "Principiante",
-      price: 49.99,
-      status: "Activo",
-      progress: 30,
-      imageUrl: "https://img.heroui.chat/image/ai?w=800&h=400&u=7",
-    },
   ];
 
   const skillAreas = [
@@ -202,52 +174,75 @@ const PagePerfil = () => {
     { name: "Certificados obtenidos", value: 5 },
   ];
 
-  // Estado de cada lista (para botones de quitar)
-  const [favUniversities, setFavUniversities] =
-    React.useState(universitiesData);
-  const [savedCourses, setSavedCourses] = React.useState(savedCoursesData);
-  const [purchasedCourses] = React.useState(purchasedCoursesData);
+  const [favUniversities, setFavUniversities] = useState(universitiesData);
+  const [savedCourses, setSavedCourses] = useState(savedCoursesData);
+  const [purchasedCourses] = useState(purchasedCoursesData);
 
   // ----------------------------
-  // Header
+  // Header con datos REALES del usuario
   // ----------------------------
-  const ProfileHeader = () => (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 bg-white rounded-xl p-6 shadow-sm border border-default-200">
-      <div className="flex items-center gap-4">
-        <Avatar
-          src="https://img.heroui.chat/image/avatar?w=200&h=200&u=1"
-          className="w-20 h-20 text-large"
-          isBordered
-          color="primary"
-        />
-        <div>
-          <h1 className="text-2xl font-semibold text-[#181818]">
-            Alejandra Martínez
-          </h1>
-          <div className="flex flex-wrap items-center gap-2 mt-1">
-            <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md text-xs font-medium">
-              Estudiante
-            </span>
-            <span className="text-default-500 text-sm">
-              Universidad Nacional Autónoma de México
-            </span>
+  const ProfileHeader = () => {
+    if (!user) return null;
+
+    const getInitials = (name) => {
+      if (!name) return "U";
+      const parts = name.trim().split(" ");
+      if (parts.length >= 2) {
+        return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+      }
+      return name[0].toUpperCase();
+    };
+
+    const getUserRole = () => {
+      if (user.roles && user.roles.length > 0) {
+        return user.roles[0].name === "admin" ? "Administrador" : "Estudiante";
+      }
+      return "Estudiante";
+    };
+
+    return (
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 bg-white rounded-xl p-6 shadow-sm border border-default-200">
+        <div className="flex items-center gap-4">
+          <Avatar
+            name={getInitials(user.name)}
+            className="w-20 h-20 text-large"
+            isBordered
+            color="primary"
+          />
+          <div>
+            <h1 className="text-2xl font-semibold text-[#181818]">
+              {user.name || "Usuario"}
+            </h1>
+            <div className="flex flex-wrap items-center gap-2 mt-1">
+              <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md text-xs font-medium">
+                {getUserRole()}
+              </span>
+              <span className="text-default-500 text-sm">{user.email}</span>
+            </div>
+            {user.matricula && (
+              <p className="text-default-500 mt-2 text-sm">
+                Matrícula: {user.matricula}
+              </p>
+            )}
+            {!user.matricula && !user.university_id && (
+              <p className="text-default-500 mt-2 text-sm">
+                Completa tu perfil para obtener recomendaciones personalizadas
+              </p>
+            )}
           </div>
-          <p className="text-default-500 mt-2 text-sm">
-            Estudiante de Ingeniería en Sistemas Computacionales • 7mo semestre
-          </p>
         </div>
-      </div>
 
-      <Button
-        color="primary"
-        variant="flat"
-        startContent={<PencilSquareIcon className="w-4 h-4" />}
-        className="sm:self-start"
-      >
-        Editar perfil
-      </Button>
-    </div>
-  );
+        <Button
+          color="primary"
+          variant="flat"
+          startContent={<PencilSquareIcon className="w-4 h-4" />}
+          className="sm:self-start"
+        >
+          Editar perfil
+        </Button>
+      </div>
+    );
+  };
 
   // ----------------------------
   // Sección: Universidades favoritas
@@ -491,7 +486,6 @@ const PagePerfil = () => {
   // ----------------------------
   // Sección: Cursos comprados
   // ----------------------------
-  const getLevelColorPurchased = (level) => getLevelColor(level);
   const getStatusColor = (status) => {
     switch (status) {
       case "Activo":
@@ -575,7 +569,7 @@ const PagePerfil = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge
-                            color={getLevelColorPurchased(course.level)}
+                            color={getLevelColor(course.level)}
                             variant="flat"
                             size="sm"
                           >
@@ -776,70 +770,95 @@ const PagePerfil = () => {
             </div>
           </CardBody>
         </Card>
+<Card className="bg-white rounded-xl shadow-sm border border-default-200">
+  <CardHeader className="px-6 pt-6 pb-0">
+    <h3 className="text-lg font-semibold">Próximos eventos</h3>
+  </CardHeader>
+  <CardBody className="p-6">
+    <div className="space-y-4">
+      <div className="flex items-start gap-3">
+        <div className="bg-primary/10 p-2 rounded-lg">
+          <CalendarIcon className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h4 className="font-medium">Feria de empleo tecnológico</h4>
+          <div className="flex items-center gap-2 text-default-500 text-sm mt-1">
+            <ClockIcon className="w-4 h-4" />
+            <span>15 de junio, 2023</span>
+          </div>
+          <Button
+            size="sm"
+            color="primary"
+            variant="flat"
+            className="mt-2"
+          >
+            Más información
+          </Button>
+        </div>
+      </div>
 
-        <Card className="bg-white rounded-xl shadow-sm border border-default-200">
-          <CardHeader className="px-6 pt-6 pb-0">
-            <h3 className="text-lg font-semibold">Próximos eventos</h3>
-          </CardHeader>
-          <CardBody className="p-6">
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="bg-primary/10 p-2 rounded-lg">
-                  <CalendarIcon className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-medium">Feria de empleo tecnológico</h4>
-                  <div className="flex items-center gap-2 text-default-500 text-sm mt-1">
-                    <ClockIcon className="w-4 h-4" />
-                    <span>15 de junio, 2023</span>
-                  </div>
-                  <Button
-                    size="sm"
-                    color="primary"
-                    variant="flat"
-                    className="mt-2"
-                  >
-                    Más información
-                  </Button>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="bg-primary/10 p-2 rounded-lg">
-                  <UsersIcon className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-medium">Webinar: Tendencias en IA</h4>
-                  <div className="flex items-center gap-2 text-default-500 text-sm mt-1">
-                    <ClockIcon className="w-4 h-4" />
-                    <span>22 de junio, 2023</span>
-                  </div>
-                  <Button
-                    size="sm"
-                    color="primary"
-                    variant="flat"
-                    className="mt-2"
-                  >
-                    Registrarse
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
+      <div className="flex items-start gap-3">
+        <div className="bg-primary/10 p-2 rounded-lg">
+          <UsersIcon className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h4 className="font-medium">Webinar: Tendencias en IA</h4>
+          <div className="flex items-center gap-2 text-default-500 text-sm mt-1">
+            <ClockIcon className="w-4 h-4" />
+            <span>22 de junio, 2023</span>
+          </div>
+          <Button
+            size="sm"
+            color="primary"
+            variant="flat"
+            className="mt-2"
+          >
+            Registrarse
+          </Button>
+        </div>
+      </div>
+    </div>
+  </CardBody>
+</Card>
+
       </div>
     </div>
   );
 
   // ----------------------------
-  // Layout + Tabs (como tus capturas)
+  // Layout principal + Tabs
   // ----------------------------
-  const [tab, setTab] = React.useState("universities"); // universities | saved | purchased | stats
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
+        <div className="flex justify-center items-center h-96">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
+        <div className="text-center py-16">
+          <h2 className="text-2xl font-semibold mb-4">No hay sesión activa</h2>
+          <p className="text-default-500 mb-6">
+            Por favor, inicia sesión para ver tu perfil
+          </p>
+          <Button color="primary" as="a" href="/login">
+            Ir a Login
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
       <ProfileHeader />
 
-      {/* Subnavegación */}
+      {/* Subnavegación con Tabs */}
       <div className="mt-6">
         <Tabs
           selectedKey={tab}

@@ -41,6 +41,14 @@ const Login = () => {
         setMessage(res.message || "Logueado");
         setTimeout(() => {
           const rol = res?.user?.roles?.[0]?.name || "user";
+          
+          // 🔥 AGREGAR ESTOS CONSOLE.LOG
+          console.log("=== DATOS DEL LOGIN ===");
+          console.log("Usuario completo:", res.user);
+          console.log("Token:", res.token);
+          console.log("Rol:", rol);
+          console.log("======================");
+          
           setToken(res.user, res.token, rol);
           // Opcional (no cambia tu lógica): redirección respetando next
           navigate(nextPath, { replace: true });

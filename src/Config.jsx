@@ -1,7 +1,20 @@
 import axios from "axios";
 
 const base_api_url = "http://localhost:8000/api/v1";
-///Route
+
+// 🔥 CONFIGURAR AXIOS PARA ENVIAR EL TOKEN AUTOMÁTICAMENTE
+axios.interceptors.request.use(
+  (config) => {
+    const token = JSON.parse(sessionStorage.getItem('token'));
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 export default {
   //Rutas privadas:
@@ -80,10 +93,18 @@ export default {
   // Cursos
   getCourses: (quantity = 120, params = {}) =>
     axios.get(`${base_api_url}/public/courses`, {
-      params: { quantity, ...params }, // <- correcto
+      params: { quantity, ...params },
     }),
   getCourseBySlug: (slug) =>
     axios.get(`${base_api_url}/public/courses/${slug}`),
+
+  // Learning Paths (Rutas de Aprendizaje)
+  getLearningPaths: (quantity = 120, params = {}) =>
+    axios.get(`${base_api_url}/public/learning-paths`, {
+      params: { quantity, ...params },
+    }),
+  getLearningPathBySlug: (slug) =>
+    axios.get(`${base_api_url}/public/learning-paths/${slug}`),
 
   // Planes
   getPlans: (quantity = 4, params = {}) =>
@@ -115,4 +136,78 @@ export default {
   // RECOMMENDATIONS (privado)
   getAttemptRecommendations: (id) =>
     axios.get(`${base_api_url}/user/test-attempts/${id}/recommendations`),
+
+  // ========================================
+  // 🎯 DAILY EXERCISES (NUEVO - privado)
+  // ========================================
+  
+  /**
+   * Obtener el ejercicio del día para el usuario autenticado
+   * @returns {Promise} Ejercicio disponible o información de completado
+   */
+  getTodayExercise: () => 
+    axios.get(`${base_api_url}/user/daily-exercise/today`),
+
+  /**
+   * Enviar respuesta del usuario para un ejercicio
+   * @param {Object} data - { exercise_id, answer, time_spent }
+   * @returns {Promise} Resultado de la validación
+   */
+  submitExerciseAnswer: (data) =>
+    axios.post(`${base_api_url}/user/daily-exercise/submit`, data),
+
+  /**
+   * Obtener la racha actual del usuario
+   * @returns {Promise} Información de racha y puntos
+   */
+  getUserStreak: () => 
+    axios.get(`${base_api_url}/user/streak`),
+
+  /**
+   * Obtener historial de ejercicios completados
+   * @param {Object} params - Parámetros de filtrado opcionales
+   * @returns {Promise} Lista de ejercicios completados
+   */
+  getUserExerciseHistory: (params = {}) =>
+    axios.get(`${base_api_url}/user/daily-exercise/history`, { params }),
+
+  // ========================================
+  // 🔧 ADMIN - DAILY EXERCISES (NUEVO)
+  // ========================================
+  
+  /**
+   * ADMIN: Obtener todos los ejercicios
+   * @param {Object} params - Filtros opcionales (course_id, difficulty, etc.)
+   */
+  getExercisesAll: (params = {}) => 
+    axios.get(`${base_api_url}/admin/daily-exercises`, { params }),
+
+  /**
+   * ADMIN: Crear un nuevo ejercicio
+   * @param {Object} data - Datos del ejercicio
+   */
+  createExercise: (data) =>
+    axios.post(`${base_api_url}/admin/daily-exercises`, data),
+
+  /**
+   * ADMIN: Obtener ejercicio por ID
+   * @param {Number} id - ID del ejercicio
+   */
+  getExerciseById: (id) =>
+    axios.get(`${base_api_url}/admin/daily-exercises/${id}`),
+
+  /**
+   * ADMIN: Actualizar ejercicio
+   * @param {Number} id - ID del ejercicio
+   * @param {Object} data - Datos actualizados
+   */
+  updateExercise: (id, data) =>
+    axios.put(`${base_api_url}/admin/daily-exercises/${id}`, data),
+
+  /**
+   * ADMIN: Eliminar ejercicio
+   * @param {Number} id - ID del ejercicio
+   */
+  deleteExercise: (id) =>
+    axios.delete(`${base_api_url}/admin/daily-exercises/${id}`),
 };

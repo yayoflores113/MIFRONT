@@ -1,5 +1,6 @@
-import React, { useMemo, useCallback, useState } from "react";
-import { Button, Card, CardBody, Avatar } from "@heroui/react";
+import React, { useMemo, useCallback, useState, useEffect } from "react";
+import { Button, Card, CardBody, Avatar, useDisclosure } from "@heroui/react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   CodeBracketIcon,
   ChartBarIcon,
@@ -13,9 +14,11 @@ import {
 } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/20/solid";
 import { motion, useReducedMotion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import Config from "../Config";
-/* ----------------------- Datos para categorías (sin cambios) ----------------------- */
+import AuthUser from "../pageauth/AuthUser";
+import DailyExerciseModal from "./DailyExerciseModal";
+
+/* ----------------------- Datos para categorías ----------------------- */
 
 const categories = [
   {
@@ -65,7 +68,26 @@ const categories = [
 const Home = () => {
   const shouldReduceMotion = useReducedMotion();
   const navigate = useNavigate();
-  const [loading, setLoading] = React.useState(false);
+  const { getToken } = AuthUser();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  
+  const [loading, setLoading] = useState(false);
+  const [hasShownModal, setHasShownModal] = useState(false);
+
+  // useEffect para mostrar el modal al cargar
+  useEffect(() => {
+    const checkAndShowExercise = async () => {
+      if (getToken() && !hasShownModal) {
+        // Espera 2 segundos después de cargar la página
+        setTimeout(() => {
+          onOpen();
+          setHasShownModal(true);
+        }, 2000);
+      }
+    };
+
+    checkAndShowExercise();
+  }, [getToken, hasShownModal, onOpen]);
 
   // --- CTA mejorado: sesión -> test activo -> runner/listado; sin sesión -> login ---
   const handleStartTest = useCallback(async () => {
@@ -121,6 +143,9 @@ const Home = () => {
 
   return (
     <>
+      {/* Modal de ejercicio diario */}
+      <DailyExerciseModal isOpen={isOpen} onClose={onClose} />
+
       <style>{`
         @keyframes floatY { 0%{ transform: translateY(0) } 50%{ transform: translateY(-10px) } 100%{ transform: translateY(0) } }
         .animate-float { animation: floatY 6s ease-in-out infinite; }
@@ -219,7 +244,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* --------------------- Sección: Categorías (tu contenido original) --------------------- */}
+      {/* --------------------- Sección: Categorías --------------------- */}
       <section className="w-full bg-default-50 px-4 py-16">
         <div className="mx-auto max-w-7xl">
           <div className="mb-12 text-center">
@@ -270,7 +295,79 @@ const Home = () => {
         </div>
       </section>
 
-      {/* -------------------- Sección: Testimonios (tu contenido original) --------------------- */}
+      {/* -------------------- Sección: Rutas de Aprendizaje (NUEVA) --------------------- */}
+      <section className="w-full bg-gradient-to-br from-blue-50 to-cyan-50 px-4 py-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-12 text-center">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <span className="text-4xl">🚀</span>
+              <h2 className="text-3xl font-bold">Rutas de Aprendizaje</h2>
+            </div>
+            <p className="mx-auto max-w-2xl text-default-600 text-lg">
+              Sigue un camino estructurado con cursos gratuitos y premium para alcanzar tus objetivos profesionales
+            </p>
+          </div>
+
+          <div className="flex justify-center gap-4">
+            <Button
+              as={Link}
+              to="/learning-paths"
+              size="lg"
+              className="bg-[#2CBFF0] text-white px-8"
+              endContent={
+                <ArrowRightIcon className="w-5 h-5" aria-hidden="true" />
+              }
+            >
+              Explorar todas las rutas
+            </Button>
+            
+            <Button
+              as={Link}
+              to="/courses"
+              variant="bordered"
+              size="lg"
+              className="border-[#2CBFF0] text-[#2CBFF0] px-8"
+            >
+              Ver cursos individuales
+            </Button>
+          </div>
+
+          {/* Preview de 3 rutas destacadas */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+            {[
+              {
+                emoji: "🚀",
+                title: "Landing Page",
+                subtitle: "Para principiantes",
+                courses: "2 cursos • 32h"
+              },
+              {
+                emoji: "💻",
+                title: "Full Stack Dev",
+                subtitle: "Nivel intermedio",
+                courses: "2+ cursos • 80h"
+              },
+              {
+                emoji: "🔧",
+                title: "PHP Laravel Master",
+                subtitle: "Nivel avanzado",
+                courses: "Backend completo • 60h"
+              }
+            ].map((preview, idx) => (
+              <Card key={idx} className="border border-default-200 shadow-sm hover:shadow-lg transition-shadow">
+                <CardBody className="text-center p-8">
+                  <div className="text-6xl mb-4">{preview.emoji}</div>
+                  <h3 className="text-xl font-bold mb-2">{preview.title}</h3>
+                  <p className="text-sm text-default-500 mb-3">{preview.subtitle}</p>
+                  <p className="text-xs text-default-400">{preview.courses}</p>
+                </CardBody>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* -------------------- Sección: Testimonios --------------------- */}
       <section className="w-full bg-gradient-to-b from-white to-default-50 px-4 py-16">
         <div className="mx-auto max-w-7xl">
           <div className="mb-12 text-center">

@@ -29,6 +29,10 @@ import TestQuestion from "./pagepublic/TestQuestion";
 import TestResults from "./pagepublic/TestResults";
 import OpenRouterChat from "./pagepublic/OpenRouterChat";
 
+// Learning Paths
+import LearningPaths from "./pagepublic/LearningPaths";
+import LearningPathDetail from "./pagepublic/LearningPathDetail";
+
 // AUTH
 import Login from "./pageauth/Login";
 import Register from "./pageauth/Register";
@@ -73,6 +77,8 @@ const App = () => {
           <Route path="/careers/:slug" element={<Career />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:slug" element={<Course />} />
+          <Route path="/learning-paths" element={<LearningPaths />} />
+          <Route path="/learning-paths/:slug" element={<LearningPathDetail />} />
           <Route path="/plans" element={<Plan />} />
           {/* Tests */}
           <Route path="/tests" element={<Test />} />
