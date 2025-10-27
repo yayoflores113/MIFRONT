@@ -3,43 +3,43 @@ import React from "react";
 // LAYOUTS
 import LayoutPublic from "./layouts/LayoutPublic";
 import LayoutAdmin from "./layouts/LayoutAdmin";
-import LayoutClient from "./layouts/LayoutClient"; //LAYOUT user realmente
+import LayoutClient from "./layouts/LayoutClient";
 
 // PUBLIC
-import Home from "./pagepublic/Home";
-import ProtectedRoutes from "./pageauth/ProtectedRoutes";
+import Home from "./PagePublic/Home";
+import ProtectedRoutes from "./PageAuth/ProtectedRoutes";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Universities from "./pagepublic/universities";
-import Universitie from "./pagepublic/universities";
-import Careers from "./pagepublic/careers";
-import Career from "./pagepublic/career";
-import Courses from "./pagepublic/courses";
-import Course from "./pagepublic/course";
-import Plan from "./pagepublic/Plan";
-import TestRunner from "./pagepublic/TestRunner";
-import Recommendations from "./pagepublic/Recommendations";
-import NotFound from "./pagepublic/NoFound";
-// metabase
-import MetaBase from "./pagepublic/MetaBase";
-import MetaBaseDashboard from "./pagepublic/MetaBaseDashboard";
+import Universities from "./PagePublic/Universities";
+import Universitie from "./PagePublic/Universitie";
+import Careers from "./PagePublic/Careers";
+import Career from "./PagePublic/Career";
+import Courses from "./PagePublic/Courses";
+import Course from "./PagePublic/Course";
+import Plan from "./PagePublic/Plan";
+import TestRunner from "./PagePublic/TestRunner";
+import Recommendations from "./PagePublic/Recommendations";
+import NotFound from "./PagePublic/NoFound";
+// Metabase
+import MetaBase from "./PagePublic/MetaBase";
+import MetaBaseDashboard from "./PagePublic/MetaBaseDashboard";
 
-//Test
-import Test from "./pagepublic/Test";
-import TestQuestion from "./pagepublic/TestQuestion";
-import TestResults from "./pagepublic/TestResults";
-import OpenRouterChat from "./pagepublic/OpenRouterChat";
+// Test
+import Test from "./PagePublic/Test";
+import TestQuestion from "./PagePublic/TestQuestion";
+import TestResults from "./PagePublic/TestResults";
+import OpenRouterChat from "./PagePublic/OpenRouterChat";
 
 // Learning Paths
-import LearningPaths from "./pagepublic/LearningPaths";
-import LearningPathDetail from "./pagepublic/LearningPathDetail";
+import LearningPaths from "./PagePublic/LearningPaths";
+import LearningPathDetail from "./PagePublic/LearningPathDetail";
 
 // AUTH
-import Login from "./pageauth/Login";
-import Register from "./pageauth/Register";
-import Dashboard from "./PageAdmin/dashboard";
-import AuthCallback from "./pageauth/AuthCallback";
+import Login from "./PageAuth/Login";
+import Register from "./PageAuth/Register";
+import Dashboard from "./PageAdmin/Dashboard";
+import AuthCallback from "./PageAuth/AuthCallback";
 
-// ROLE USURARIO (Perfil)
+// ROLE USUARIO (Perfil)
 import PagePerfil from "./PagePerfil/PagePerfil";
 
 // ROLE ADMIN
@@ -70,7 +70,7 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
-          {/* Catalogos */}
+          {/* Catálogos */}
           <Route path="/universities" element={<Universities />} />
           <Route path="/universities/:slug" element={<Universitie />} />
           <Route path="/careers" element={<Careers />} />
@@ -87,23 +87,22 @@ const App = () => {
           <Route path="/recommendations" element={<Recommendations />} />
           <Route path="/question" element={<TestQuestion />} />
           <Route path="/openchat" element={<OpenRouterChat />} />
-          {/* hola mundo */}
+          {/* Metabase */}
           <Route path="/meta" element={<MetaBase />} />
           <Route path="/metadashboard" element={<MetaBaseDashboard />} />
           {/* 404 not found */}
           <Route path="/*" element={<NotFound />} />
         </Route>
+
         <Route element={<ProtectedRoutes />} />
+
         <Route path="/admin" element={<LayoutAdmin />}>
           <Route index element={<Dashboard />} />
           <Route path="users" element={<UserAll />} />
           <Route path="user/edit/:id" element={<UserUpdate />} />
           <Route path="universities" element={<UniversidadesAll />} />
           <Route path="universities/create" element={<UniversidadesStore />} />
-          <Route
-            path="universities/edit/:id"
-            element={<UniversidadesUpdate />}
-          />
+          <Route path="universities/edit/:id" element={<UniversidadesUpdate />} />
           <Route path="careers" element={<CarrerasAll />} />
           <Route path="careers/create" element={<CarrerasStore />} />
           <Route path="careers/:id/edit" element={<CarrerasUpdate />} />
@@ -115,11 +114,9 @@ const App = () => {
           <Route path="plans/:id/edit" element={<PlanesUpdate />} />
           <Route path="subscriptions" element={<SubscriptionsAll />} />
           <Route path="subscriptions/create" element={<SubscriptionsStore />} />
-          <Route
-            path="subscriptions/:id/edit"
-            element={<SubscriptionsUpdate />}
-          />
+          <Route path="subscriptions/:id/edit" element={<SubscriptionsUpdate />} />
         </Route>
+
         <Route path="/user" element={<LayoutClient />}>
           <Route index element={<PagePerfil />} />
           <Route path="profile" element={<PagePerfil />} />
