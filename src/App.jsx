@@ -36,30 +36,30 @@ import LearningPathDetail from "./pagepublic/LearningPathDetail";
 // AUTH
 import Login from "./pageauth/Login";
 import Register from "./pageauth/Register";
-import Dashboard from "./pageadmin/Dashboard";
+import Dashboard from "./PageAdmin/Dashboard";
 import AuthCallback from "./pageauth/AuthCallback";
 
 // ROLE USUARIO (Perfil)
-import PagePerfil from "./pageperfil/PagePerfil";
+import PagePerfil from "./PagePerfil/PagePerfil";
 
 // ROLE ADMIN
-import UserAll from "./pageadmin/UserAll";
-import UserUpdate from "./pageadmin/UserUpdate";
-import UniversidadesAll from "./pageadmin/UniversidadesAll";
-import UniversidadesStore from "./pageadmin/UniversidadesStore";
-import UniversidadesUpdate from "./pageadmin/UniversidadesUpdate";
-import CarrerasAll from "./pageadmin/CarrerasAll";
-import CarrerasStore from "./pageadmin/CarrerasStore";
-import CarrerasUpdate from "./pageadmin/CarrerasUpdate";
-import CursosAll from "./pageadmin/CursosAll";
-import CursosStore from "./pageadmin/CursosStore";
-import CursosUpdate from "./pageadmin/CursosUpdate";
-import PlanesAll from "./pageadmin/PlanesAll";
-import PlanesStore from "./pageadmin/PlanesStore";
-import PlanesUpdate from "./pageadmin/PlanesUpdate";
-import SubscriptionsAll from "./pageadmin/SubscriptionsAll";
-import SubscriptionsStore from "./pageadmin/SubscriptionsStore";
-import SubscriptionsUpdate from "./pageadmin/SubscriptionsUpdate";
+import UserAll from "./PageAdmin/UserAll";
+import UserUpdate from "./PageAdmin/UserUpdate";
+import UniversidadesAll from "./PageAdmin/UniversidadesAll";
+import UniversidadesStore from "./PageAdmin/UniversidadesStore";
+import UniversidadesUpdate from "./PageAdmin/UniversidadesUpdate";
+import CarrerasAll from "./PageAdmin/CarrerasAll";
+import CarrerasStore from "./PageAdmin/CarrerasStore";
+import CarrerasUpdate from "./PageAdmin/CarrerasUpdate";
+import CursosAll from "./PageAdmin/CursosAll";
+import CursosStore from "./PageAdmin/CursosStore";
+import CursosUpdate from "./PageAdmin/CursosUpdate";
+import PlanesAll from "./PageAdmin/PlanesAll";
+import PlanesStore from "./PageAdmin/PlanesStore";
+import PlanesUpdate from "./PageAdmin/PlanesUpdate";
+import SubscriptionsAll from "./PageAdmin/SubscriptionsAll";
+import SubscriptionsStore from "./PageAdmin/SubscriptionsStore";
+import SubscriptionsUpdate from "./PageAdmin/SubscriptionsUpdate";
 
 const App = () => {
   return (
