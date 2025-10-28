@@ -38,19 +38,19 @@ const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
 // helper de: (carpeta /img/cursos)
 const courseImgSrc = (val) => {
   if (!val) return "";
-  if (val.startsWith("data:image")) return val; // base64
-  if (/^https?:\/\//i.test(val)) return val; // URL absoluta
+  const v = String(val).trim();
 
-  // Construir origen del backend
-  const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
-  const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
-  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "").trim();
-  const backendOrigin = fromAxios || fromEnv || "";
+  // Si es base64 o URL absoluta, usarla tal cual
+  if (v.startsWith("data:image")) return v;
+  if (/^https?:\/\//i.test(v)) return v;
 
-  // OJO: carpeta en ESPAÑOL, igual que en tu admin: /img/cursos
-  return backendOrigin
-    ? `${backendOrigin.replace(/\/$/, "")}/img/cursos/${val}`
-    : `/img/cursos/${val}`;
+  // Obtener el origen del backend
+  const backendUrl =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+  const origin = backendUrl.replace(/\/$/, ""); // Quitar "/" final si existe
+
+  // Construir la URL completa
+  return `${origin}/img/cursos/${v}`;
 };
 
 const centsToCurrency = (cents, locale = "es-MX", currency = "MXN") =>
