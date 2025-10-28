@@ -1,11 +1,10 @@
-// Login.jsx (versión mejorada sin cambiar estructura ni lógica)
 import React, { useEffect, useState } from "react";
 import AuthUser from "./AuthUser";
 import { useNavigate, Link, useLocation } from "react-router-dom"; // <-- añadido useLocation
 import Config from "../Config";
-import axios from "axios";
 import { Form, Input, Button, Image, Alert, Divider } from "@heroui/react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { ensureSanctum } from "../lib/axios";
 
 const Login = () => {
   const { setToken, getToken } = AuthUser();
@@ -32,26 +31,30 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await axios.get("/sanctum/csrf-cookie");
+      // 1. Obtener cookie CSRF
+      await ensureSanctum();
+
+      // 2. Hacer login
       const resp = await Config.getLogin({ email, password });
       const res = resp?.data || {};
 
       if (res.success) {
         setStatus("success");
         setMessage(res.message || "Logueado");
+
         setTimeout(() => {
-          const rol = res?.user?.roles?.[0]?.name || "user";
-          
-          // 🔥 AGREGAR ESTOS CONSOLE.LOG
-          console.log("=== DATOS DEL LOGIN ===");
-          console.log("Usuario completo:", res.user);
-          console.log("Token:", res.token);
-          console.log("Rol:", rol);
-          console.log("======================");
-          
-          setToken(res.user, res.token, rol);
-          // Opcional (no cambia tu lógica): redirección respetando next
-          navigate(nextPath, { replace: true });
+          // Obtener rol de la respuesta (ahora viene en res.rol)
+          const userRol = res.rol || "user";
+
+          // Guardar con token = null (es el segundo parámetro)
+          setToken(res.user, null, userRol);
+
+          // Navegar según el rol
+          if (userRol === "admin") {
+            navigate("/admin", { replace: true });
+          } else {
+            navigate(nextPath, { replace: true });
+          }
         }, 600);
       } else {
         setStatus("danger");
@@ -60,6 +63,7 @@ const Login = () => {
     } catch (err) {
       setStatus("danger");
       setMessage("Ocurrió un error al iniciar sesión.");
+      console.error("Error en login:", err);
     } finally {
       setLoading(false);
     }
