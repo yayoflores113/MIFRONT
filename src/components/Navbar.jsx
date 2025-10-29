@@ -27,56 +27,31 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Guard: oculta navbar en login y register
   if (pathname === "/login" || pathname === "/register") return null;
 
-  // Logout
   const logoutUser = () => {
     Config.getLogout("/logout")
       .then(() => getLogout())
-      .catch((error) => console.error(error));
+      .catch(console.error);
+    navigate("/login");
   };
 
-  // Render links según sesión
-  const renderLinks = () => {
-    const currentUser = user ?? getUser();
+  const handleDashboardRedirect = () => {
     if (getToken()) {
-      return (
-        <>
-          <NavbarItem>
-            <Link
-              href={`/${getRol()}`}
-              className="text-sm md:text-base text-[#181818]/80 hover:text-[#181818] transition-colors"
-            >
-              <span className="hidden sm:inline">Bienvenid@</span>
-              <span className="mx-1">|</span>
-              <span className="font-medium">{currentUser?.name ?? "Usuario"}</span>
-            </Link>
-          </NavbarItem>
-          <NavbarItem>
-            <Link
-              href="#"
-              onPress={logoutUser}
-              className="inline-flex items-center rounded-xl border border-black/10 px-3 py-2 text-sm md:text-base text-[#181818]/80 hover:text-[#181818] hover:bg-black/5 transition-colors"
-            >
-              Logout
-            </Link>
-          </NavbarItem>
-        </>
-      );
+      navigate(`/${getRol()}`);
     } else {
-      return (
-        <NavbarItem>
-          <Link
-            href="/login"
-            className="inline-flex items-center gap-2 rounded-xl bg-[#2CBFF0] px-4 py-2 text-sm md:text-base font-medium text-[#181818] shadow-sm hover:opacity-90 active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2CBFF0] focus-visible:ring-offset-2 transition"
-          >
-            Login
-          </Link>
-        </NavbarItem>
-      );
+      navigate("/login");
     }
   };
+
+  const navLinks = [
+    { label: "Home", to: "/" },
+    { label: "Universidades", to: "/universities" },
+    { label: "Carreras", to: "/careers" },
+    { label: "Cursos", to: "/courses" },
+    { label: "Rutas de Aprendizaje", to: "/learning-paths" },
+    { label: "Planes", to: "/plans" },
+  ];
 
   const isActive = (to) => pathname === to;
 
@@ -112,14 +87,7 @@ const Navbar = () => {
 
       {/* Links Desktop */}
       <NavbarContent className="hidden lg:flex gap-6" justify="center">
-        {[
-          { label: "Home", to: "/" },
-          { label: "Universidades", to: "/universities" },
-          { label: "Carreras", to: "/careers" },
-          { label: "Cursos", to: "/courses" },
-          { label: "Rutas de Aprendizaje", to: "/learning-paths" },
-          { label: "Planes", to: "/plans" },
-        ].map((link) => (
+        {navLinks.map((link) => (
           <NavbarItem key={link.to} isActive={isActive(link.to)}>
             <Link
               href={link.to}
@@ -139,9 +107,39 @@ const Navbar = () => {
         ))}
       </NavbarContent>
 
-      {/* Acciones Desktop */}
+      {/* Actions Desktop */}
       <NavbarContent justify="end" className="hidden lg:flex gap-4">
-        {renderLinks()}
+        {getToken() ? (
+          <>
+            <NavbarItem>
+              <Link
+                href="#"
+                onPress={handleDashboardRedirect}
+                className="text-sm md:text-base text-[#181818]/80 hover:text-[#181818] transition-colors"
+              >
+                Bienvenid@ | <span className="font-medium">{(user ?? getUser())?.name ?? "Usuario"}</span>
+              </Link>
+            </NavbarItem>
+            <NavbarItem>
+              <Link
+                href="#"
+                onPress={logoutUser}
+                className="inline-flex items-center rounded-xl border border-black/10 px-3 py-2 text-sm md:text-base text-[#181818]/80 hover:text-[#181818] hover:bg-black/5 transition-colors"
+              >
+                Logout
+              </Link>
+            </NavbarItem>
+          </>
+        ) : (
+          <NavbarItem>
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#2CBFF0] px-4 py-2 text-sm md:text-base font-medium text-[#181818] shadow-sm hover:opacity-90 active:opacity-80 transition"
+            >
+              Login
+            </Link>
+          </NavbarItem>
+        )}
       </NavbarContent>
 
       {/* Toggle Mobile */}
@@ -152,16 +150,9 @@ const Navbar = () => {
         />
       </NavbarContent>
 
-      {/* Menú Mobile */}
+      {/* Mobile Menu */}
       <NavbarMenu className="pt-2">
-        {[
-          { label: "Home", to: "/" },
-          { label: "Universidades", to: "/universities" },
-          { label: "Carreras", to: "/careers" },
-          { label: "Cursos", to: "/courses" },
-          { label: "Rutas de Aprendizaje", to: "/learning-paths" },
-          { label: "Planes", to: "/plans" },
-        ].map((link) => (
+        {navLinks.map((link) => (
           <NavbarMenuItem key={link.to} isActive={isActive(link.to)}>
             <Link
               href={link.to}
@@ -176,17 +167,17 @@ const Navbar = () => {
           </NavbarMenuItem>
         ))}
 
-        {/* Acciones Mobile */}
+        {/* Mobile Actions */}
         <div className="mt-3 border-t border-black/5 pt-3">
           {getToken() ? (
             <>
               <NavbarMenuItem>
                 <Link
-                  href={`/${getRol()}`}
+                  href="#"
+                  onPress={handleDashboardRedirect}
                   className="block rounded-lg px-2 py-2 text-[#181818] hover:bg-black/5"
                 >
-                  Administración <span className="mx-1">|</span>{" "}
-                  {(user ?? getUser())?.name ?? "Usuario"}
+                  Administración | {(user ?? getUser())?.name ?? "Usuario"}
                 </Link>
               </NavbarMenuItem>
               <NavbarMenuItem>
