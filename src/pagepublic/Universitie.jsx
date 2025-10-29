@@ -20,6 +20,8 @@ import {
   BookmarkIcon,
   ClockIcon,
 } from "@heroicons/react/24/outline";
+import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
+import { StarIcon as StarOutline } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import Config from "../Config";
 
@@ -29,23 +31,25 @@ import Config from "../Config";
 const logoImgSrc = (val) => {
   if (!val) return "";
   const v = String(val).trim();
+
+  // Si es base64 o URL absoluta, usarla tal cual
   if (v.startsWith("data:image")) return v;
   if (/^https?:\/\//i.test(v)) return v;
 
-  const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
-  const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
-  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "").trim();
-  const backendOrigin = (fromAxios || fromEnv || "").replace(/\/$/, "");
-  return backendOrigin
-    ? `${backendOrigin}/img/universidades/${v}`
-    : `/img/universidades/${v}`;
+  // Obtener el origen del backend
+  const backendUrl =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+  const origin = backendUrl.replace(/\/$/, ""); // Quitar "/" final si existe
+
+  // Construir la URL completa
+  return `${origin}/img/universidades/${v}`;
 };
 
 const Universitie = () => {
   const { slug } = useParams(); // viene de /universities/:slug
   const navigate = useNavigate();
 
-  const [detail, setDetail] = React.useState(null); // { university, careers, courses }
+  const [detail, setDetail] = React.useState(null); // { universities, careers, courses }
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
 
@@ -72,6 +76,44 @@ const Universitie = () => {
   }, [slug]);
 
   const u = detail?.university;
+
+  // === Favoritos (agregado sin alterar tu estructura) ===
+  const [isFav, setIsFav] = React.useState(false);
+  const uniId = u?.id != null ? Number(u.id) : null;
+
+  React.useEffect(() => {
+    let active = true;
+    if (!uniId) return;
+    (async () => {
+      try {
+        const res = await Config.getFavorites?.("university");
+        const data = Array.isArray(res?.data) ? res.data : [];
+        const ids = new Set(
+          data.map((x) => Number(x?.item?.id)).filter(Number.isFinite)
+        );
+        if (active) setIsFav(ids.has(uniId));
+      } catch (e) {
+        console.debug("No se pudo leer favoritos:", e?.message ?? e);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [uniId]);
+
+  const toggleFav = async () => {
+    if (!uniId) return;
+    try {
+      await Config.toggleFavorite?.({
+        favoritable_type: "university",
+        favoritable_id: uniId,
+      });
+      setIsFav((v) => !v);
+    } catch (e) {
+      console.error("Error al alternar favorito:", e?.message ?? e);
+    }
+  };
+  // === /Favoritos ===
 
   // Variantes para animaciones (solo UI)
   const containerVariants = {
@@ -169,25 +211,42 @@ const Universitie = () => {
                   <p className="text-default-700 mb-4">{u.description}</p>
                 )}
 
-                {u.website && (
-                  <a
-                    href={
-                      u.website.startsWith("http")
-                        ? u.website
-                        : `https://${u.website}`
-                    }
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <Button
-                      variant="light"
-                      startContent={<LinkIcon className="w-4" />}
-                      className="text-[#2CBFF0]"
+                {/* Acciones: Sitio oficial + Favorito */}
+                <div className="flex items-center gap-2">
+                  {u.website && (
+                    <a
+                      href={
+                        u.website.startsWith("http")
+                          ? u.website
+                          : `https://${u.website}`
+                      }
+                      target="_blank"
+                      rel="noreferrer"
                     >
-                      Sitio oficial
-                    </Button>
-                  </a>
-                )}
+                      <Button
+                        variant="light"
+                        startContent={<LinkIcon className="w-4" />}
+                        className="text-[#2CBFF0]"
+                      >
+                        Sitio oficial
+                      </Button>
+                    </a>
+                  )}
+
+                  <Button
+                    variant="light"
+                    onPress={toggleFav}
+                    startContent={
+                      isFav ? (
+                        <StarSolid className="w-4 text-yellow-500" />
+                      ) : (
+                        <StarOutline className="w-4" />
+                      )
+                    }
+                  >
+                    {isFav ? "En favoritos" : "Guardar"}
+                  </Button>
+                </div>
               </div>
             </div>
 
