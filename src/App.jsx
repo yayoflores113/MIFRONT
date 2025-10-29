@@ -65,11 +65,13 @@ const App = () => {
   return (
     <Router>
       <Routes>
+        {/* RUTAS PÚBLICAS */}
         <Route path="/" element={<LayoutPublic />}>
           <Route index element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          
           {/* Catálogos */}
           <Route path="/universities" element={<Universities />} />
           <Route path="/universities/:slug" element={<Universitie />} />
@@ -80,6 +82,7 @@ const App = () => {
           <Route path="/learning-paths" element={<LearningPaths />} />
           <Route path="/learning-paths/:slug" element={<LearningPathDetail />} />
           <Route path="/plans" element={<Plan />} />
+          
           {/* Tests */}
           <Route path="/tests" element={<Test />} />
           <Route path="/tests/:slug" element={<TestRunner />} />
@@ -87,15 +90,16 @@ const App = () => {
           <Route path="/recommendations" element={<Recommendations />} />
           <Route path="/question" element={<TestQuestion />} />
           <Route path="/openchat" element={<OpenRouterChat />} />
+          
           {/* Metabase */}
           <Route path="/meta" element={<MetaBase />} />
           <Route path="/metadashboard" element={<MetaBaseDashboard />} />
-          {/* 404 not found */}
-          <Route path="/*" element={<NotFound />} />
         </Route>
 
+        {/* RUTAS PROTEGIDAS */}
         <Route element={<ProtectedRoutes />} />
 
+        {/* RUTAS DE ADMINISTRADOR */}
         <Route path="/admin" element={<LayoutAdmin />}>
           <Route index element={<Dashboard />} />
           <Route path="users" element={<UserAll />} />
@@ -117,10 +121,14 @@ const App = () => {
           <Route path="subscriptions/:id/edit" element={<SubscriptionsUpdate />} />
         </Route>
 
+        {/* RUTAS DE USUARIO/CLIENTE */}
         <Route path="/user" element={<LayoutClient />}>
           <Route index element={<PagePerfil />} />
           <Route path="profile" element={<PagePerfil />} />
         </Route>
+
+        {/* RUTA 404 - DEBE ESTAR AL FINAL */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
