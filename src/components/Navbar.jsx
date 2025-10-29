@@ -1,70 +1,72 @@
 import React from "react";
-import { Navbar, NavbarBrand, NavbarContent, NavbarItem, Link as UILink } from "@heroui/react";
-import { Link as RouterLink, useLocation } from "react-router-dom";
+import {
+  Navbar,
+  NavbarBrand,
+  NavbarContent,
+  NavbarItem,
+  Button,
+  Link as HeroLink,
+} from "@heroui/react";
+import { Link, useLocation } from "react-router-dom";
 
-const NavbarComponent = () => {
-  const { pathname } = useLocation();
+const AppNavbar = () => {
+  const location = useLocation();
+
+  const isActive = (path) =>
+    location.pathname === path
+      ? "text-[#2CBFF0] font-semibold"
+      : "text-default-600 hover:text-[#2CBFF0] transition-colors";
 
   return (
-    <Navbar isBordered variant="floating">
+    <Navbar
+      shouldHideOnScroll
+      className="bg-white/90 backdrop-blur-md shadow-sm fixed top-0 left-0 w-full z-50"
+    >
       <NavbarBrand>
-        <UILink as={RouterLink} to="/" className="font-bold text-xl text-white">
-          MI
-        </UILink>
+        <Link to="/" className="flex items-center gap-2">
+          <img src="/MI.png" alt="Logo" className="w-8 h-8" />
+          <p className="font-bold text-xl text-[#2CBFF0]">MI</p>
+        </Link>
       </NavbarBrand>
 
-      <NavbarContent justify="center">
-        <NavbarItem isActive={pathname === "/"}>
-          <UILink as={RouterLink} to="/">
+      <NavbarContent className="hidden sm:flex gap-6" justify="center">
+        <NavbarItem>
+          <Link to="/" className={isActive("/")}>
             Inicio
-          </UILink>
+          </Link>
         </NavbarItem>
-
-        <NavbarItem isActive={pathname.startsWith("/universities")}>
-          <UILink as={RouterLink} to="/universities">
-            Universidades
-          </UILink>
+        <NavbarItem>
+          <Link to="/learning-paths" className={isActive("/learning-paths")}>
+            Rutas
+          </Link>
         </NavbarItem>
-
-        <NavbarItem isActive={pathname.startsWith("/careers")}>
-          <UILink as={RouterLink} to="/careers">
-            Carreras
-          </UILink>
-        </NavbarItem>
-
-        <NavbarItem isActive={pathname.startsWith("/courses")}>
-          <UILink as={RouterLink} to="/courses">
+        <NavbarItem>
+          <Link to="/courses" className={isActive("/courses")}>
             Cursos
-          </UILink>
+          </Link>
         </NavbarItem>
-
-        <NavbarItem isActive={pathname.startsWith("/learning-paths")}>
-          <UILink as={RouterLink} to="/learning-paths">
-            Rutas de Aprendizaje
-          </UILink>
-        </NavbarItem>
-
-        <NavbarItem isActive={pathname.startsWith("/plans")}>
-          <UILink as={RouterLink} to="/plans">
-            Planes
-          </UILink>
+        <NavbarItem>
+          <Link to="/tests" className={isActive("/tests")}>
+            Test
+          </Link>
         </NavbarItem>
       </NavbarContent>
 
       <NavbarContent justify="end">
         <NavbarItem>
-          <UILink as={RouterLink} to="/login" color="primary">
+          <Button
+            as={Link}
+            to="/login"
+            color="primary"
+            variant="flat"
+            className="bg-[#2CBFF0]/10 text-[#2CBFF0]"
+          >
             Iniciar sesión
-          </UILink>
-        </NavbarItem>
-        <NavbarItem>
-          <UILink as={RouterLink} to="/register" color="success">
-            Registrarse
-          </UILink>
+          </Button>
         </NavbarItem>
       </NavbarContent>
     </Navbar>
   );
 };
 
-export default NavbarComponent;
+export default AppNavbar;
