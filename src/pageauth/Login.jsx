@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import AuthUser from "./AuthUser";
-import { useNavigate, Link, useLocation } from "react-router-dom"; // <-- añadido useLocation
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import Config from "../Config";
 import { Form, Input, Button, Image, Alert, Divider } from "@heroui/react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
@@ -13,15 +13,18 @@ const Login = () => {
   const [showPwd, setShowPwd] = useState(false);
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
-  const [status, setStatus] = useState(null); // 'success' | 'danger' | null
+  const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-  const location = useLocation(); // <-- para leer state.next
+  const location = useLocation();
   const nextPath = location.state?.next || "/";
 
   useEffect(() => {
-    if (getToken()) navigate(nextPath); // <-- respeta retorno si ya hay sesión
+    if (getToken()) {
+      // Si ya hay token, redirige
+      navigate(nextPath, { replace: true });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -31,15 +34,46 @@ const Login = () => {
     setLoading(true);
 
     try {
+
+      // ⚡ Obtener CSRF cookie (si usas Sanctum)
+      await axios.get("/sanctum/csrf-cookie");
+
+      // Login en backend
+
       // 1. Obtener cookie CSRF
       await ensureSanctum();
 
       // 2. Hacer login
+
       const resp = await Config.getLogin({ email, password });
       const res = resp?.data || {};
 
       if (res.success) {
         setStatus("success");
+
+        setMessage(res.message || "Logueado correctamente");
+
+        setTimeout(() => {
+          const user = res.user;
+          const token = res.token;
+          const rol = user?.roles?.[0]?.name || "user";
+
+          // 🔥 Guardar usuario + token + rol
+          setToken(user, token, rol);
+
+          // ⚡ Configurar axios con token para futuras peticiones
+          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+          console.log("=== LOGIN EXITOSO ===");
+          console.log("Usuario:", user);
+          console.log("Token:", token);
+          console.log("Rol:", rol);
+          console.log("=====================");
+
+          // Redirigir
+          navigate(nextPath, { replace: true });
+        }, 300);
+
         setMessage(res.message || "Logueado");
 
         setTimeout(() => {
@@ -56,11 +90,13 @@ const Login = () => {
             navigate(nextPath, { replace: true });
           }
         }, 600);
+
       } else {
         setStatus("danger");
         setMessage(res.message || "Correo o contraseña incorrectos");
       }
     } catch (err) {
+      console.error("Error login:", err);
       setStatus("danger");
       setMessage("Ocurrió un error al iniciar sesión.");
       console.error("Error en login:", err);
@@ -82,12 +118,10 @@ const Login = () => {
         <div className="absolute -bottom-28 -right-24 h-96 w-96 rounded-full bg-[#181818] opacity-[0.06] blur-3xl" />
       </div>
 
-      {/* Layout 2 columnas */}
       <div className="grid grid-cols-1 md:grid-cols-2 min-h-screen">
-        {/* IZQUIERDA: formulario (centrado) */}
+        {/* Formulario */}
         <section className="flex items-center justify-center px-6 md:px-12 py-10">
           <div className="w-full max-w-sm">
-            {/* Encabezado */}
             <div>
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-[#2CBFF0]" />
@@ -103,14 +137,12 @@ const Login = () => {
               </p>
             </div>
 
-            {/* Form (HeroUI) */}
             <Form
               className="mt-8 flex flex-col gap-5"
               validationBehavior="aria"
               autoComplete="on"
               onSubmit={submitLogin}
             >
-              {/* Mensaje contextual */}
               {message && (
                 <Alert
                   color={status === "success" ? "success" : "danger"}
@@ -158,9 +190,7 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={() => setShowPwd((v) => !v)}
-                    aria-label={
-                      showPwd ? "Ocultar contraseña" : "Mostrar contraseña"
-                    }
+                    aria-label={showPwd ? "Ocultar contraseña" : "Mostrar contraseña"}
                     className="focus:outline-none"
                   >
                     {showPwd ? (
@@ -184,7 +214,6 @@ const Login = () => {
 
               <Divider className="my-1" />
 
-              {/* Botón Google */}
               <Button
                 as="a"
                 href={GOOGLE_REDIRECT}
@@ -205,7 +234,6 @@ const Login = () => {
                 </span>
               </Button>
 
-              {/* Botón Microsoft */}
               <Button
                 as="a"
                 href={MICROSOFT_REDIRECT}
@@ -242,13 +270,11 @@ const Login = () => {
           </div>
         </section>
 
-        {/* DERECHA: imagen/hero */}
         <aside className="relative hidden md:block overflow-hidden">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#181818] via-[#252526]/70 to-[#181818]" />
           <div className="pointer-events-none absolute -top-10 -left-10 h-56 w-56 rounded-full bg-white/15 blur-2xl" />
           <div className="pointer-events-none absolute bottom-12 left-10 h-40 w-40 rounded-full bg-white/10 blur-xl" />
           <div className="pointer-events-none absolute -bottom-10 -right-10 h-72 w-72 rounded-full bg-[#FEFEFE]/10 blur-2xl" />
-
           <div className="absolute inset-0 z-10 flex items-end justify-start p-0">
             <div className="w-full flex items-end justify-start p-0 m-0">
               <Image
