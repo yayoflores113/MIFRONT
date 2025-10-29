@@ -1,4 +1,4 @@
-// CursosStore.jsx — mismo diseño que Users/Universidades/Carreras, sin cambiar tu lógica
+ // CursosStore.jsx — mismo diseño que Users/Universidades/Carreras, sin cambiar tu lógica
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";

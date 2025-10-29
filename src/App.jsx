@@ -1,6 +1,8 @@
 import React from "react";
 
 // LAYOUTS
+import NotificationCenter from "./components/NotificationCenter"; // Ajusta la ruta según tu proyecto
+
 import LayoutPublic from "./layouts/LayoutPublic";
 import LayoutAdmin from "./layouts/LayoutAdmin";
 import LayoutClient from "./layouts/LayoutClient"; //LAYOUT user realmente
@@ -58,9 +60,11 @@ import SubscriptionsStore from "./PageAdmin/SubscriptionsStore";
 import SubscriptionsUpdate from "./PageAdmin/SubscriptionsUpdate";
 
 const App = () => {
+  
   return (
     <Router>
       <Routes>
+
         <Route path="/" element={<LayoutPublic />}>
           <Route index element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -120,7 +124,11 @@ const App = () => {
         </Route>
       </Routes>
     </Router>
+    
   );
+  
+  
 };
+
 
 export default App;

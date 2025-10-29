@@ -29,36 +29,28 @@ import TestResults from "./TestResults";
 import OpenRouterChat from "./OpenRouterChat";
 
 const Test = () => {
-  // Cambia esto si tu test activo tiene otro id
   const TEST_ID = 2;
 
   const navigate = useNavigate();
-
   const [loading, setLoading] = React.useState(true);
   const [currentStep, setCurrentStep] = React.useState(1);
   const [answers, setAnswers] = React.useState({});
   const [questions, setQuestions] = React.useState([]);
   const [recommendedCareers, setRecommendedCareers] = React.useState([]);
   const [recommendedCourses, setRecommendedCourses] = React.useState([]);
-  const [recommendedUniversities, setRecommendedUniversities] = React.useState(
-    []
-  );
+  const [recommendedUniversities, setRecommendedUniversities] = React.useState([]);
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-  // Normaliza preguntas de la API al formato del UI
   const normalizeQuestions = (raw) =>
     (raw || [])
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       .map((q) => ({
         id: q.id,
-        question: q.text, // el UI espera 'question'
-        options: (q.answer_options || []).sort(
-          (a, b) => (a.order ?? 0) - (b.order ?? 0)
-        ), // el UI espera 'options'
+        question: q.text,
+        options: (q.answer_options || []).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
       }));
 
-  // Cargar las preguntas de la db al montar el componente
   React.useEffect(() => {
     let cancelled = false;
 
@@ -95,12 +87,10 @@ const Test = () => {
 
   const handleOptionSelect = (questionId, option) => {
     setAnswers((prev) => ({ ...prev, [questionId]: option }));
-    // Si luego quieres persistir cada respuesta:
-    // Config.answerAttempt(attemptId, { question_id: questionId, answer_option_id: Number(option.id) })
   };
 
-  // carbar a datos reales (mock de resultados + modal)
-  const calculateResults = () => {
+  const calculateResults = async () => {
+    // Mock de resultados
     const mockCareers = [
       "Ingeniería en Software (UADY)",
       "Diseño Digital (Modelo)",
@@ -111,6 +101,15 @@ const Test = () => {
     setRecommendedCareers(mockCareers);
     setRecommendedCourses([]);
     setRecommendedUniversities([]);
+
+    // 🔹 Registrar notificación al superusuario (solo refleja)
+    try {
+      await Config.post("/notificaciones/test-completado", {});
+      console.log("Notificación registrada correctamente.");
+    } catch (err) {
+      console.error("No se pudo registrar la notificación:", err);
+    }
+
     onOpen();
   };
 
@@ -120,7 +119,6 @@ const Test = () => {
     onOpenChange(false);
   };
 
-  // navegar a /profile
   const navigateToProfile = () => {
     navigate("/user");
   };
@@ -151,11 +149,7 @@ const Test = () => {
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-4xl">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <Card className="overflow-visible shadow-sm">
           <CardBody className="p-6 md:p-8">
             <div className="flex flex-col gap-8">
@@ -171,39 +165,27 @@ const Test = () => {
               <div className="w-full">
                 <div className="flex justify-between text-xs text-slate-500 mb-2">
                   <span>
-                    Pregunta {Math.max(currentStep, questions.length ? 1 : 0)}{" "}
-                    de {questions.length}
+                    Pregunta {Math.max(currentStep, questions.length ? 1 : 0)} de {questions.length}
                   </span>
                   <span>
-                    {questions.length
-                      ? Math.round((currentStep / questions.length) * 100)
-                      : 0}
-                    %
+                    {questions.length ? Math.round((currentStep / questions.length) * 100) : 0}%
                   </span>
                 </div>
                 <Progress
                   aria-label="Progreso del test"
-                  value={
-                    questions.length
-                      ? (currentStep / questions.length) * 100
-                      : 0
-                  }
+                  value={questions.length ? (currentStep / questions.length) * 100 : 0}
                   className="h-1.5"
                   color="primary"
                 />
               </div>
 
               {questions.length === 0 ? (
-                <p className="text-center text-slate-500">
-                  No hay preguntas disponibles.
-                </p>
+                <p className="text-center text-slate-500">No hay preguntas disponibles.</p>
               ) : (
                 <TestQuestion
                   question={currentQuestion}
                   selectedOption={answers[currentQuestion?.id]?.id}
-                  onOptionSelect={(option) =>
-                    handleOptionSelect(currentQuestion.id, option)
-                  }
+                  onOptionSelect={(option) => handleOptionSelect(currentQuestion.id, option)}
                 />
               )}
 
@@ -221,9 +203,7 @@ const Test = () => {
                 <Button
                   color="primary"
                   className="bg-[#2CBFF0]"
-                  isDisabled={
-                    !questions.length || !answers[currentQuestion?.id]
-                  }
+                  isDisabled={!questions.length || !answers[currentQuestion?.id]}
                   onPress={() => {
                     if (currentStep < questions.length) {
                       setCurrentStep((s) => s + 1);
@@ -231,30 +211,37 @@ const Test = () => {
                       calculateResults();
                     }
                   }}
-                  endContent={
-                    currentStep === questions.length ? (
-                      <CheckIcon className="w-4 h-4" />
-                    ) : (
-                      <ArrowRightIcon className="w-4 h-4" />
-                    )
-                  }
+                  endContent={currentStep === questions.length ? <CheckIcon className="w-4 h-4" /> : <ArrowRightIcon className="w-4 h-4" />}
                 >
-                  {currentStep === questions.length
-                    ? "Ver resultados"
-                    : "Siguiente"}
+                  {currentStep === questions.length ? "Ver resultados" : "Siguiente"}
                 </Button>
               </div>
+
+              {/* 🔹 Botón de prueba para guardar notificación */}
+              {questions.length > 0 && currentStep === questions.length && (
+                <div className="mt-4 flex justify-center gap-4">
+                  <Button
+                    color="secondary"
+                    onPress={async () => {
+                      try {
+                        await Config.post("/notificaciones/test-completado", {});
+                        alert("Notificación registrada en la BD del superusuario.");
+                      } catch (err) {
+                        console.error("Error al guardar notificación:", err);
+                        alert("No se pudo guardar la notificación.");
+                      }
+                    }}
+                  >
+                    Guardar notificación (Prueba)
+                  </Button>
+                </div>
+              )}
             </div>
           </CardBody>
         </Card>
       </motion.div>
 
-      <Modal
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        size="lg"
-        backdrop="blur"
-      >
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="lg" backdrop="blur">
         <ModalContent>
           {(onClose) => (
             <>
@@ -277,23 +264,10 @@ const Test = () => {
                 </div>
               </ModalBody>
               <ModalFooter>
-                <Button
-                  className="bg-[#FEFEFE] shadow-sm border border-slate-200"
-                  onPress={() => {
-                    onClose();
-                    restartTest();
-                  }}
-                >
+                <Button className="bg-[#FEFEFE] shadow-sm border border-slate-200" onPress={() => { onClose(); restartTest(); }}>
                   Realizar test nuevamente
                 </Button>
-                <Button
-                  color="primary"
-                  className="bg-[#2CBFF0]"
-                  onPress={() => {
-                    onClose();
-                    navigateToProfile(); // navega a /profile
-                  }}
-                >
+                <Button color="primary" className="bg-[#2CBFF0]" onPress={() => { onClose(); navigateToProfile(); }}>
                   Visitar perfil
                 </Button>
               </ModalFooter>

@@ -623,7 +623,7 @@ const Courses = () => {
                                   as={Link}
                                   to={`/courses/${c.slug}`}
                                   className="bg-[#2CBFF0] text-white"
-                                >
+                                      >
                                   Ver curso
                                 </Button>
                               </div>

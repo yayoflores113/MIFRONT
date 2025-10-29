@@ -9,43 +9,31 @@ import {
   Spinner,
   Skeleton,
 } from "@heroui/react";
-import {
+import { 
   MapPinIcon,
   ArrowLeftIcon,
   LinkIcon,
-  AcademicCapIcon,
-  BookOpenIcon,
-  TagIcon,
-  ArrowRightIcon,
-  BookmarkIcon,
-  ClockIcon,
+  AcademicCapIcon
 } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import Config from "../Config";
+import axios from "axios";
 
-// === Helper de imagen (mismo criterio que usas en Universities.jsx) ===
-// Acepta base64 o URL absoluta. Si viene nombre de archivo, arma /img/universidades/<archivo>
-// e intenta inferir el origen backend desde axios.baseURL o VITE_BACKEND_URL.
+const BACKEND_URL = "http://localhost:8000";
+
 const logoImgSrc = (val) => {
   if (!val) return "";
   const v = String(val).trim();
   if (v.startsWith("data:image")) return v;
   if (/^https?:\/\//i.test(v)) return v;
-
-  const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
-  const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
-  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "").trim();
-  const backendOrigin = (fromAxios || fromEnv || "").replace(/\/$/, "");
-  return backendOrigin
-    ? `${backendOrigin}/img/universidades/${v}`
-    : `/img/universidades/${v}`;
+  return `${BACKEND_URL}/img/universidades/${v}`;
 };
 
 const Universitie = () => {
-  const { slug } = useParams(); // viene de /universities/:slug
+  const { slug } = useParams();
   const navigate = useNavigate();
 
-  const [detail, setDetail] = React.useState(null); // { university, careers, courses }
+  const [detail, setDetail] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
 
@@ -66,29 +54,62 @@ const Universitie = () => {
         if (active) setLoading(false);
       }
     })();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [slug]);
 
   const u = detail?.university;
 
-  // Variantes para animaciones (solo UI)
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.05 },
-    },
-  };
+  const handleSendNotification = async () => {
+    try {
+      // 1️⃣ Obtener el token del localStorage
+      const token = localStorage.getItem("auth_token");
+      
+      if (!token) {
+        alert("No estás autenticado. Por favor inicia sesión.");
+        navigate("/login");
+        return;
+      }
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
-    },
+      // 2️⃣ Obtener cookie CSRF (solo si usas Sanctum con cookies)
+      await axios.get(`${BACKEND_URL}/sanctum/csrf-cookie`, { 
+        withCredentials: true 
+      });
+
+      // 3️⃣ Enviar notificación con el token en el header
+      const response = await axios.post(
+        `${BACKEND_URL}/api/notificaciones/send`,
+        { 
+          mensaje: `${u?.name || "Una universidad"} fue visitada.` 
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          withCredentials: true
+        }
+      );
+
+      console.log("Notificación enviada:", response.data);
+
+      // 🔹 En vez de alerta, abrir el link en una nueva pestaña
+      window.open("https://www.utmerida.edu.mx/", "_blank");
+      
+    } catch (error) {
+      console.error("Error enviando notificación:", error);
+      
+      // Manejo de errores específicos
+      if (error.response?.status === 401) {
+        alert("Sesión expirada. Por favor inicia sesión nuevamente.");
+        localStorage.removeItem("auth_token");
+        navigate("/login");
+      } else if (error.response?.status === 422) {
+        alert("Datos inválidos. Verifica el mensaje.");
+      } else {
+        alert("Error al enviar la notificación. Intenta nuevamente.");
+      }
+    }
   };
 
   return (
@@ -107,7 +128,6 @@ const Universitie = () => {
           </Link>
         </div>
 
-        {/* Loading / Error */}
         {loading && (
           <div className="space-y-4">
             <Skeleton className="h-8 w-1/3 rounded-lg" />
@@ -120,7 +140,6 @@ const Universitie = () => {
 
         {!loading && !error && u && (
           <>
-            {/* Hero */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
               <div className="lg:col-span-1">
                 <div className="relative h-44 bg-default-100 rounded-2xl overflow-hidden flex items-center justify-center">
@@ -132,8 +151,7 @@ const Universitie = () => {
                       radius="none"
                       shadow="none"
                       classNames={{
-                        wrapper:
-                          "w-full h-full flex items-center justify-center",
+                        wrapper: "w-full h-full flex items-center justify-center",
                         img: "max-h-full max-w-full object-contain p-6",
                       }}
                     />
@@ -147,9 +165,7 @@ const Universitie = () => {
               </div>
 
               <div className="lg:col-span-2">
-                <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                  {u.name}
-                </h1>
+                <h1 className="text-3xl md:text-4xl font-bold mb-2">{u.name}</h1>
                 {u.acronym && (
                   <Chip size="sm" className="bg-[#2CBFF0] text-white mb-3">
                     {u.acronym}
@@ -165,218 +181,23 @@ const Universitie = () => {
                   </span>
                 </div>
 
-                {u.description && (
-                  <p className="text-default-700 mb-4">{u.description}</p>
-                )}
+                {u.description && <p className="text-default-700 mb-4">{u.description}</p>}
 
                 {u.website && (
-                  <a
-                    href={
-                      u.website.startsWith("http")
-                        ? u.website
-                        : `https://${u.website}`
-                    }
-                    target="_blank"
-                    rel="noreferrer"
+                  <Button
+                    variant="light"
+                    startContent={<LinkIcon className="w-4" />}
+                    className="text-[#2CBFF0]"
+                    onPress={handleSendNotification}
                   >
-                    <Button
-                      variant="light"
-                      startContent={<LinkIcon className="w-4" />}
-                      className="text-[#2CBFF0]"
-                    >
-                      Sitio oficial
-                    </Button>
-                  </a>
+                    Sitio oficial
+                  </Button>
                 )}
               </div>
             </div>
-
-            {/* Carreras */}
-            {Array.isArray(detail.careers) && detail.careers.length > 0 && (
-              <div className="mb-10">
-                {/* Header estilo nuevo */}
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-2xl font-semibold">Carreras</h2>
-                    <Chip size="sm" variant="flat" className="bg-gray-100">
-                      {detail.careers.length}
-                    </Chip>
-                  </div>
-                </div>
-
-                {/* Contenedor animado + card blanca */}
-                <motion.div
-                  className="bg-white rounded-xl shadow-sm p-6"
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {detail.careers.map((c) => (
-                      <motion.div
-                        key={c.id}
-                        variants={itemVariants}
-                        className="flex"
-                      >
-                        {/* Ícono circular */}
-                        <div className="flex-shrink-0 mr-4 mt-1">
-                          <div className="w-10 h-10 rounded-full bg-[#2CBFF0]/10 flex items-center justify-center">
-                            <BookOpenIcon className="h-5 w-5 text-[#2CBFF0]" />
-                          </div>
-                        </div>
-
-                        {/* Contenido */}
-                        <div className="flex-grow">
-                          <h3 className="font-semibold text-medium mb-2 line-clamp-1">
-                            {c.name}
-                          </h3>
-
-                          {/* Área */}
-                          {c.area && (
-                            <div className="flex items-center text-default-500 mb-2">
-                              <TagIcon className="h-3.5 w-3.5 mr-1.5" />
-                              <span className="text-sm line-clamp-1">
-                                {c.area}
-                              </span>
-                            </div>
-                          )}
-
-                          {/* Niveles (si existen) / fallback a level */}
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            {Array.isArray(c.levels) && c.levels.length > 0
-                              ? c.levels.map((level, idx) => (
-                                  <Chip
-                                    key={idx}
-                                    size="sm"
-                                    variant="flat"
-                                    className="bg-[#2CBFF0]/10 text-[#2CBFF0] text-xs"
-                                  >
-                                    {level}
-                                  </Chip>
-                                ))
-                              : c.level && (
-                                  <Chip
-                                    size="sm"
-                                    variant="flat"
-                                    className="bg-[#2CBFF0]/10 text-[#2CBFF0] text-xs"
-                                  >
-                                    {c.level}
-                                  </Chip>
-                                )}
-                          </div>
-
-                          {/* Botón -> mantiene tu Link y ruta */}
-                          <Link to={`/careers/${c.slug}`}>
-                            <Button
-                              size="sm"
-                              variant="flat"
-                              color="primary"
-                              className="px-3"
-                              endContent={
-                                <ArrowRightIcon className="h-3.5 w-3.5" />
-                              }
-                            >
-                              Ver detalle
-                            </Button>
-                          </Link>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              </div>
-            )}
-
-            {/* Cursos destacados */}
-            {Array.isArray(detail.courses) && detail.courses.length > 0 && (
-              <div className="mb-6">
-                {/* Header con conteo */}
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-2xl font-semibold">Cursos</h2>
-                    <Chip size="sm" variant="flat" className="bg-gray-100">
-                      {detail.courses.length}
-                    </Chip>
-                  </div>
-                </div>
-
-                {/* Contenedor animado + card blanca */}
-                <motion.div
-                  className="bg-white rounded-xl shadow-sm p-6"
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {detail.courses.map((course) => (
-                      <motion.div key={course.id} variants={itemVariants}>
-                        {/* Mantengo tu Card isPressable + onPress con navigate */}
-                        <Card
-                          isPressable
-                          onPress={() => navigate(`/courses/${course.slug}`)}
-                          className="border border-default-200 hover:shadow-md transition-all group cursor-pointer"
-                        >
-                          <CardBody className="p-4">
-                            <div className="flex">
-                              {/* Ícono circular */}
-                              <div className="flex-shrink-0 mr-4 mt-1">
-                                <div className="w-10 h-10 rounded-full bg-[#2CBFF0]/10 flex items-center justify-center group-hover:bg-[#2CBFF0]/20 transition-all duration-200">
-                                  <BookOpenIcon className="h-5 w-5 text-[#2CBFF0]" />
-                                </div>
-                              </div>
-
-                              {/* Contenido */}
-                              <div className="flex-grow">
-                                <h3 className="font-semibold text-medium mb-2 group-hover:text-[#2CBFF0] transition-colors duration-200 line-clamp-1">
-                                  {course.title}
-                                </h3>
-
-                                {/* Provider */}
-                                <div className="flex items-center text-default-500 mb-2">
-                                  <BookmarkIcon className="h-3.5 w-3.5 mr-1.5" />
-                                  <span className="text-sm">
-                                    {course.provider || "Curso propio"}
-                                  </span>
-                                </div>
-
-                                {/* Duración (si existe) */}
-                                {course.duration && (
-                                  <div className="flex items-center text-default-500 mb-3">
-                                    <ClockIcon className="h-3.5 w-3.5 mr-1.5" />
-                                    <span className="text-sm">
-                                      {course.duration}
-                                    </span>
-                                  </div>
-                                )}
-
-                                {/* Tags (si existen) */}
-                                <div className="flex flex-wrap gap-2">
-                                  {Array.isArray(course.tags) &&
-                                    course.tags.map((tag, idx) => (
-                                      <Chip
-                                        key={idx}
-                                        size="sm"
-                                        variant="flat"
-                                        className="bg-gray-100 text-xs"
-                                      >
-                                        {tag}
-                                      </Chip>
-                                    ))}
-                                </div>
-                              </div>
-                            </div>
-                          </CardBody>
-                        </Card>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              </div>
-            )}
           </>
         )}
 
-        {/* Cargando inicial mínimo */}
         {loading && !detail && (
           <div className="flex items-center gap-2 text-default-500 mt-6">
             <Spinner size="sm" /> Cargando…
