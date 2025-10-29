@@ -36,7 +36,6 @@ const PAGE_SIZE = 9;
 const uniq = (arr) => Array.from(new Set(arr.filter(Boolean)));
 const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
 
-
 // Helper para obtener el origen de la API
 const apiOrigin = () => {
   const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
@@ -44,17 +43,6 @@ const apiOrigin = () => {
   const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "").trim();
   return fromAxios || fromEnv || "";
 };
-
-// helper de: (carpeta /img/cursos)
-const courseImgSrc = (val) => {
-  if (!val) return "";
-  if (val.startsWith("data:image")) return val;
-  if (/^https?:\/\//i.test(val)) return val;
-
-  const backendOrigin = apiOrigin();
-  return backendOrigin
-    ? `${backendOrigin.replace(/\/$/, "")}/img/cursos/${val}`
-    : `/img/cursos/${val}`;
 
 // helper de: (carpeta /img/cursos)
 const courseImgSrc = (val) => {
@@ -72,7 +60,6 @@ const courseImgSrc = (val) => {
 
   // Construir la URL completa
   return `${origin}/img/cursos/${v}`;
-
 };
 
 const centsToCurrency = (cents, locale = "es-MX", currency = "MXN") =>
