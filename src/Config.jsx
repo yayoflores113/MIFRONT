@@ -1,18 +1,16 @@
 // config/api.js
 import axios from "./lib/axios";
 
-// =====================
 // URLs base
-// =====================
-const BASE_API_URL = "https://miback-1333.onrender.com/api/v1"; // API
-const BASE_AUTH_URL = "https://miback-1333.onrender.com"; // Para CSRF/Login
+const BASE_API_URL = "https://miback-1333.onrender.com/api/v1"; // Para rutas de API
+const BASE_AUTH_URL = "https://miback-1333.onrender.com"; // Para Sanctum CSRF/login
 
 // =====================
-// Axios instance
+// Axios para API
 // =====================
 const api = axios.create({
   baseURL: BASE_API_URL,
-  withCredentials: true,
+  withCredentials: true, // necesario para enviar cookies
 });
 
 // =====================
@@ -22,7 +20,8 @@ const Auth = {
   getCsrfCookie: () => axios.get(`${BASE_AUTH_URL}/sanctum/csrf-cookie`, { withCredentials: true }),
   register: (data) => api.post("/auth/register", data),
   login: async (data) => {
-    await Auth.getCsrfCookie(); // Obtener CSRF cookie
+    // Primero obtener la cookie CSRF
+    await Auth.getCsrfCookie();
     return api.post("/auth/login", data);
   },
   logout: () => api.post("/auth/logout"),
@@ -95,83 +94,26 @@ const AdminSubscriptions = {
 };
 
 // =====================
-// Public Universities
+// Public Routes
 // =====================
 const PublicUniversities = {
   getAll: (quantity) => api.get(`/public/universities/${quantity}`),
   getBySlug: (slug) => api.get(`/public/universities/${slug}`),
 };
 
-// =====================
-// Public Careers
-// =====================
 const PublicCareers = {
   getAll: (quantity) => api.get(`/public/careers/${quantity}`),
   getBySlug: (slug) => api.get(`/public/careers/${slug}`),
 };
 
-// =====================
-// Public Courses
-// =====================
 const PublicCourses = {
   getAll: (quantity = 120, params = {}) => api.get("/public/courses", { params: { quantity, ...params } }),
   getBySlug: (slug) => api.get(`/public/courses/${slug}`),
 };
 
-// =====================
-// Public Plans
-// =====================
 const PublicPlans = {
   getAll: (quantity = 4, params = {}) => api.get("/public/plans", { params: { quantity, ...params } }),
   getBySlug: (slug) => api.get(`/public/plans/${slug}`),
-};
-
-// =====================
-// Public Tests
-// =====================
-const PublicTests = {
-  getActive: () => api.get("/public/tests/active"),
-  getAll: () => api.get("/public/tests"),
-  getById: (id) => api.get(`/public/tests/${id}`),
-  getQuestions: (params = {}) => api.get("/public/questions", { params }),
-  getAnswerOptions: (params = {}) => api.get("/public/answer-options", { params }),
-};
-
-// =====================
-// Test Attempts
-// =====================
-const TestAttempts = {
-  create: (data) => api.post("/user/test-attempts", data),
-  getMy: () => api.get("/user/test-attempts"),
-  getById: (id) => api.get(`/user/test-attempts/${id}`),
-  answer: (id, data) => api.post(`/user/test-attempts/${id}/answer`, data),
-  finish: (id) => api.post(`/user/test-attempts/${id}/finish`),
-  getRecommendations: (id) => api.get(`/user/test-attempts/${id}/recommendations`),
-};
-
-// =====================
-// Favorites
-// =====================
-const Favorites = {
-  getAll: (params = {}) => api.get("/favorites", { params }),
-  toggle: (payload) => api.post("/favorites", payload),
-};
-
-// =====================
-// Daily Exercises
-// =====================
-const DailyExercises = {
-  getToday: () => api.get("/user/daily-exercise/today"),
-  submitAnswer: (data) => api.post("/user/daily-exercise/submit", data),
-  getHistory: (params = {}) => api.get("/user/daily-exercise/history", { params }),
-  getStreak: () => api.get("/user/streak"),
-
-  // Admin
-  getAll: (params = {}) => api.get("/admin/daily-exercises", { params }),
-  create: (data) => api.post("/admin/daily-exercises", data),
-  getById: (id) => api.get(`/admin/daily-exercises/${id}`),
-  update: (id, data) => api.put(`/admin/daily-exercises/${id}`, data),
-  delete: (id) => api.delete(`/admin/daily-exercises/${id}`),
 };
 
 // =====================
@@ -189,29 +131,4 @@ export default {
   PublicCareers,
   PublicCourses,
   PublicPlans,
-  PublicTests,
-  TestAttempts,
-  Favorites,
-  DailyExercises,
-};
-
-// =====================
-// Named exports
-// =====================
-export {
-  Auth,
-  AdminUsers,
-  AdminUniversities,
-  AdminCareers,
-  AdminCourses,
-  AdminPlans,
-  AdminSubscriptions,
-  PublicUniversities,
-  PublicCareers,
-  PublicCourses,
-  PublicPlans,
-  PublicTests,
-  TestAttempts,
-  Favorites,
-  DailyExercises,
 };
