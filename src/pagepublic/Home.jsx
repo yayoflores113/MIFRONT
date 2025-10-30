@@ -1,5 +1,6 @@
-import React, { useMemo, useCallback, useState } from "react";
-import { Button, Card, CardBody, Avatar } from "@heroui/react";
+import React, { useMemo, useCallback, useState, useEffect } from "react";
+import { Button, Card, CardBody, Avatar, useDisclosure } from "@heroui/react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   CodeBracketIcon,
   ChartBarIcon,
@@ -13,9 +14,11 @@ import {
 } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/20/solid";
 import { motion, useReducedMotion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import Config from "../Config";
-/* ----------------------- Datos para categorías (sin cambios) ----------------------- */
+import AuthUser from "../pageauth/AuthUser";
+import DailyExerciseModal from "./DailyExerciseModal";
+
+/* ----------------------- Datos para categorías ----------------------- */
 
 const categories = [
   {
@@ -65,7 +68,26 @@ const categories = [
 const Home = () => {
   const shouldReduceMotion = useReducedMotion();
   const navigate = useNavigate();
-  const [loading, setLoading] = React.useState(false);
+  const { getToken } = AuthUser();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  
+  const [loading, setLoading] = useState(false);
+  const [hasShownModal, setHasShownModal] = useState(false);
+
+  // useEffect para mostrar el modal al cargar
+  useEffect(() => {
+    const checkAndShowExercise = async () => {
+      if (getToken() && !hasShownModal) {
+        // Espera 2 segundos después de cargar la página
+        setTimeout(() => {
+          onOpen();
+          setHasShownModal(true);
+        }, 2000);
+      }
+    };
+
+    checkAndShowExercise();
+  }, [getToken, hasShownModal, onOpen]);
 
   // --- CTA mejorado: sesión -> test activo -> runner/listado; sin sesión -> login ---
   const handleStartTest = useCallback(async () => {
@@ -121,6 +143,9 @@ const Home = () => {
 
   return (
     <>
+      {/* Modal de ejercicio diario */}
+      <DailyExerciseModal isOpen={isOpen} onClose={onClose} />
+
       <style>{`
         @keyframes floatY { 0%{ transform: translateY(0) } 50%{ transform: translateY(-10px) } 100%{ transform: translateY(0) } }
         .animate-float { animation: floatY 6s ease-in-out infinite; }
@@ -219,7 +244,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* --------------------- Sección: Categorías (tu contenido original) --------------------- */}
+      {/* --------------------- Sección: Categorías --------------------- */}
       <section className="w-full bg-default-50 px-4 py-16">
         <div className="mx-auto max-w-7xl">
           <div className="mb-12 text-center">
@@ -270,92 +295,79 @@ const Home = () => {
         </div>
       </section>
 
-      {/* -------------------- Sección: Testimonios (tu contenido original) --------------------- */}
-      <section className="w-full bg-gradient-to-b from-white to-default-50 px-4 py-16">
+      {/* -------------------- Sección: Rutas de Aprendizaje (NUEVA) --------------------- */}
+      <section className="w-full bg-gradient-to-br from-blue-50 to-cyan-50 px-4 py-16">
         <div className="mx-auto max-w-7xl">
           <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold">
-              Lo que dicen los estudiantes
-            </h2>
-            <p className="mx-auto max-w-2xl text-default-600">
-              Únase a miles de estudiantes satisfechos que han utilizado "MI"
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <span className="text-4xl">🚀</span>
+              <h2 className="text-3xl font-bold">Rutas de Aprendizaje</h2>
+            </div>
+            <p className="mx-auto max-w-2xl text-default-600 text-lg">
+              Sigue un camino estructurado con cursos gratuitos y premium para alcanzar tus objetivos profesionales
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="flex justify-center gap-4">
+            <Button
+              as={Link}
+              to="/learning-paths"
+              size="lg"
+              className="bg-[#2CBFF0] text-white px-8"
+              endContent={
+                <ArrowRightIcon className="w-5 h-5" aria-hidden="true" />
+              }
+            >
+              Explorar todas las rutas
+            </Button>
+            
+            <Button
+              as={Link}
+              to="/courses"
+              variant="bordered"
+              size="lg"
+              className="border-[#2CBFF0] text-[#2CBFF0] px-8"
+            >
+              Ver cursos individuales
+            </Button>
+          </div>
+
+          {/* Preview de 3 rutas destacadas */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
             {[
               {
-                id: 1,
-                name: "Marta",
-                role: "El master de los masters",
-                company: "en la UTM",
-                avatar: "https://img.heroui.chat/image/avatar?w=150&h=150&u=1",
-                content:
-                  "Esta pagina me ha dejado sin palabras, la calidad de los cursos es impresionante y los instructores son expertos en sus campos. Gracias a MI, he podido avanzar en mi carrera y adquirir nuevas habilidades que me han abierto muchas puertas. ¡Altamente recomendado!",
+                emoji: "🚀",
+                title: "Landing Page",
+                subtitle: "Para principiantes",
+                courses: "2 cursos • 32h"
               },
               {
-                id: 2,
-                name: "Flor",
-                role: "UX Designer",
-                company: "Googlesss",
-                avatar: "https://img.heroui.chat/image/avatar?w=150&h=150&u=2",
-                content:
-                  "El curso de UX/UI fue justo lo que necesitaba para cambiarme a tech. Los proyectos fueron retadores y el feedback de los instructores fue invaluable. ¡Súper recomendado!",
+                emoji: "💻",
+                title: "Full Stack Dev",
+                subtitle: "Nivel intermedio",
+                courses: "2+ cursos • 80h"
               },
               {
-                id: 3,
-                name: "Raul",
-                role: "Data Scientist",
-                company: "Microsoft",
-                avatar: "https://img.heroui.chat/image/avatar?w=150&h=150&u=3",
-                content:
-                  "He probado muchas plataformas, pero MI destaca por su plan de estudios estructurado y comunidad de apoyo. La ruta de Data Science me preparó para retos reales del día a día.",
-              },
-            ].map((t, index) => (
-              <motion.div
-                key={t.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
-              >
-                <Card className="h-full border border-default-200 shadow-sm">
-                  <CardBody className="p-6">
-                    <div className="mb-4 flex items-center gap-3">
-                      <Avatar src={t.avatar} size="lg" />
-                      <div>
-                        <p className="font-semibold">{t.name}</p>
-                        <p className="text-sm text-default-500">
-                          {t.role} at {t.company}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <ChatBubbleLeftRightIcon
-                        className="h-8 w-8 text-[#2CBFF0] opacity-30"
-                        aria-hidden="true"
-                      />
-                    </div>
-
-                    <p className="italic text-default-700">"{t.content}"</p>
-
-                    <div className="mt-4 flex">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <StarIcon
-                          key={i}
-                          className="h-4 w-4 text-amber-500"
-                          aria-hidden="true"
-                        />
-                      ))}
-                    </div>
-                  </CardBody>
-                </Card>
-              </motion.div>
+                emoji: "🔧",
+                title: "PHP Laravel Master",
+                subtitle: "Nivel avanzado",
+                courses: "Backend completo • 60h"
+              }
+            ].map((preview, idx) => (
+              <Card key={idx} className="border border-default-200 shadow-sm hover:shadow-lg transition-shadow">
+                <CardBody className="text-center p-8">
+                  <div className="text-6xl mb-4">{preview.emoji}</div>
+                  <h3 className="text-xl font-bold mb-2">{preview.title}</h3>
+                  <p className="text-sm text-default-500 mb-3">{preview.subtitle}</p>
+                  <p className="text-xs text-default-400">{preview.courses}</p>
+                </CardBody>
+              </Card>
             ))}
           </div>
         </div>
       </section>
+
+     
     </>
   );
 };

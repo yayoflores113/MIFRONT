@@ -1,5 +1,4 @@
-// src/pagepublic/Universities.jsx
-import React from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardBody,
@@ -23,6 +22,8 @@ import {
   FunnelIcon,
   LinkIcon,
 } from "@heroicons/react/24/outline";
+import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
+import { StarIcon as StarOutline } from "@heroicons/react/24/outline";
 import { AcademicCapIcon, StarIcon } from "@heroicons/react/24/solid";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -34,11 +35,7 @@ const PAGE_SIZE = 9;
 const uniq = (arr) => Array.from(new Set(arr.filter(Boolean)));
 const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
 
-/** ========= helper de imágenes (mismo criterio que usas donde sí carga) =========
- *  - Acepta base64 y URL absoluta tal cual
- *  - Si viene sólo el nombre de archivo, construye `${ORIGEN_BACK}/img/universidades/<archivo>`
- *  - ORIGEN_BACK: intenta sacar del baseURL de axios (quitando /api/...), o de VITE_BACKEND_URL
- */
+/** ========= helper de imágenes ========= */
 const logoImgSrc = (val) => {
   if (!val) return "";
   const v = String(val).trim();
@@ -50,7 +47,7 @@ const logoImgSrc = (val) => {
   // si era .../api/v1, quita el /api/...
   const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
   // variable de entorno como respaldo
-const base_api_url = (import.meta?.env?.VITE_API_BASE_URL || "https://miback-14.onrender.com/api/v1").trim();
+  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "").trim();
   const backendOrigin = fromAxios || fromEnv || "";
 
   const origin = backendOrigin.replace(/\/$/, "");
@@ -59,7 +56,6 @@ const base_api_url = (import.meta?.env?.VITE_API_BASE_URL || "https://miback-14.
     : `/img/universidades/${v}`;
 };
 
-// rafce
 const Universities = () => {
   // Data
   const [universities, setUniversities] = React.useState([]);
@@ -72,10 +68,44 @@ const Universities = () => {
   const [selectedState, setSelectedState] = React.useState(null);
   const [selectedCity, setSelectedCity] = React.useState(null);
   const [onlyWithLogo, setOnlyWithLogo] = React.useState(false);
-  const [sortKey, setSortKey] = React.useState("relevance"); // relevance | name_asc | name_desc
+  const [sortKey, setSortKey] = React.useState("relevance");
 
   // Pagination
   const [page, setPage] = React.useState(1);
+
+  // Favoritos
+  const [favIds, setFavIds] = React.useState(new Set());
+  const toInt = (v) => Number.parseInt(v, 10);
+
+  // al montar, sincroniza favoritos
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await Config.getFavorites("university");
+        const ids = (Array.isArray(data) ? data : [])
+          .map((x) => toInt(x?.item?.id))
+          .filter(Number.isFinite);
+        setFavIds(new Set(ids));
+      } catch {}
+    })();
+  }, []);
+
+  const onToggleFav = async (u) => {
+    try {
+      await Config.toggleFavorite({
+        favoritable_type: "university",
+        favoritable_id: u.id,
+      });
+      setFavIds((prev) => {
+        const next = new Set(prev);
+        const id = toInt(u.id);
+        next.has(id) ? next.delete(id) : next.add(id);
+        return next;
+      });
+    } catch (e) {
+      console.error("favorite error", e);
+    }
+  };
 
   // Fetch inicial
   React.useEffect(() => {
@@ -91,7 +121,8 @@ const Universities = () => {
           : Array.isArray(data?.data)
           ? data.data
           : [];
-        setUniversities(list);
+        // 🔧 Asegura que todos los IDs de universidades sean number
+        setUniversities(list.map((u) => ({ ...u, id: toInt(u.id) })));
       } catch (e) {
         console.error("Universities fetch error:", e);
         if (!active) return;
@@ -128,7 +159,6 @@ const Universities = () => {
   const filtered = React.useMemo(() => {
     let res = universities.slice();
 
-    // búsqueda
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       res = res.filter((u) =>
@@ -140,13 +170,11 @@ const Universities = () => {
       );
     }
 
-    // filtros
     if (selectedCountry) res = res.filter((u) => u.country === selectedCountry);
     if (selectedState) res = res.filter((u) => u.state === selectedState);
     if (selectedCity) res = res.filter((u) => u.city === selectedCity);
     if (onlyWithLogo) res = res.filter((u) => !!u.logo_url);
 
-    // orden
     res.sort((a, b) => {
       switch (sortKey) {
         case "name_asc":
@@ -456,7 +484,7 @@ const Universities = () => {
                             wrapper:
                               "w-full h-full flex items-center justify-center z-0",
                             img: "max-h-full max-w-full object-contain p-6",
-                            zoomedWrapper: "z-0", // 👈 evita que el overlay del zoom tape el chip
+                            zoomedWrapper: "z-0",
                           }}
                         />
                       ) : (
@@ -521,6 +549,22 @@ const Universities = () => {
                 </CardBody>
 
                 <CardFooter className="flex justify-between p-5 pt-0">
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    onPress={() => onToggleFav(u)}
+                    aria-label={
+                      favIds.has(toInt(u.id))
+                        ? "Quitar de favoritos"
+                        : "Agregar a favoritos"
+                    }
+                  >
+                    {favIds.has(toInt(u.id)) ? (
+                      <StarSolid className="w-5 text-yellow-500" />
+                    ) : (
+                      <StarOutline className="w-5 text-default-500" />
+                    )}
+                  </Button>
                   <Button
                     as={Link}
                     to={`/universities/${u.slug}`}

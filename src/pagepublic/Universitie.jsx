@@ -15,18 +15,22 @@ import {
   LinkIcon,
   AcademicCapIcon
 } from "@heroicons/react/24/outline";
+import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
+import { StarIcon as StarOutline } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import Config from "../Config";
 import axios from "axios";
 
-const BACKEND_URL = "http://localhost:8000";
+// BACKEND URL: usar variable de entorno con fallback a localhost
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 
+// Construye la URL del logo
 const logoImgSrc = (val) => {
   if (!val) return "";
   const v = String(val).trim();
-  if (v.startsWith("data:image")) return v;
-  if (/^https?:\/\//i.test(v)) return v;
-  return `${BACKEND_URL}/img/universidades/${v}`;
+  if (v.startsWith("data:image")) return v;           // base64
+  if (/^https?:\/\//i.test(v)) return v;            // URL absoluta
+  return `${BACKEND_URL.replace(/\/$/, "")}/img/universidades/${v}`;
 };
 
 const Universitie = () => {
@@ -36,7 +40,12 @@ const Universitie = () => {
   const [detail, setDetail] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
+  const [isFav, setIsFav] = React.useState(false);
 
+  const u = detail?.university;
+  const uniId = u?.id != null ? Number(u.id) : null;
+
+  // Cargar datos de la universidad
   React.useEffect(() => {
     let active = true;
     (async () => {
@@ -57,49 +66,67 @@ const Universitie = () => {
     return () => { active = false; };
   }, [slug]);
 
-  const u = detail?.university;
+  // Cargar estado de favorito
+  React.useEffect(() => {
+    let active = true;
+    if (!uniId) return;
+    (async () => {
+      try {
+        const res = await Config.getFavorites?.("university");
+        const data = Array.isArray(res?.data) ? res.data : [];
+        const ids = new Set(
+          data.map((x) => Number(x?.item?.id)).filter(Number.isFinite)
+        );
+        if (active) setIsFav(ids.has(uniId));
+      } catch (e) {
+        console.debug("No se pudo leer favoritos:", e?.message ?? e);
+      }
+    })();
+    return () => { active = false; };
+  }, [uniId]);
 
+  const toggleFav = async () => {
+    if (!uniId) return;
+    try {
+      await Config.toggleFavorite?.({
+        favoritable_type: "university",
+        favoritable_id: uniId,
+      });
+      setIsFav((v) => !v);
+    } catch (e) {
+      console.error("Error al alternar favorito:", e?.message ?? e);
+    }
+  };
+
+  // Enviar notificación (opcional)
   const handleSendNotification = async () => {
     try {
-      // 1️⃣ Obtener el token del localStorage
       const token = localStorage.getItem("auth_token");
-      
       if (!token) {
         alert("No estás autenticado. Por favor inicia sesión.");
         navigate("/login");
         return;
       }
 
-      // 2️⃣ Obtener cookie CSRF (solo si usas Sanctum con cookies)
-      await axios.get(`${BACKEND_URL}/sanctum/csrf-cookie`, { 
-        withCredentials: true 
-      });
+      await axios.get(`${BACKEND_URL}/sanctum/csrf-cookie`, { withCredentials: true });
 
-      // 3️⃣ Enviar notificación con el token en el header
-      const response = await axios.post(
+      await axios.post(
         `${BACKEND_URL}/api/notificaciones/send`,
-        { 
-          mensaje: `${u?.name || "Una universidad"} fue visitada.` 
-        },
+        { mensaje: `${u?.name || "Una universidad"} fue visitada.` },
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+            Accept: "application/json",
           },
-          withCredentials: true
+          withCredentials: true,
         }
       );
 
-      console.log("Notificación enviada:", response.data);
+      window.open(u?.website || "https://www.utmerida.edu.mx/", "_blank");
 
-      // 🔹 En vez de alerta, abrir el link en una nueva pestaña
-      window.open("https://www.utmerida.edu.mx/", "_blank");
-      
     } catch (error) {
       console.error("Error enviando notificación:", error);
-      
-      // Manejo de errores específicos
       if (error.response?.status === 401) {
         alert("Sesión expirada. Por favor inicia sesión nuevamente.");
         localStorage.removeItem("auth_token");
@@ -183,16 +210,34 @@ const Universitie = () => {
 
                 {u.description && <p className="text-default-700 mb-4">{u.description}</p>}
 
-                {u.website && (
+                {/* Acciones: Sitio oficial + Favorito */}
+                <div className="flex items-center gap-2">
+                  {u.website && (
+                    <a
+                      href={u.website.startsWith("http") ? u.website : `https://${u.website}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <Button
+                        variant="light"
+                        startContent={<LinkIcon className="w-4" />}
+                        className="text-[#2CBFF0]"
+                      >
+                        Sitio oficial
+                      </Button>
+                    </a>
+                  )}
+
                   <Button
                     variant="light"
-                    startContent={<LinkIcon className="w-4" />}
-                    className="text-[#2CBFF0]"
-                    onPress={handleSendNotification}
+                    onPress={toggleFav}
+                    startContent={
+                      isFav ? <StarSolid className="w-4 text-yellow-500" /> : <StarOutline className="w-4" />
+                    }
                   >
-                    Sitio oficial
+                    {isFav ? "En favoritos" : "Guardar"}
                   </Button>
-                )}
+                </div>
               </div>
             </div>
           </>

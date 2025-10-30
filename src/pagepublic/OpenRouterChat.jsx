@@ -7,11 +7,19 @@ const OpenRouterChat = () => {
   const [message, setMessage] = React.useState("");
   const [chatHistory, setChatHistory] = React.useState([
     {
+      role: "system",
+      content: "Eres un asistente de orientación vocacional especializado en carreras universitarias en Yucatán, México. Proporciona información útil, precisa y motivadora sobre carreras, universidades como la UADY, oportunidades laborales y becas disponibles."
+    },
+    {
       type: "bot",
-      text: "¡Hola! Soy tu asistente de orientación vocacional. Puedo ayudarte con información sobre las carreras recomendadas. ¿Qué te gustaría saber?",
+      role: "assistant",
+      content: "¡Hola! Soy tu asistente de orientación vocacional. Puedo ayudarte con información sobre las carreras recomendadas. ¿Qué te gustaría saber?",
     },
   ]);
   const [isTyping, setIsTyping] = React.useState(false);
+
+  // Leer API key desde variable de entorno (ajusta según tu setup)
+  const API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
 
   const chatContainerRef = React.useRef(null);
 
@@ -22,33 +30,63 @@ const OpenRouterChat = () => {
     }
   }, [chatHistory]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     const clean = message.trim();
     if (!clean) return;
 
     // Añadir mensaje del usuario
-    setChatHistory((prev) => [...prev, { type: "user", text: clean }]);
+    const newMessages = [...chatHistory, { role: "user", content: clean }];
+    setChatHistory(newMessages);
     setMessage("");
-
-    // Simular respuesta del bot
     setIsTyping(true);
-    setTimeout(() => {
-      const responses = [
-        "Las carreras de ingeniería tienen excelentes oportunidades laborales en Yucatán, especialmente con el crecimiento del sector tecnológico.",
-        "El diseño digital es una excelente opción si te gusta combinar creatividad con tecnología. Hay varias agencias en Mérida buscando talento.",
-        "La UADY tiene uno de los programas de Psicología mejor valorados en la región sureste.",
-        "Si te interesa más información sobre alguna carrera específica, puedo darte detalles sobre el plan de estudios y salidas profesionales.",
-        "¿Te gustaría saber más sobre becas disponibles para estas carreras?",
-      ];
-      setChatHistory((prev) => [
-        ...prev,
+
+    try {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-4o-mini", // o "anthropic/claude-3.5-sonnet"
+          messages: newMessages,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.choices && data.choices.length > 0) {
+        setChatHistory([
+          ...newMessages, 
+          {
+            type: "bot",
+            role: "assistant",
+            content: data.choices[0].message.content
+          }
+        ]);
+      } else {
+        setChatHistory([
+          ...newMessages,
+          {
+            type: "bot",
+            role: "assistant",
+            content: "Lo siento, no hubo respuesta de la IA."
+          }
+        ]);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setChatHistory([
+        ...newMessages,
         {
           type: "bot",
-          text: responses[Math.floor(Math.random() * responses.length)],
-        },
+          role: "assistant",
+          content: "Error: " + error.message
+        }
       ]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -57,27 +95,29 @@ const OpenRouterChat = () => {
         ref={chatContainerRef}
         className="flex-1 overflow-y-auto p-3 space-y-3"
       >
-        {chatHistory.map((chat, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className={`flex ${
-              chat.type === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
-            <div
-              className={`max-w-[80%] rounded-xl p-3 ${
-                chat.type === "user"
-                  ? "bg-[#2CBFF0] text-white rounded-tr-none"
-                  : "bg-slate-100 text-[#181818] rounded-tl-none"
+        {chatHistory
+          .filter((chat) => chat.role === "user" || chat.role === "assistant")
+          .map((chat, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className={`flex ${
+                chat.role === "user" ? "justify-end" : "justify-start"
               }`}
             >
-              <p className="text-sm">{chat.text}</p>
-            </div>
-          </motion.div>
-        ))}
+              <div
+                className={`max-w-[80%] rounded-xl p-3 ${
+                  chat.role === "user"
+                    ? "bg-[#2CBFF0] text-white rounded-tr-none"
+                    : "bg-slate-100 text-[#181818] rounded-tl-none"
+                }`}
+              >
+                <p className="text-sm">{chat.content}</p>
+              </div>
+            </motion.div>
+          ))}
 
         {isTyping && (
           <motion.div
@@ -120,6 +160,7 @@ const OpenRouterChat = () => {
             variant="bordered"
             size="sm"
             radius="full"
+            disabled={isTyping}
           />
           <Button
             isIconOnly
@@ -127,7 +168,7 @@ const OpenRouterChat = () => {
             radius="full"
             size="sm"
             type="submit"
-            isDisabled={!message.trim()}
+            isDisabled={!message.trim() || isTyping}
           >
             <PaperAirplaneIcon className="w-4 h-4" />
           </Button>
