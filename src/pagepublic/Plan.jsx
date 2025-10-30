@@ -11,17 +11,7 @@ import {
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { motion } from "framer-motion";
 import Config from "../Config";
-
-// Helper para stripe checkout
-const apiOrigin = () => {
-  const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
-  const fromAxiosOrigin = axiosBase
-    ? axiosBase.replace(/\/api\/?.*$/i, "")
-    : "";
-  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "").trim();
-  const backendOrigin = (fromAxiosOrigin || fromEnv || "").replace(/\/$/, "");
-  return backendOrigin || "";
-};
+import axios, { ensureSanctum } from "../lib/axios";
 
 // utilidades pequeñas y limpias
 const cn = (...xs) => xs.filter(Boolean).join(" ");
@@ -33,44 +23,55 @@ const currencyFmt = (amount, currency = "MXN", locale = "es-MX") =>
 
 // ---- Tarjeta de Plan (UI minimalista) ----
 const PlanCard = ({ plan, i }) => {
+  const [loadingCheckout, setLoadingCheckout] = React.useState(false);
   const isFeatured = !!plan.is_featured;
   const hasTrial = Number(plan.trial_days || 0) > 0;
   const price = currencyFmt(plan.price_cents, plan.currency || "MXN");
 
   // Stripe Checkout
   const handlePlanCheckout = async () => {
-    const slug = plan.slug;
-    const success = `${window.location.origin}/plans?status=success&plan=${slug}`;
-    const cancel = `${window.location.origin}/plans?status=cancel&plan=${slug}`;
+    try {
+      setLoadingCheckout(true);
 
-    const body = {
-      mode: "payment", // si luego usas suscripciones reales, cambia a "subscription" y envía price_id
-      amount_cents: Number(plan.price_cents || 0),
-      currency: (plan.currency || "MXN").toUpperCase(),
-      product_name: plan.name || "Plan",
-      success_url: success,
-      cancel_url: cancel,
-      metadata: {
-        kind: "plan",
-        plan_id: plan.id,
-        plan_slug: slug,
-        interval: plan.interval || "month",
-      },
-    };
+      // 1. Asegurar cookie CSRF
+      await ensureSanctum();
 
-    const url = `${apiOrigin()}/api/v1/checkout`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+      const slug = plan.slug;
+      const frontendUrl = window.location.origin;
 
-    const data = await res.json();
-    if (data?.url) {
-      window.location.href = data.url;
-    } else {
-      console.error("Stripe checkout error:", data);
-      alert("No se pudo iniciar el pago del plan. Intenta nuevamente.");
+      // 2. Preparar datos del checkout
+      const body = {
+        mode: "payment",
+        amount_cents: Number(plan.price_cents || 0),
+        currency: (plan.currency || "MXN").toUpperCase(),
+        product_name: plan.name || "Plan",
+        success_url: `${frontendUrl}/plans?status=success&plan=${slug}`,
+        cancel_url: `${frontendUrl}/plans?status=cancel&plan=${slug}`,
+        metadata: {
+          kind: "plan",
+          plan_id: plan.id,
+          plan_slug: slug,
+          interval: plan.interval || "month",
+        },
+      };
+
+      // 3. Hacer petición con axios (NO fetch)
+      const { data } = await axios.post("/api/v1/checkout", body);
+
+      // 4. Redirigir a Stripe
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        console.error("Stripe checkout error:", data);
+        alert("No se pudo iniciar el pago del plan. Intenta nuevamente.");
+      }
+    } catch (error) {
+      console.error("Error en handlePlanCheckout:", error);
+      alert(
+        "Ocurrió un error al procesar el pago. Por favor, intenta de nuevo."
+      );
+    } finally {
+      setLoadingCheckout(false);
     }
   };
 
@@ -92,8 +93,6 @@ const PlanCard = ({ plan, i }) => {
         )}
       >
         <CardBody className="p-7 flex flex-col">
-          {/* Badge de destacado */}
-
           {/* Header */}
           <div className="mb-5 text-center">
             <h3 className="text-2xl font-extrabold tracking-tight text-[#181818]">
@@ -134,7 +133,7 @@ const PlanCard = ({ plan, i }) => {
             </>
           )}
 
-          {/* Features (lista compacta) */}
+          {/* Features */}
           {!!plan.features?.length && (
             <ul className="space-y-2.5 mb-6 flex-1">
               {plan.features.map((feat, idx) => (
@@ -146,7 +145,7 @@ const PlanCard = ({ plan, i }) => {
             </ul>
           )}
 
-          {/* CTA */}
+          {/* CTA con loading */}
           <Tooltip
             content={
               plan.cta_type === "trial"
@@ -160,8 +159,12 @@ const PlanCard = ({ plan, i }) => {
               fullWidth
               aria-label={plan.cta_label || "Continuar"}
               onPress={handlePlanCheckout}
+              isLoading={loadingCheckout} // ← Agregar
+              isDisabled={loadingCheckout} // ← Agregar
             >
-              {plan.cta_label || "Continuar"}
+              {loadingCheckout
+                ? "Procesando..."
+                : plan.cta_label || "Continuar"}
             </Button>
           </Tooltip>
         </CardBody>
@@ -295,7 +298,7 @@ const Plan = ({ plans: plansProp, quantity = 4 }) => {
             : sorted.slice(0, 2).map(
                 (
                   plan,
-                  i // ✅ muestra 2 cards
+                  i // muestra 2 cards
                 ) => <PlanCard key={plan.id ?? i} plan={plan} i={i} />
               )}
         </div>

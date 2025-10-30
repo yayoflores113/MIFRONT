@@ -70,21 +70,42 @@ const Register = () => {
   const submitRegistro = async (e) => {
     e.preventDefault();
 
-    // ⟵ Mantengo tu misma llamada y flujo; solo PASO campos extra
-    Config.getRegister({
-      name,
-      email,
-      password,
-      // nuevos campos (serán ignorados si el backend no los usa aún)
-      birth_date: birthDate || null,
-      university_id: universityId || null,
-      matricula: matricula || null,
-      country_id: countryId || null,
-    }).then(({ data }) => {
+    try {
+      // 1. Asegurar cookie CSRF
+      await ensureSanctum();
+
+      // 2. Hacer registro
+      const { data } = await Config.getRegister({
+        name,
+        email,
+        password,
+        birth_date: birthDate || null,
+        university_id: universityId || null,
+        matricula: matricula || null,
+        country_id: countryId || null,
+      });
+
       if (data.success) {
-        navigate("/login");
+        // Si el backend autologa después del registro
+        if (data.user && data.rol) {
+          const userRol = data.rol || "user";
+          setToken(data.user, null, userRol);
+
+          // Navegar según rol
+          if (userRol === "admin") {
+            navigate("/admin", { replace: true });
+          } else {
+            navigate("/", { replace: true });
+          }
+        } else {
+          // Si no autologa, ir a login
+          navigate("/login");
+        }
       }
-    });
+    } catch (err) {
+      console.error("Error en registro:", err);
+      // Mostrar mensaje de error al usuario
+    }
   };
 
   return (

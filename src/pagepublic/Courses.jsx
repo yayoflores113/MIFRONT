@@ -36,6 +36,7 @@ const PAGE_SIZE = 9;
 const uniq = (arr) => Array.from(new Set(arr.filter(Boolean)));
 const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
 
+
 // Helper para obtener el origen de la API
 const apiOrigin = () => {
   const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
@@ -54,6 +55,24 @@ const courseImgSrc = (val) => {
   return backendOrigin
     ? `${backendOrigin.replace(/\/$/, "")}/img/cursos/${val}`
     : `/img/cursos/${val}`;
+
+// helper de: (carpeta /img/cursos)
+const courseImgSrc = (val) => {
+  if (!val) return "";
+  const v = String(val).trim();
+
+  // Si es base64 o URL absoluta, usarla tal cual
+  if (v.startsWith("data:image")) return v;
+  if (/^https?:\/\//i.test(v)) return v;
+
+  // Obtener el origen del backend
+  const backendUrl =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+  const origin = backendUrl.replace(/\/$/, ""); // Quitar "/" final si existe
+
+  // Construir la URL completa
+  return `${origin}/img/cursos/${v}`;
+
 };
 
 const centsToCurrency = (cents, locale = "es-MX", currency = "MXN") =>
