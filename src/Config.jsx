@@ -1,4 +1,4 @@
-mport axios from "./lib/axios";
+import axios from "./lib/axios";
 
 const base_api_url = "/api/v1";
 
