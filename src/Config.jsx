@@ -1,216 +1,203 @@
+// config/api.js
 import axios from "./lib/axios";
 
-const base_api_url = "https://miback-1333.onrender.com/api/v1";
+// =====================
+// URLs base
+// =====================
+const BASE_API_URL = "https://miback-1333.onrender.com/api/v1"; // API
+const BASE_AUTH_URL = "https://miback-1333.onrender.com"; // Para CSRF/Login
 
+// =====================
+// Axios instance
+// =====================
+const api = axios.create({
+  baseURL: BASE_API_URL,
+  withCredentials: true,
+});
+
+// =====================
+// Auth
+// =====================
 const Auth = {
-  register: (data) => axios.post(`${base_api_url}/auth/register`, data),
-  login: (data) => axios.post(`${base_api_url}/auth/login`, data),
-  logout: () => axios.post(`${base_api_url}/auth/logout`),
-  me: () => axios.get(`${base_api_url}/auth/me`),
+  getCsrfCookie: () => axios.get(`${BASE_AUTH_URL}/sanctum/csrf-cookie`, { withCredentials: true }),
+  register: (data) => api.post("/auth/register", data),
+  login: async (data) => {
+    await Auth.getCsrfCookie(); // Obtener CSRF cookie
+    return api.post("/auth/login", data);
+  },
+  logout: () => api.post("/auth/logout"),
+  me: () => api.get("/auth/me"),
 };
 
+// =====================
+// Admin Users
+// =====================
 const AdminUsers = {
-  getAll: () => axios.get(`${base_api_url}/admin/users`),
-  getById: (id) => axios.get(`${base_api_url}/admin/users/${id}`),
-  update: (id, data) => axios.put(`${base_api_url}/admin/users/${id}`, data),
-  delete: (id) => axios.delete(`${base_api_url}/admin/users/${id}`),
+  getAll: () => api.get("/admin/users"),
+  getById: (id) => api.get(`/admin/users/${id}`),
+  update: (id, data) => api.put(`/admin/users/${id}`, data),
+  delete: (id) => api.delete(`/admin/users/${id}`),
 };
 
+// =====================
+// Admin Universities
+// =====================
 const AdminUniversities = {
-  getAll: () => axios.get(`${base_api_url}/admin/universities`),
-  create: (data) => axios.post(`${base_api_url}/admin/universities`, data),
-  getById: (id) => axios.get(`${base_api_url}/admin/universities/${id}`),
-  update: (id, data) => axios.put(`${base_api_url}/admin/universities/${id}`, data),
-  delete: (id) => axios.delete(`${base_api_url}/admin/universities/${id}`),
+  getAll: () => api.get("/admin/universities"),
+  create: (data) => api.post("/admin/universities", data),
+  getById: (id) => api.get(`/admin/universities/${id}`),
+  update: (id, data) => api.put(`/admin/universities/${id}`, data),
+  delete: (id) => api.delete(`/admin/universities/${id}`),
 };
 
+// =====================
+// Admin Careers
+// =====================
 const AdminCareers = {
-  getAll: () => axios.get(`${base_api_url}/admin/careers`),
-  create: (data) => axios.post(`${base_api_url}/admin/careers`, data),
-  getById: (id) => axios.get(`${base_api_url}/admin/careers/${id}`),
-  update: (id, data) => axios.put(`${base_api_url}/admin/careers/${id}`, data),
-  delete: (id) => axios.delete(`${base_api_url}/admin/careers/${id}`),
+  getAll: () => api.get("/admin/careers"),
+  create: (data) => api.post("/admin/careers", data),
+  getById: (id) => api.get(`/admin/careers/${id}`),
+  update: (id, data) => api.put(`/admin/careers/${id}`, data),
+  delete: (id) => api.delete(`/admin/careers/${id}`),
 };
 
+// =====================
+// Admin Courses
+// =====================
 const AdminCourses = {
-  getAll: () => axios.get(`${base_api_url}/admin/courses`),
-  create: (data) => axios.post(`${base_api_url}/admin/courses`, data),
-  getById: (id) => axios.get(`${base_api_url}/admin/courses/${id}`),
-  update: (id, data) => axios.put(`${base_api_url}/admin/courses/${id}`, data),
-  delete: (id) => axios.delete(`${base_api_url}/admin/courses/${id}`),
+  getAll: () => api.get("/admin/courses"),
+  create: (data) => api.post("/admin/courses", data),
+  getById: (id) => api.get(`/admin/courses/${id}`),
+  update: (id, data) => api.put(`/admin/courses/${id}`, data),
+  delete: (id) => api.delete(`/admin/courses/${id}`),
 };
 
-const AdminPlans = { 
-  getAll: () => axios.get(`${base_api_url}/admin/plans`),
-  create: (data) => axios.post(`${base_api_url}/admin/plans`, data),
-  getById: (id) => axios.get(`${base_api_url}/admin/plans/${id}`),
-  update: (id, data) => axios.put(`${base_api_url}/admin/plans/${id}`, data),
-  delete: (id) => axios.delete(`${base_api_url}/admin/plans/${id}`),
+// =====================
+// Admin Plans
+// =====================
+const AdminPlans = {
+  getAll: () => api.get("/admin/plans"),
+  create: (data) => api.post("/admin/plans", data),
+  getById: (id) => api.get(`/admin/plans/${id}`),
+  update: (id, data) => api.put(`/admin/plans/${id}`, data),
+  delete: (id) => api.delete(`/admin/plans/${id}`),
 };
 
+// =====================
+// Admin Subscriptions
+// =====================
 const AdminSubscriptions = {
-  getAll: (params) => axios.get(`${base_api_url}/user/subscriptions`, { params }),
-  getById: (id) => axios.get(`${base_api_url}/user/subscriptions/${id}`),
-  create: (data) => axios.post(`${base_api_url}/admin/subscriptions`, data),
-  update: (id, data) => axios.put(`${base_api_url}/admin/subscriptions/${id}`, data),
-  delete: (id) => axios.delete(`${base_api_url}/admin/subscriptions/${id}`),
+  getAll: (params) => api.get("/user/subscriptions", { params }),
+  getById: (id) => api.get(`/user/subscriptions/${id}`),
+  create: (data) => api.post("/admin/subscriptions", data),
+  update: (id, data) => api.put(`/admin/subscriptions/${id}`, data),
+  delete: (id) => api.delete(`/admin/subscriptions/${id}`),
 };
 
+// =====================
+// Public Universities
+// =====================
 const PublicUniversities = {
-  getAll: (quantity) => axios.get(`${base_api_url}/public/universities/${quantity}`),
-  getBySlug: (slug) => axios.get(`${base_api_url}/public/universities/${slug}`),
+  getAll: (quantity) => api.get(`/public/universities/${quantity}`),
+  getBySlug: (slug) => api.get(`/public/universities/${slug}`),
 };
 
+// =====================
+// Public Careers
+// =====================
 const PublicCareers = {
-  getAll: (quantity) => axios.get(`${base_api_url}/public/careers/${quantity}`),
-  getBySlug: (slug) => axios.get(`${base_api_url}/public/careers/${slug}`),
+  getAll: (quantity) => api.get(`/public/careers/${quantity}`),
+  getBySlug: (slug) => api.get(`/public/careers/${slug}`),
 };
 
+// =====================
+// Public Courses
+// =====================
 const PublicCourses = {
-  getAll: (quantity = 120, params = {}) =>
-    axios.get(`${base_api_url}/public/courses`, {
-      params: { quantity, ...params },
-    }),
-  getBySlug: (slug) => axios.get(`${base_api_url}/public/courses/${slug}`),
+  getAll: (quantity = 120, params = {}) => api.get("/public/courses", { params: { quantity, ...params } }),
+  getBySlug: (slug) => api.get(`/public/courses/${slug}`),
 };
 
+// =====================
+// Public Plans
+// =====================
 const PublicPlans = {
-  getAll: (quantity = 4, params = {}) =>
-    axios.get(`${base_api_url}/public/plans`, {
-      params: { quantity, ...params },
-    }),
-  getBySlug: (slug) => axios.get(`${base_api_url}/public/plans/${slug}`),
+  getAll: (quantity = 4, params = {}) => api.get("/public/plans", { params: { quantity, ...params } }),
+  getBySlug: (slug) => api.get(`/public/plans/${slug}`),
 };
 
+// =====================
+// Public Tests
+// =====================
 const PublicTests = {
-  getActive: () => axios.get(`${base_api_url}/public/tests/active`),
-  getAll: () => axios.get(`${base_api_url}/public/tests`),
-  getById: (id) => axios.get(`${base_api_url}/public/tests/${id}`),
-  getQuestions: (params = {}) => axios.get(`${base_api_url}/public/questions`, { params }),
-  getAnswerOptions: (params = {}) => axios.get(`${base_api_url}/public/answer-options`, { params }),
+  getActive: () => api.get("/public/tests/active"),
+  getAll: () => api.get("/public/tests"),
+  getById: (id) => api.get(`/public/tests/${id}`),
+  getQuestions: (params = {}) => api.get("/public/questions", { params }),
+  getAnswerOptions: (params = {}) => api.get("/public/answer-options", { params }),
 };
 
+// =====================
+// Test Attempts
+// =====================
 const TestAttempts = {
-  create: (data) => axios.post(`${base_api_url}/user/test-attempts`, data),
-  getMy: () => axios.get(`${base_api_url}/user/test-attempts`),
-  getById: (id) => axios.get(`${base_api_url}/user/test-attempts/${id}`),
-  answer: (id, data) => axios.post(`${base_api_url}/user/test-attempts/${id}/answer`, data),
-  finish: (id) => axios.post(`${base_api_url}/user/test-attempts/${id}/finish`),
-  getRecommendations: (id) => axios.get(`${base_api_url}/user/test-attempts/${id}/recommendations`),
+  create: (data) => api.post("/user/test-attempts", data),
+  getMy: () => api.get("/user/test-attempts"),
+  getById: (id) => api.get(`/user/test-attempts/${id}`),
+  answer: (id, data) => api.post(`/user/test-attempts/${id}/answer`, data),
+  finish: (id) => api.post(`/user/test-attempts/${id}/finish`),
+  getRecommendations: (id) => api.get(`/user/test-attempts/${id}/recommendations`),
 };
 
+// =====================
+// Favorites
+// =====================
 const Favorites = {
-  getAll: (params = {}) => axios.get(`${base_api_url}/favorites`, { params }),
-  toggle: (payload) => axios.post(`${base_api_url}/favorites`, payload),
+  getAll: (params = {}) => api.get("/favorites", { params }),
+  toggle: (payload) => api.post("/favorites", payload),
 };
 
-const LearningPaths = {
-  getAll: () => axios.get(`${base_api_url}/user/learning-paths`),
-  getById: (id) => axios.get(`${base_api_url}/user/learning-paths/${id}`),
-  enroll: (id) => axios.post(`${base_api_url}/user/learning-paths/${id}/enroll`),
-  updateProgress: (id, data) => axios.put(`${base_api_url}/user/learning-paths/${id}/progress`, data),
+// =====================
+// Daily Exercises
+// =====================
+const DailyExercises = {
+  getToday: () => api.get("/user/daily-exercise/today"),
+  submitAnswer: (data) => api.post("/user/daily-exercise/submit", data),
+  getHistory: (params = {}) => api.get("/user/daily-exercise/history", { params }),
+  getStreak: () => api.get("/user/streak"),
+
+  // Admin
+  getAll: (params = {}) => api.get("/admin/daily-exercises", { params }),
+  create: (data) => api.post("/admin/daily-exercises", data),
+  getById: (id) => api.get(`/admin/daily-exercises/${id}`),
+  update: (id, data) => api.put(`/admin/daily-exercises/${id}`, data),
+  delete: (id) => api.delete(`/admin/daily-exercises/${id}`),
 };
 
-const AdminLearningPaths = {
-  getAll: () => axios.get(`${base_api_url}/admin/learning-paths`),
-  create: (data) => axios.post(`${base_api_url}/admin/learning-paths`, data),
-  getById: (id) => axios.get(`${base_api_url}/admin/learning-paths/${id}`),
-  update: (id, data) => axios.put(`${base_api_url}/admin/learning-paths/${id}`, data),
-  delete: (id) => axios.delete(`${base_api_url}/admin/learning-paths/${id}`),
-};
-
+// =====================
+// Export default
+// =====================
 export default {
-  getRegister: Auth.register,
-  getLogin: Auth.login,
-  getLogout: Auth.logout,
-  getMe: Auth.me,
-
-  getUserAll: AdminUsers.getAll,
-  getUserById: AdminUsers.getById,
-  getUserUpdate: (data, id) => AdminUsers.update(id, data),
-  getUserDelete: AdminUsers.delete,
-
-  getUniversidadesAll: AdminUniversities.getAll,
-  getUniversidadesStore: AdminUniversities.create,
-  getUniversidadesById: AdminUniversities.getById,
-  getUniversidadesUpdate: (data, id) => AdminUniversities.update(id, data),
-  getUniversidadesDeleteById: AdminUniversities.delete,
-
-  getCarrerasAll: AdminCareers.getAll,
-  getCarrerasStore: AdminCareers.create,
-  getCarrerasShow: AdminCareers.getById,
-  getCarrerasUpdate: (data, id) => AdminCareers.update(id, data),
-  getCarrerasDestroy: AdminCareers.delete,
-
-  getCursosAll: AdminCourses.getAll,
-  getCursosStore: AdminCourses.create,
-  getCursosShow: AdminCourses.getById,
-  getCursosUpdate: (data, id) => AdminCourses.update(id, data),
-  getCursosDestroy: AdminCourses.delete,
-
-  getPlanesAll: AdminPlans.getAll,
-  getPlanesStore: AdminPlans.create,
-  getPlanesShow: AdminPlans.getById,
-  getPlanesUpdate: (data, id) => AdminPlans.update(id, data),
-  getPlanesDestroy: AdminPlans.delete,
-
-  getSubscriptionsAll: AdminSubscriptions.getAll,
-  getSubscriptionShow: AdminSubscriptions.getById,
-  createSubscription: AdminSubscriptions.create,
-  updateSubscription: (data, id) => AdminSubscriptions.update(id, data),
-  deleteSubscription: AdminSubscriptions.delete,
-
-  getUniversities: PublicUniversities.getAll,
-  getUniversityBySlug: PublicUniversities.getBySlug,
-
-  getCareers: PublicCareers.getAll,
-  getCareerBySlug: PublicCareers.getBySlug,
-
-  getCourses: PublicCourses.getAll,
-  getCourseBySlug: PublicCourses.getBySlug,
-
-  getPlans: PublicPlans.getAll,
-  getPlanBySlug: PublicPlans.getBySlug,
-
-  getActiveTests: PublicTests.getActive,
-  getTests: PublicTests.getAll,
-  getTestById: PublicTests.getById,
-  getQuestions: PublicTests.getQuestions,
-  getAnswerOptions: PublicTests.getAnswerOptions,
-
-  createTestAttempt: TestAttempts.create,
-  getMyTestAttempts: TestAttempts.getMy,
-  getTestAttempt: TestAttempts.getById,
-  answerAttempt: TestAttempts.answer,
-  finishAttempt: TestAttempts.finish,
-  getAttemptRecommendations: TestAttempts.getRecommendations,
-
-  getFavorites: Favorites.getAll,
-  toggleFavorite: Favorites.toggle,
-
-  getTodayExercise: () => axios.get(`${base_api_url}/user/daily-exercise/today`),
-  submitExerciseAnswer: (data) => axios.post(`${base_api_url}/user/daily-exercise/submit`, data),
-  getUserStreak: () => axios.get(`${base_api_url}/user/streak`),
-  getUserExerciseHistory: (params = {}) => axios.get(`${base_api_url}/user/daily-exercise/history`, { params }),
-
-  getExercisesAll: (params = {}) => axios.get(`${base_api_url}/admin/daily-exercises`, { params }),
-  createExercise: (data) => axios.post(`${base_api_url}/admin/daily-exercises`, data),
-  getExerciseById: (id) => axios.get(`${base_api_url}/admin/daily-exercises/${id}`),
-  updateExercise: (id, data) => axios.put(`${base_api_url}/admin/daily-exercises/${id}`, data),
-  deleteExercise: (id) => axios.delete(`${base_api_url}/admin/daily-exercises/${id}`),
-
-  getLearningPaths: LearningPaths.getAll,
-  getLearningPathById: LearningPaths.getById,
-  enrollInPath: LearningPaths.enroll,
-  updatePathProgress: LearningPaths.updateProgress,
-
-  getAdminLearningPaths: AdminLearningPaths.getAll,
-  createLearningPath: AdminLearningPaths.create,
-  getAdminLearningPathById: AdminLearningPaths.getById,
-  updateLearningPath: (data, id) => AdminLearningPaths.update(id, data),
-  deleteLearningPath: AdminLearningPaths.delete,
+  Auth,
+  AdminUsers,
+  AdminUniversities,
+  AdminCareers,
+  AdminCourses,
+  AdminPlans,
+  AdminSubscriptions,
+  PublicUniversities,
+  PublicCareers,
+  PublicCourses,
+  PublicPlans,
+  PublicTests,
+  TestAttempts,
+  Favorites,
+  DailyExercises,
 };
 
+// =====================
+// Named exports
+// =====================
 export {
   Auth,
   AdminUsers,
@@ -226,6 +213,5 @@ export {
   PublicTests,
   TestAttempts,
   Favorites,
-  LearningPaths,
-  AdminLearningPaths,
+  DailyExercises,
 };
