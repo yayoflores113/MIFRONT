@@ -1,4 +1,3 @@
-// src/pagepublic/Universities.jsx
 import React from "react";
 import {
   Card,
@@ -36,8 +35,8 @@ const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
 
 /** ========= helper de imágenes =========
  *  - Acepta base64 y URL absoluta
- *  - Si viene sólo el nombre de archivo, construye `${ORIGEN_BACK}/img/universidades/<archivo>`
- *  - ORIGEN_BACK: intenta sacar del baseURL de axios o de VITE_BACKEND_URL
+ *  - Si viene sólo el nombre de archivo, construye ${BACKEND_BASE}/img/universidades/<archivo>
+ *  - BACKEND_BASE: intenta sacar del baseURL de axios o de VITE_BACKEND_URL
  */
 const logoImgSrc = (val) => {
   if (!val) return "";
@@ -53,11 +52,11 @@ const logoImgSrc = (val) => {
   const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
 
   const backendOrigin = fromAxios || fromEnv || "";
-  const backendBase = backendOrigin.replace(/\/$/, ""); // 👈 nombre cambiado (antes era origin)
+  const backendBase = backendOrigin.replace(/\/$/, "");
 
   return backendBase
-    ? `${backendBase}/img/universidades/${v}`
-    : `/img/universidades/${v}`;
+    ? ${backendBase}/img/universidades/${v}
+    : /img/universidades/${v};
 };
 
 const Universities = () => {
@@ -414,7 +413,7 @@ const Universities = () => {
             Mostrando {filtered.length}{" "}
             {filtered.length === 1 ? "universidad" : "universidades"}
             {selectedCountry ? ` en ${selectedCountry}` : ""}{" "}
-            {searchQuery ? ` que coinciden con “${searchQuery}”` : ""}
+            {searchQuery ? ` que coinciden con "${searchQuery}"` : ""}
           </p>
         </div>
 
@@ -437,13 +436,13 @@ const Universities = () => {
             >
               <Card className="border border-default-200 shadow-sm h-full overflow-visible">
                 <CardBody className="p-0">
-                  <Link to={`/universities/${u.slug}`} className="block">
+                  <Link to={/universities/${u.slug}} className="block">
                     <div className="relative h-40 bg-default-100 rounded-large overflow-hidden">
                       {u.logo_url ? (
                         <Image
                           isZoomed
                           loading="lazy"
-                          alt={`${u.name} logo`}
+                          alt={${u.name} logo}
                           src={logoImgSrc(u.logo_url)}
                           fallbackSrc="/img/universidades/placeholder.png"
                           radius="none"
@@ -479,7 +478,7 @@ const Universities = () => {
                   <div className="p-5">
                     <div className="flex justify-between items-start mb-2">
                       <div className="min-w-0">
-                        <Link to={`/universities/${u.slug}`}>
+                        <Link to={/universities/${u.slug}}>
                           <h3
                             className="font-bold text-xl truncate"
                             title={u.name}
@@ -519,7 +518,7 @@ const Universities = () => {
                 <CardFooter className="flex justify-between p-5 pt-0">
                   <Button
                     as={Link}
-                    to={`/universities/${u.slug}`}
+                    to={/universities/${u.slug}}
                     variant="light"
                     className="text-[#2CBFF0]"
                     startContent={<LinkIcon className="w-4" />}
