@@ -104,6 +104,21 @@ const Favorites = {
   toggle: (payload) => axios.post(`${base_api_url}/favorites`, payload),
 };
 
+const LearningPaths = {
+  getAll: () => axios.get(`${base_api_url}/user/learning-paths`),
+  getById: (id) => axios.get(`${base_api_url}/user/learning-paths/${id}`),
+  enroll: (id) => axios.post(`${base_api_url}/user/learning-paths/${id}/enroll`),
+  updateProgress: (id, data) => axios.put(`${base_api_url}/user/learning-paths/${id}/progress`, data),
+};
+
+const AdminLearningPaths = {
+  getAll: () => axios.get(`${base_api_url}/admin/learning-paths`),
+  create: (data) => axios.post(`${base_api_url}/admin/learning-paths`, data),
+  getById: (id) => axios.get(`${base_api_url}/admin/learning-paths/${id}`),
+  update: (id, data) => axios.put(`${base_api_url}/admin/learning-paths/${id}`, data),
+  delete: (id) => axios.delete(`${base_api_url}/admin/learning-paths/${id}`),
+};
+
 export default {
   getRegister: Auth.register,
   getLogin: Auth.login,
@@ -183,6 +198,17 @@ export default {
   getExerciseById: (id) => axios.get(`${base_api_url}/admin/daily-exercises/${id}`),
   updateExercise: (id, data) => axios.put(`${base_api_url}/admin/daily-exercises/${id}`, data),
   deleteExercise: (id) => axios.delete(`${base_api_url}/admin/daily-exercises/${id}`),
+
+  getLearningPaths: LearningPaths.getAll,
+  getLearningPathById: LearningPaths.getById,
+  enrollInPath: LearningPaths.enroll,
+  updatePathProgress: LearningPaths.updateProgress,
+
+  getAdminLearningPaths: AdminLearningPaths.getAll,
+  createLearningPath: AdminLearningPaths.create,
+  getAdminLearningPathById: AdminLearningPaths.getById,
+  updateLearningPath: (data, id) => AdminLearningPaths.update(id, data),
+  deleteLearningPath: AdminLearningPaths.delete,
 };
 
 export {
@@ -200,4 +226,6 @@ export {
   PublicTests,
   TestAttempts,
   Favorites,
+  LearningPaths,
+  AdminLearningPaths,
 };
