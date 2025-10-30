@@ -1,5 +1,5 @@
-// src/config/Config.js
-import axios from "../lib/axios";
+// src/Config.jsx
+import axios from "./lib/axios";
 
 const base_api_url = "https://miback-1333.onrender.com/api/v1";
 
