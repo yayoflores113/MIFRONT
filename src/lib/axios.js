@@ -1,66 +1,37 @@
-import Axios from "axios";
+import axios from "axios";
 
-const axios = Axios.create({
-  baseURL: import.meta.env?.VITE_BACKEND_URL || "http://localhost:8000",
-  timeout: 60000,
-  withCredentials: true, // Envía cookies en todas las peticiones
-  withXSRFToken: true,   // Envía token CSRF automáticamente
-  xsrfCookieName: "XSRF-TOKEN",
-  xsrfHeaderName: "X-XSRF-TOKEN",
-  // CRÍTICO para cookies
+const instance = axios.create({
+  baseURL: "https://miback-1333.onrender.com/api/v1",
   headers: {
-    Accept: "application/json",
     "Content-Type": "application/json",
-    "X-Requested-With": "XMLHttpRequest", // Laravel lo usa para identificar peticiones AJAX
+    Accept: "application/json",
   },
 });
 
-// Interceptor de errores
-axios.interceptors.response.use(null, (err) => {
-  const error = {
-    status: err.response?.status,
-    original: err,
-    validation: {},
-    message: null
-  };
-  
-  switch (err.response?.status) {
-    case 422: // Laravel validation errors
-      for (let field in err.response.data.errors) {
-        error.validation[field] = err.response.data.errors[field][0];
-      }
-      break;
-    case 403:
-      error.message = "No tienes permisos para esta acción.";
-      break;
-    case 401:
-      error.message = "Por favor, inicia sesión nuevamente.";
-      break;
-    case 419:
-      error.message = "Token CSRF inválido. Refresca la página.";
-      break;
-    case 500:
-      error.message = "Error del servidor. Contacta soporte.";
-      break;
-    default:
-      error.message = "Algo salió mal, intenta más tarde.";
+// 🟢 Interceptor para incluir el token automáticamente
+instance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token"); // Asegúrate de guardar aquí tu JWT al hacer login
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// 🔴 Interceptor para manejar errores 401 (token expirado)
+instance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      console.warn("⚠️ Sesión expirada o no autorizada");
+      // Opcional: redirigir al login o limpiar token
+      localStorage.removeItem("token");
+      // window.location.href = "/login"; // Descomenta si deseas forzar login
+    }
+    return Promise.reject(error);
   }
-  
-  return Promise.reject(error);
-});
+);
 
-/**
- * Inicializa Sanctum obteniendo la cookie CSRF
- * DEBE llamarse antes de cualquier petición de autenticación
- */
-export const ensureSanctum = async () => {
-  try {
-    // Esta llamada genera la cookie XSRF-TOKEN y la cookie de sesión
-    await axios.get("/sanctum/csrf-cookie", { withCredentials: true });
-  } catch (e) {
-    console.error("No se pudo inicializar Sanctum", e);
-  }
-};
-
-
-export default axios;
+export default instance;
