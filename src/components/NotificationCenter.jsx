@@ -16,7 +16,10 @@ const NotificationCenterFloating = () => {
   const [loading, setLoading] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
 
-  const BACKEND_URL = "http://localhost:8000";
+const BACKEND_URL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:8000"
+    : "https://miback-14.onrender.com/api/v1";
 
   const fetchNotifications = async () => {
     if (!user) return;

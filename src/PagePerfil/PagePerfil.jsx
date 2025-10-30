@@ -1,39 +1,21 @@
 import React from "react";
-import {
-  Avatar,
-  Button,
-  Card,
-  CardBody,
-  CardFooter,
-  Badge,
-} from "@heroui/react";
+import { Avatar, Button, Card, CardBody } from "@heroui/react";
 import {
   PencilSquareIcon,
   MapPinIcon,
-  XMarkIcon,
-  InformationCircleIcon,
   BookmarkIcon,
 } from "@heroicons/react/24/outline";
 import { motion } from "framer-motion";
 import AuthUser from "../pageauth/AuthUser";
 
 const PagePerfil = () => {
-  // ----------------------------
-  // Obtener usuario actual del sistema
-  // ----------------------------
   const { getUser } = AuthUser();
   const user = getUser();
-
-  // En caso de que aún no haya sesión
   const userEmail = user?.email?.toLowerCase() || "";
-
-  // ----------------------------
-  // Si el usuario es utm@gmail.com → dashboard escolar
-  // ----------------------------
   const isUTMUser = userEmail === "utm@gmail.com";
 
   // ----------------------------
-  // Datos mock de universidades
+  // Datos de universidades favoritas (solo si no es UTM)
   // ----------------------------
   const universitiesData = [
     {
@@ -57,8 +39,11 @@ const PagePerfil = () => {
   const [favUniversities, setFavUniversities] =
     React.useState(universitiesData);
 
+  const handleRemoveUniversity = (id) =>
+    setFavUniversities((prev) => prev.filter((u) => u.id !== id));
+
   // ----------------------------
-  // Header del perfil (solo si NO es UTM)
+  // Encabezado del perfil (solo si no es UTM)
   // ----------------------------
   const ProfileHeader = () => (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 bg-white rounded-xl p-6 shadow-sm border border-default-200">
@@ -98,11 +83,8 @@ const PagePerfil = () => {
   );
 
   // ----------------------------
-  // Universidades favoritas (solo si NO es UTM)
+  // Universidades favoritas (solo si no es UTM)
   // ----------------------------
-  const handleRemoveUniversity = (id) =>
-    setFavUniversities((prev) => prev.filter((u) => u.id !== id));
-
   const FavoriteUniversities = () => (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -153,29 +135,7 @@ const PagePerfil = () => {
                       {university.city}, {university.country}
                     </span>
                   </div>
-                  <Badge color="primary" variant="flat" className="mt-3">
-                    {university.specialty}
-                  </Badge>
                 </CardBody>
-                <CardFooter className="flex justify-between gap-2 p-5 pt-0">
-                  <Button
-                    size="sm"
-                    color="primary"
-                    variant="flat"
-                    startContent={<InformationCircleIcon className="w-4 h-4" />}
-                  >
-                    Ver detalle
-                  </Button>
-                  <Button
-                    size="sm"
-                    color="danger"
-                    variant="light"
-                    startContent={<XMarkIcon className="w-4 h-4" />}
-                    onPress={() => handleRemoveUniversity(university.id)}
-                  >
-                    Quitar
-                  </Button>
-                </CardFooter>
               </Card>
             </motion.div>
           ))}
@@ -185,61 +145,23 @@ const PagePerfil = () => {
   );
 
   // ----------------------------
-  // Dashboard Escolar (solo si ES UTM)
+  // Descripción simple de la UTM (solo si es utm@gmail.com)
   // ----------------------------
-  const SchoolDashboard = () => {
-    const schoolStats = [
-      { name: "Alumnos", value: 256 },
-      { name: "Cursos activos", value: 34 },
-      { name: "Certificaciones", value: 18 },
-    ];
-
-    const schoolCourses = [
-      { id: 1, title: "Matemáticas Avanzadas", level: "Intermedio" },
-      { id: 2, title: "Física Moderna", level: "Avanzado" },
-      { id: 3, title: "Programación en Python", level: "Principiante" },
-    ];
-
-    return (
-      <div className="space-y-6">
-        <Card className="bg-white rounded-xl shadow-sm border border-default-200 p-6">
-          <h2 className="text-xl font-semibold mb-4">
-            🏫 Dashboard Escolar - Universidad Tecnológica
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {schoolStats.map((stat) => (
-              <Card
-                key={stat.name}
-                className="bg-primary/10 text-center p-4 rounded-xl"
-              >
-                <h3 className="text-2xl font-bold">{stat.value}</h3>
-                <p className="text-default-600">{stat.name}</p>
-              </Card>
-            ))}
-          </div>
-        </Card>
-
-        <Card className="bg-white rounded-xl shadow-sm border border-default-200 p-6">
-          <h3 className="text-lg font-semibold mb-4">Cursos disponibles</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {schoolCourses.map((course) => (
-              <Card key={course.id} className="p-4">
-                <h4 className="font-medium">{course.title}</h4>
-                <Badge color="primary" variant="flat">
-                  {course.level}
-                </Badge>
-              </Card>
-            ))}
-          </div>
-        </Card>
-
-        <Card className="bg-white rounded-xl shadow-sm border border-default-200 p-6 flex justify-between">
-          <Button color="primary">Agregar curso</Button>
-          <Button color="success">Generar reporte</Button>
-        </Card>
-      </div>
-    );
-  };
+  const UTMDescription = () => (
+    <Card className="bg-white rounded-xl shadow-sm border border-default-200 p-8">
+      <h2 className="text-2xl font-semibold mb-4 text-[#181818]">
+        Universidad Tecnológica de la Mixteca (UTM)
+      </h2>
+      <p className="text-default-600 leading-relaxed">
+        La Universidad Tecnológica de la Mixteca (UTM) es una institución pública 
+        de educación superior ubicada en Huajuapan de León, Oaxaca. 
+        Se distingue por su enfoque en la formación tecnológica, científica y humanista,
+        así como por su compromiso con el desarrollo regional y la innovación. 
+        Su modelo educativo busca preparar profesionales altamente capacitados 
+        y comprometidos con la sociedad.
+      </p>
+    </Card>
+  );
 
   // ----------------------------
   // Render principal
@@ -249,7 +171,7 @@ const PagePerfil = () => {
       {!isUTMUser && <ProfileHeader />}
 
       <div className="mt-6 space-y-6">
-        {isUTMUser ? <SchoolDashboard /> : <FavoriteUniversities />}
+        {isUTMUser ? <UTMDescription /> : <FavoriteUniversities />}
       </div>
     </div>
   );
