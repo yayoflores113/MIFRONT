@@ -1,6 +1,6 @@
 import axios from "./lib/axios";
 
-const base_api_url = "/api/v1";
+const base_api_url = "https://miback-1333.onrender.com/api/v1";
 
 const Auth = {
   register: (data) => axios.post(`${base_api_url}/auth/register`, data),
