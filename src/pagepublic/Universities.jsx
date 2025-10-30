@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Card,
   CardBody,
@@ -22,8 +22,6 @@ import {
   FunnelIcon,
   LinkIcon,
 } from "@heroicons/react/24/outline";
-import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
-import { StarIcon as StarOutline } from "@heroicons/react/24/outline";
 import { AcademicCapIcon, StarIcon } from "@heroicons/react/24/solid";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -35,32 +33,30 @@ const PAGE_SIZE = 9;
 const uniq = (arr) => Array.from(new Set(arr.filter(Boolean)));
 const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
 
-/** ========= helper de imágenes ========= */
+/** ========= helper de imágenes =========
+ *  - Acepta base64 y URL absoluta
+ *  - Si viene sólo el nombre de archivo, construye ${BACKEND_BASE}/img/universidades/<archivo>
+ *  - BACKEND_BASE: intenta sacar del baseURL de axios o de VITE_BACKEND_URL
+ */
 const logoImgSrc = (val) => {
   if (!val) return "";
   const v = String(val).trim();
   if (v.startsWith("data:image")) return v;
   if (/^https?:\/\//i.test(v)) return v;
 
-
   // intenta leer baseURL de axios global si existe
   const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
   // si era .../api/v1, quita el /api/...
   const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
   // variable de entorno como respaldo
- const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
+  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
+
   const backendOrigin = fromAxios || fromEnv || "";
+  const backendBase = backendOrigin.replace(/\/$/, "");
 
-  const origin = backendOrigin.replace(/\/$/, "");
-  return origin
-    ? `${origin}/img/universidades/${v}`
-    : `/img/universidades/${v}`;
-
-  const backendUrl =
-    import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
-  const origin = backendUrl.replace(/\/$/, "");
-  return `${origin}/img/universidades/${v}`;
-
+  return backendBase
+    ? ${backendBase}/img/universidades/${v}
+    : /img/universidades/${v};
 };
 
 const Universities = () => {
@@ -80,40 +76,6 @@ const Universities = () => {
   // Pagination
   const [page, setPage] = React.useState(1);
 
-  // Favoritos
-  const [favIds, setFavIds] = React.useState(new Set());
-  const toInt = (v) => Number.parseInt(v, 10);
-
-  // al montar, sincroniza favoritos
-  React.useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await Config.getFavorites("university");
-        const ids = (Array.isArray(data) ? data : [])
-          .map((x) => toInt(x?.item?.id))
-          .filter(Number.isFinite);
-        setFavIds(new Set(ids));
-      } catch {}
-    })();
-  }, []);
-
-  const onToggleFav = async (u) => {
-    try {
-      await Config.toggleFavorite({
-        favoritable_type: "university",
-        favoritable_id: u.id,
-      });
-      setFavIds((prev) => {
-        const next = new Set(prev);
-        const id = toInt(u.id);
-        next.has(id) ? next.delete(id) : next.add(id);
-        return next;
-      });
-    } catch (e) {
-      console.error("favorite error", e);
-    }
-  };
-
   // Fetch inicial
   React.useEffect(() => {
     let active = true;
@@ -128,8 +90,7 @@ const Universities = () => {
           : Array.isArray(data?.data)
           ? data.data
           : [];
-        // 🔧 Asegura que todos los IDs de universidades sean number
-        setUniversities(list.map((u) => ({ ...u, id: toInt(u.id) })));
+        setUniversities(list);
       } catch (e) {
         console.error("Universities fetch error:", e);
         if (!active) return;
@@ -220,7 +181,6 @@ const Universities = () => {
     return filtered.slice(start, start + PAGE_SIZE);
   }, [filtered, currentPage]);
 
-  // Reset de hijos al cambiar padres
   React.useEffect(() => {
     setSelectedState(null);
     setSelectedCity(null);
@@ -453,7 +413,7 @@ const Universities = () => {
             Mostrando {filtered.length}{" "}
             {filtered.length === 1 ? "universidad" : "universidades"}
             {selectedCountry ? ` en ${selectedCountry}` : ""}{" "}
-            {searchQuery ? ` que coinciden con “${searchQuery}”` : ""}
+            {searchQuery ? ` que coinciden con "${searchQuery}"` : ""}
           </p>
         </div>
 
@@ -476,13 +436,13 @@ const Universities = () => {
             >
               <Card className="border border-default-200 shadow-sm h-full overflow-visible">
                 <CardBody className="p-0">
-                  <Link to={`/universities/${u.slug}`} className="block">
+                  <Link to={/universities/${u.slug}} className="block">
                     <div className="relative h-40 bg-default-100 rounded-large overflow-hidden">
                       {u.logo_url ? (
                         <Image
                           isZoomed
                           loading="lazy"
-                          alt={`${u.name} logo`}
+                          alt={${u.name} logo}
                           src={logoImgSrc(u.logo_url)}
                           fallbackSrc="/img/universidades/placeholder.png"
                           radius="none"
@@ -518,7 +478,7 @@ const Universities = () => {
                   <div className="p-5">
                     <div className="flex justify-between items-start mb-2">
                       <div className="min-w-0">
-                        <Link to={`/universities/${u.slug}`}>
+                        <Link to={/universities/${u.slug}}>
                           <h3
                             className="font-bold text-xl truncate"
                             title={u.name}
@@ -557,24 +517,8 @@ const Universities = () => {
 
                 <CardFooter className="flex justify-between p-5 pt-0">
                   <Button
-                    isIconOnly
-                    variant="light"
-                    onPress={() => onToggleFav(u)}
-                    aria-label={
-                      favIds.has(toInt(u.id))
-                        ? "Quitar de favoritos"
-                        : "Agregar a favoritos"
-                    }
-                  >
-                    {favIds.has(toInt(u.id)) ? (
-                      <StarSolid className="w-5 text-yellow-500" />
-                    ) : (
-                      <StarOutline className="w-5 text-default-500" />
-                    )}
-                  </Button>
-                  <Button
                     as={Link}
-                    to={`/universities/${u.slug}`}
+                    to={/universities/${u.slug}}
                     variant="light"
                     className="text-[#2CBFF0]"
                     startContent={<LinkIcon className="w-4" />}
@@ -593,45 +537,35 @@ const Universities = () => {
         {/* Empty */}
         {!loading && filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <MagnifyingGlassIcon className="text-default-300 mb-4 w-12" />
-            <h3 className="text-xl font-semibold mb-2">
-              No se encontraron universidades
-            </h3>
-            <p className="text-default-500 max-w-md mb-6">
-              Ajusta los filtros o el término de búsqueda para ver más
-              resultados.
+            <AcademicCapIcon className="w-12 text-default-400 mb-3" />
+            <p className="text-default-500 text-lg">
+              No se encontraron universidades que coincidan con tu búsqueda.
             </p>
-            <Button
-              variant="flat"
-              color="primary"
-              onPress={() => {
-                setSelectedCountry(null);
-                setSelectedState(null);
-                setSelectedCity(null);
-                setOnlyWithLogo(false);
-                setSearchQuery("");
-                setSortKey("relevance");
-                setPage(1);
-              }}
-            >
-              Limpiar filtros
-            </Button>
           </div>
         )}
 
         {/* Pagination */}
-        {filtered.length > 0 && (
-          <div className="flex justify-center mt-12 flex-wrap gap-1">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <Button
-                key={p}
-                variant={p === currentPage ? "flat" : "light"}
-                className="mx-0.5"
-                onPress={() => setPage(p)}
-              >
-                {p}
-              </Button>
-            ))}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-12">
+            <Button
+              size="sm"
+              variant="light"
+              isDisabled={currentPage === 1}
+              onPress={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              ← Anterior
+            </Button>
+            <span className="text-default-600 text-sm">
+              Página {currentPage} de {totalPages}
+            </span>
+            <Button
+              size="sm"
+              variant="light"
+              isDisabled={currentPage === totalPages}
+              onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Siguiente →
+            </Button>
           </div>
         )}
       </div>
