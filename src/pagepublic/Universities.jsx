@@ -50,7 +50,7 @@ const logoImgSrc = (val) => {
   // si era .../api/v1, quita el /api/...
   const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
   // variable de entorno como respaldo
-  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "").trim();
+ const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
   const backendOrigin = fromAxios || fromEnv || "";
 
   const origin = backendOrigin.replace(/\/$/, "");

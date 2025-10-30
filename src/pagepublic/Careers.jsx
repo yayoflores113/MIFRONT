@@ -46,7 +46,7 @@ const careerImgSrc = (val) => {
 
   const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
   const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
-  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "").trim();
+const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
   const backendOrigin = (fromAxios || fromEnv || "").replace(/\/$/, "");
   return backendOrigin
     ? `${backendOrigin}/img/carreras/${v}`

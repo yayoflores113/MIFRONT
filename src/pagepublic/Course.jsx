@@ -29,7 +29,7 @@ const apiOrigin = () => {
   const fromAxiosOrigin = axiosBase
     ? axiosBase.replace(/\/api\/?.*$/i, "")
     : "";
-  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "").trim();
+const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
   const backendOrigin = (fromAxiosOrigin || fromEnv || "").replace(/\/$/, "");
   return backendOrigin || "";
 };

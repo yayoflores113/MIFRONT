@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const base_api_url = "http://localhost:8000/api/v1";
+const base_api_url = (import.meta?.env?.VITE_API_BASE_URL || "https://miback-1333.onrender.com/api/v1").trim();
 
 // 🔥 CONFIGURAR AXIOS PARA ENVIAR EL TOKEN AUTOMÁTICAMENTE
 axios.interceptors.request.use(

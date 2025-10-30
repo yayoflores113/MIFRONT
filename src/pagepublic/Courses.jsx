@@ -39,8 +39,8 @@ const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
 // Helper para obtener el origen de la API
 const apiOrigin = () => {
   const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
-  const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
-  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "").trim();
+  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim(); "";
+
   return fromAxios || fromEnv || "";
 };
 
