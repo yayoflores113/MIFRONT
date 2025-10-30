@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import AuthUser from "../pageauth/AuthUser";
 import Config from "../Config";
 import {
-  Navbar,
+  Navbar as UINavbar,
   NavbarBrand,
   NavbarContent,
   NavbarItem,
@@ -18,9 +18,7 @@ const NavbarComponent = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
 
-  const { pathname } = useLocation();
-
-  // (1) Hooks siempre se declaran en todas las renderizaciones
+  // Hooks siempre se declaran al inicio
   useEffect(() => {
     const onScroll = () => setHasScrolled(window.scrollY > 0);
     onScroll();
@@ -28,52 +26,55 @@ const NavbarComponent = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // (2) Guard de rutas: ahora SÍ después de los hooks
+  // Guard de rutas: no mostrar navbar en login/register
   if (pathname === "/login" || pathname === "/register") return null;
 
   const logoutUser = () => {
-    Config.getLogout("/logout")
-      .then(() => getLogout())
+    Config.getLogout()
+      .then(() => {
+        localStorage.removeItem("auth_token");
+        window.location.href = "/login";
+      })
       .catch((error) => console.error(error));
   };
 
   const renderLinks = () => {
-    const currentUser = user ?? getUser();
-    if (getToken()) {
+    const user = AuthUser.getUser();
+    const token = AuthUser.getToken();
+
+    if (token) {
       return (
         <>
           <NavbarItem>
-            <Link
-              href={`/${getRol()}`}
+            <UILink
+              href={`/${AuthUser.getRol()}`}
               className="text-sm md:text-base text-[#181818]/80 hover:text-[#181818] transition-colors"
             >
               <span className="hidden sm:inline">Bienvenid@</span>
               <span className="mx-1">|</span>
-              <span className="font-medium">
-                {currentUser?.name ?? "Usuario"}
-              </span>
-            </Link>
+              <span className="font-medium">{user?.name ?? "Usuario"}</span>
+            </UILink>
           </NavbarItem>
           <NavbarItem>
-            <Link
+            <UILink
               href="#"
               onPress={logoutUser}
               className="inline-flex items-center rounded-xl border border-black/10 px-3 py-2 text-sm md:text-base text-[#181818]/80 hover:text-[#181818] hover:bg-black/5 transition-colors"
             >
               Logout
-            </Link>
+            </UILink>
           </NavbarItem>
         </>
       );
     } else {
       return (
         <NavbarItem>
-          <Link
+          <UILink
             href="/login"
-            className="inline-flex items-center gap-2 rounded-xl bg-[#2CBFF0] px-4 py-2 text-sm md:text-base font-medium text-[#181818] shadow-sm hover:opacity-90 active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2CBFF0] focus-visible:ring-offset-2 transition"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#2CBFF0] px-4 py-2 text-sm md:text-base font-medium text-[#181818] shadow-sm hover:opacity-90 active:opacity-80 transition"
           >
             Login
-          </Link>
+          </UILink>
         </NavbarItem>
       );
     }
@@ -101,108 +102,45 @@ const NavbarComponent = () => {
     >
       {/* Brand */}
       <NavbarBrand>
-        <Link
+        <UILink
           href="/"
           className="flex items-center gap-2 text-[#181818] hover:opacity-90 transition-opacity"
           aria-label="Ir al inicio"
         >
           <img
-            src={`MI.png`}
+            src="MI.png"
             width={35}
             height={35}
             alt="MI"
             className="rounded-lg"
           />
           <span className="sr-only">Inicio</span>
-        </Link>
+        </UILink>
       </NavbarBrand>
 
       {/* Navegación centro (desktop) */}
       <NavbarContent className="hidden lg:flex gap-6" justify="center">
-        <NavbarItem isActive={pathname === "/"}>
-          <Link
-            href="/"
-            aria-current={pathname === "/" ? "page" : undefined}
-            className={`group relative text-[#181818]/80 hover:text-[#181818] transition-colors ${
-              isActive("/") && "text-[#181818]"
-            }`}
-          >
-            Home
-            <span
-              className={`pointer-events-none absolute -bottom-1 left-0 h-[2px] w-0 bg-[#2CBFF0] transition-[width] duration-200 group-hover:w-full ${
-                isActive("/") && "w-full"
-              }`}
-            />
-          </Link>
-        </NavbarItem>
-
-        <NavbarItem isActive={pathname === "/universities"}>
-          <Link
-            href="/universities"
-            aria-current={pathname === "/universities" ? "page" : undefined}
-            className={`group relative text-[#181818]/80 hover:text-[#181818] transition-colors ${
-              isActive("/universities") && "text-[#181818]"
-            }`}
-          >
-            Universidades
-            <span
-              className={`pointer-events-none absolute -bottom-1 left-0 h-[2px] w-0 bg-[#2CBFF0] transition-[width] duration-200 group-hover:w-full ${
-                isActive("/universities") && "w-full"
-              }`}
-            />
-          </Link>
-        </NavbarItem>
-
-        <NavbarItem isActive={pathname === "/careers"}>
-          <Link
-            href="/careers"
-            aria-current={pathname === "/careers" ? "page" : undefined}
-            className={`group relative text-[#181818]/80 hover:text-[#181818] transition-colors ${
-              isActive("/careers") && "text-[#181818]"
-            }`}
-          >
-            Carreras
-            <span
-              className={`pointer-events-none absolute -bottom-1 left-0 h-[2px] w-0 bg-[#2CBFF0] transition-[width] duration-200 group-hover:w-full ${
-                isActive("/careers") && "w-full"
-              }`}
-            />
-          </Link>
-        </NavbarItem>
-
-        <NavbarItem isActive={pathname === "/courses"}>
-          <Link
-            href="/courses"
-            aria-current={pathname === "/courses" ? "page" : undefined}
-            className={`group relative text-[#181818]/80 hover:text-[#181818] transition-colors ${
-              isActive("/courses") && "text-[#181818]"
-            }`}
-          >
-            Cursos
-            <span
-              className={`pointer-events-none absolute -bottom-1 left-0 h-[2px] w-0 bg-[#2CBFF0] transition-[width] duration-200 group-hover:w-full ${
-                isActive("/courses") && "w-full"
-              }`}
-            />
-          </Link>
-        </NavbarItem>
-
-        <NavbarItem isActive={pathname === "/plans"}>
-          <Link
-            href="/plans"
-            aria-current={pathname === "/plans" ? "page" : undefined}
-            className={`group relative text-[#181818]/80 hover:text-[#181818] transition-colors ${
-              isActive("/plans") && "text-[#181818]"
-            }`}
-          >
-            Planes
-            <span
-              className={`pointer-events-none absolute -bottom-1 left-0 h-[2px] w-0 bg-[#2CBFF0] transition-[width] duration-200 group-hover:w-full ${
-                isActive("/plans") && "w-full"
-              }`}
-            />
-          </Link>
-        </NavbarItem>
+        {["/", "/universities", "/careers", "/courses", "/plans"].map((route, i) => {
+          const labels = ["Home", "Universidades", "Carreras", "Cursos", "Planes"];
+          return (
+            <NavbarItem key={i} isActive={pathname === route}>
+              <UILink
+                href={route}
+                aria-current={pathname === route ? "page" : undefined}
+                className={`group relative text-[#181818]/80 hover:text-[#181818] transition-colors ${
+                  isActive(route) && "text-[#181818]"
+                }`}
+              >
+                {labels[i]}
+                <span
+                  className={`pointer-events-none absolute -bottom-1 left-0 h-[2px] w-0 bg-[#2CBFF0] transition-[width] duration-200 group-hover:w-full ${
+                    isActive(route) && "w-full"
+                  }`}
+                />
+              </UILink>
+            </NavbarItem>
+          );
+        })}
       </NavbarContent>
 
       {/* Acciones derecha (desktop) */}
@@ -220,102 +158,54 @@ const NavbarComponent = () => {
 
       {/* Menú (mobile) */}
       <NavbarMenu className="pt-2">
-        <NavbarMenuItem isActive={pathname === "/"}>
-          <Link
-            href="/"
-            size="lg"
-            aria-current={pathname === "/" ? "page" : undefined}
-            className={`block rounded-lg px-2 py-2 text-[#181818]/90 hover:bg-black/5 ${
-              isActive("/") && "bg-black/[0.04] font-medium"
-            }`}
-          >
-            Home
-          </Link>
-        </NavbarMenuItem>
+        {["/", "/universities", "/careers", "/courses", "/plans"].map((route, i) => {
+          const labels = ["Home", "Universidades", "Carreras", "Cursos", "Planes"];
+          return (
+            <NavbarMenuItem key={i} isActive={pathname === route}>
+              <UILink
+                href={route}
+                size="lg"
+                aria-current={pathname === route ? "page" : undefined}
+                className={`block rounded-lg px-2 py-2 text-[#181818]/90 hover:bg-black/5 ${
+                  isActive(route) && "bg-black/[0.04] font-medium"
+                }`}
+              >
+                {labels[i]}
+              </UILink>
+            </NavbarMenuItem>
+          );
+        })}
 
-        <NavbarMenuItem isActive={pathname === "/universities"}>
-          <Link
-            href="/universities"
-            size="lg"
-            aria-current={pathname === "/universities" ? "page" : undefined}
-            className={`block rounded-lg px-2 py-2 text-[#181818]/90 hover:bg-black/5 ${
-              isActive("/universities") && "bg-black/[0.04] font-medium"
-            }`}
-          >
-            Universidades
-          </Link>
-        </NavbarMenuItem>
-
-        <NavbarMenuItem isActive={pathname === "/careers"}>
-          <Link
-            href="/careers"
-            size="lg"
-            aria-current={pathname === "/careers" ? "page" : undefined}
-            className={`block rounded-lg px-2 py-2 text-[#181818]/90 hover:bg-black/5 ${
-              isActive("/careers") && "bg-black/[0.04] font-medium"
-            }`}
-          >
-            Carreras
-          </Link>
-        </NavbarMenuItem>
-
-        <NavbarMenuItem isActive={pathname === "/courses"}>
-          <Link
-            href="/courses"
-            size="lg"
-            aria-current={pathname === "/courses" ? "page" : undefined}
-            className={`block rounded-lg px-2 py-2 text-[#181818]/90 hover:bg-black/5 ${
-              isActive("/courses") && "bg-black/[0.04] font-medium"
-            }`}
-          >
-            Cursos
-          </Link>
-        </NavbarMenuItem>
-
-        <NavbarMenuItem isActive={pathname === "/plans"}>
-          <Link
-            href="/plans"
-            size="lg"
-            aria-current={pathname === "/plans" ? "page" : undefined}
-            className={`block rounded-lg px-2 py-2 text-[#181818]/90 hover:bg-black/5 ${
-              isActive("/plans") && "bg-black/[0.04] font-medium"
-            }`}
-          >
-            Planes
-          </Link>
-        </NavbarMenuItem>
-
-        {/* Acciones (mobile) — misma lógica tuya */}
+        {/* Acciones (mobile) */}
         <div className="mt-3 border-t border-black/5 pt-3">
-          {getToken() ? (
+          {AuthUser.getToken() ? (
             <>
               <NavbarMenuItem>
-                <Link
-                  href={`/${getRol()}`}
+                <UILink
+                  href={`/${AuthUser.getRol()}`}
                   className="block rounded-lg px-2 py-2 text-[#181818] hover:bg-black/5"
                 >
-                  Administración <span className="mx-1">|</span>{" "}
-                  {(user ?? getUser())?.name ?? "Usuario"}
-                </Link>
+                  Administración | {AuthUser.getUser()?.name ?? "Usuario"}
+                </UILink>
               </NavbarMenuItem>
               <NavbarMenuItem>
-                <Link
+                <UILink
                   href="#"
                   onPress={logoutUser}
                   className="block rounded-lg px-2 py-2 text-red-600 hover:bg-red-50"
                 >
                   Logout
-                </Link>
+                </UILink>
               </NavbarMenuItem>
             </>
           ) : (
             <NavbarMenuItem>
-              <Link
+              <UILink
                 href="/login"
                 className="inline-flex items-center gap-2 rounded-xl bg-[#2CBFF0] px-4 py-2 text-[#181818] font-medium shadow-sm hover:opacity-90 active:opacity-80 transition"
               >
                 Login
-              </Link>
+              </UILink>
             </NavbarMenuItem>
           )}
         </div>
