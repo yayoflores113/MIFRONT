@@ -11,7 +11,7 @@ import {
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { motion } from "framer-motion";
 import Config from "../Config";
-import axios, { ensureSanctum } from "../lib/axios";
+import axios from "../lib/axios";
 
 // utilidades pequeñas y limpias
 const cn = (...xs) => xs.filter(Boolean).join(" ");

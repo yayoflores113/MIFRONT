@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Config from "../Config";
 import AuthUser from "./AuthUser";
-import { ensureSanctum } from "../lib/axios";
+import axios from "../lib/axios";
+
 
 export default function AuthCallback() {
   const navigate = useNavigate();
