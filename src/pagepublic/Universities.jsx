@@ -33,39 +33,30 @@ const PAGE_SIZE = 9;
 const uniq = (arr) => Array.from(new Set(arr.filter(Boolean)));
 const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
 
-/** ========= helper de imágenes =========
- *  - Acepta base64 y URL absoluta
- *  - Si viene sólo el nombre de archivo, construye ${BACKEND_BASE}/img/universidades/<archivo>
- *  - BACKEND_BASE: intenta sacar del baseURL de axios o de VITE_BACKEND_URL
- */
 const logoImgSrc = (val) => {
   if (!val) return "";
   const v = String(val).trim();
   if (v.startsWith("data:image")) return v;
   if (/^https?:\/\//i.test(v)) return v;
 
-  // intenta leer baseURL de axios global si existe
   const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
-  // si era .../api/v1, quita el /api/...
   const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
-  // variable de entorno como respaldo
   const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
 
   const backendOrigin = fromAxios || fromEnv || "";
   const backendBase = backendOrigin.replace(/\/$/, "");
 
-  return backendBase
-    ? ${backendBase}/img/universidades/${v}
-    : /img/universidades/${v};
+  if (backendBase) {
+    return backendBase + "/img/universidades/" + v;
+  }
+  return "/img/universidades/" + v;
 };
 
 const Universities = () => {
-  // Data
   const [universities, setUniversities] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
 
-  // Search & filters
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedCountry, setSelectedCountry] = React.useState(null);
   const [selectedState, setSelectedState] = React.useState(null);
@@ -73,10 +64,8 @@ const Universities = () => {
   const [onlyWithLogo, setOnlyWithLogo] = React.useState(false);
   const [sortKey, setSortKey] = React.useState("relevance");
 
-  // Pagination
   const [page, setPage] = React.useState(1);
 
-  // Fetch inicial
   React.useEffect(() => {
     let active = true;
     (async () => {
@@ -105,7 +94,6 @@ const Universities = () => {
     };
   }, []);
 
-  // Opciones dependientes
   const countries = React.useMemo(
     () => uniq(universities.map((u) => u.country)),
     [universities]
@@ -123,7 +111,6 @@ const Universities = () => {
     return uniq(base.map((u) => u.city));
   }, [universities, selectedCountry, selectedState]);
 
-  // Filtros + búsqueda + orden
   const filtered = React.useMemo(() => {
     let res = universities.slice();
 
@@ -173,7 +160,6 @@ const Universities = () => {
     sortKey,
   ]);
 
-  // Paginación
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = clamp(page, 1, totalPages);
   const pageItems = React.useMemo(() => {
@@ -192,7 +178,6 @@ const Universities = () => {
   return (
     <section className="w-full py-16 px-4 bg-[#FEFEFE]">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
             <h1 className="text-4xl font-bold mb-2">Universidades</h1>
@@ -202,7 +187,6 @@ const Universities = () => {
           </div>
         </div>
 
-        {/* Search + Sort */}
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4 mb-6">
           <div className="flex-1">
             <Input
@@ -279,9 +263,7 @@ const Universities = () => {
           </Button>
         </div>
 
-        {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-8">
-          {/* País */}
           <Dropdown>
             <DropdownTrigger>
               <Button
@@ -308,7 +290,6 @@ const Universities = () => {
             </DropdownMenu>
           </Dropdown>
 
-          {/* Estado */}
           <Dropdown>
             <DropdownTrigger>
               <Button
@@ -336,7 +317,6 @@ const Universities = () => {
             </DropdownMenu>
           </Dropdown>
 
-          {/* Ciudad */}
           <Dropdown>
             <DropdownTrigger>
               <Button
@@ -364,7 +344,6 @@ const Universities = () => {
             </DropdownMenu>
           </Dropdown>
 
-          {/* Con logo */}
           <div className="flex gap-2">
             <Button
               variant={onlyWithLogo ? "solid" : "flat"}
@@ -382,7 +361,6 @@ const Universities = () => {
           </div>
         </div>
 
-        {/* Reset */}
         <div className="flex items-center gap-3 mb-6">
           {(selectedCountry ||
             selectedState ||
@@ -407,17 +385,15 @@ const Universities = () => {
           )}
         </div>
 
-        {/* Count */}
         <div className="mb-6">
           <p className="text-default-500">
             Mostrando {filtered.length}{" "}
             {filtered.length === 1 ? "universidad" : "universidades"}
-            {selectedCountry ? ` en ${selectedCountry}` : ""}{" "}
-            {searchQuery ? ` que coinciden con "${searchQuery}"` : ""}
+            {selectedCountry ? " en " + selectedCountry : ""}{" "}
+            {searchQuery ? 'que coinciden con "' + searchQuery + '"' : ""}
           </p>
         </div>
 
-        {/* Loading / Error */}
         {loading && (
           <div className="flex items-center gap-3 text-default-500 mb-6">
             <Spinner size="sm" /> Cargando universidades…
@@ -425,7 +401,6 @@ const Universities = () => {
         )}
         {!!error && <p className="text-warning mb-4">{error}</p>}
 
-        {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {pageItems.map((u, index) => (
             <motion.div
@@ -436,13 +411,13 @@ const Universities = () => {
             >
               <Card className="border border-default-200 shadow-sm h-full overflow-visible">
                 <CardBody className="p-0">
-                  <Link to={/universities/${u.slug}} className="block">
+                  <Link to={"/universities/" + u.slug} className="block">
                     <div className="relative h-40 bg-default-100 rounded-large overflow-hidden">
                       {u.logo_url ? (
                         <Image
                           isZoomed
                           loading="lazy"
-                          alt={${u.name} logo}
+                          alt={u.name + " logo"}
                           src={logoImgSrc(u.logo_url)}
                           fallbackSrc="/img/universidades/placeholder.png"
                           radius="none"
@@ -478,7 +453,7 @@ const Universities = () => {
                   <div className="p-5">
                     <div className="flex justify-between items-start mb-2">
                       <div className="min-w-0">
-                        <Link to={/universities/${u.slug}}>
+                        <Link to={"/universities/" + u.slug}>
                           <h3
                             className="font-bold text-xl truncate"
                             title={u.name}
@@ -501,8 +476,8 @@ const Universities = () => {
                     <div className="flex items-center gap-2 text-default-500 text-sm mb-4">
                       <MapPinIcon className="w-4" />
                       <span className="truncate">
-                        {u.city ? `${u.city}, ` : ""}
-                        {u.state ? `${u.state}, ` : ""}
+                        {u.city ? u.city + ", " : ""}
+                        {u.state ? u.state + ", " : ""}
                         {u.country || ""}
                       </span>
                     </div>
@@ -518,7 +493,7 @@ const Universities = () => {
                 <CardFooter className="flex justify-between p-5 pt-0">
                   <Button
                     as={Link}
-                    to={/universities/${u.slug}}
+                    to={"/universities/" + u.slug}
                     variant="light"
                     className="text-[#2CBFF0]"
                     startContent={<LinkIcon className="w-4" />}
@@ -534,7 +509,6 @@ const Universities = () => {
           ))}
         </div>
 
-        {/* Empty */}
         {!loading && filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <AcademicCapIcon className="w-12 text-default-400 mb-3" />
@@ -544,7 +518,6 @@ const Universities = () => {
           </div>
         )}
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex justify-center items-center gap-2 mt-12">
             <Button
