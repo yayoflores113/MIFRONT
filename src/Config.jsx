@@ -1,10 +1,28 @@
+
+import axios from "axios";
+
+const base_api_url = (import.meta?.env?.VITE_API_BASE_URL || "https://miback-1333.onrender.com/api/v1").trim();
+
+
+axios.interceptors.request.use(
+  (config) => {
+    const token = JSON.parse(sessionStorage.getItem('token'));
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 import axios from "./lib/axios";
+
 
 const base_api_url = "/api/v1"; // axios.js ya tiene baseURL
 
-// ============================================
-// AUTH (con Sanctum stateful)
-// ============================================
+
 const Auth = {
   register: (data) => axios.post(`${base_api_url}/auth/register`, data),
   login: (data) => axios.post(`${base_api_url}/auth/login`, data),

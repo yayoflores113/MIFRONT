@@ -41,10 +41,26 @@ const logoImgSrc = (val) => {
   const v = String(val).trim();
   if (v.startsWith("data:image")) return v;
   if (/^https?:\/\//i.test(v)) return v;
+
+
+  // intenta leer baseURL de axios global si existe
+  const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
+  // si era .../api/v1, quita el /api/...
+  const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
+  // variable de entorno como respaldo
+ const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
+  const backendOrigin = fromAxios || fromEnv || "";
+
+  const origin = backendOrigin.replace(/\/$/, "");
+  return origin
+    ? `${origin}/img/universidades/${v}`
+    : `/img/universidades/${v}`;
+
   const backendUrl =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
   const origin = backendUrl.replace(/\/$/, "");
   return `${origin}/img/universidades/${v}`;
+
 };
 
 const Universities = () => {

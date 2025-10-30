@@ -24,6 +24,19 @@ import axios, { ensureSanctum } from "../lib/axios";
  * - nombre de archivo → construye `${backend}/img/cursos/<archivo>`
  */
 
+
+// Helper para stripe
+const apiOrigin = () => {
+  const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
+  const fromAxiosOrigin = axiosBase
+    ? axiosBase.replace(/\/api\/?.*$/i, "")
+    : "";
+const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
+  const backendOrigin = (fromAxiosOrigin || fromEnv || "").replace(/\/$/, "");
+  return backendOrigin || "";
+};
+
+
 const courseImgSrc = (val) => {
   if (!val) return "";
   const v = String(val).trim();
