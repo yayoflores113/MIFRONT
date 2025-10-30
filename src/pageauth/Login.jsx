@@ -4,7 +4,8 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import Config from "../Config";
 import { Form, Input, Button, Image, Alert, Divider } from "@heroui/react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
-import { ensureSanctum } from "../lib/axios";
+import axios from "../lib/axios";
+
 
 const Login = () => {
   const { setToken, getToken } = AuthUser();
