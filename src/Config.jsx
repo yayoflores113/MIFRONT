@@ -2,15 +2,15 @@
 import axios from "./lib/axios";
 
 // URLs base
-const BASE_API_URL = "https://miback-1333.onrender.com/api/v1"; // Para rutas de API
-const BASE_AUTH_URL = "https://miback-1333.onrender.com"; // Para Sanctum CSRF/login
+const BASE_API_URL = "https://miback-1333.onrender.com/api/v1";
+const BASE_AUTH_URL = "https://miback-1333.onrender.com";
 
 // =====================
 // Axios para API
 // =====================
 const api = axios.create({
   baseURL: BASE_API_URL,
-  withCredentials: true, // necesario para enviar cookies
+  withCredentials: true,
 });
 
 // =====================
@@ -20,7 +20,6 @@ const Auth = {
   getCsrfCookie: () => axios.get(`${BASE_AUTH_URL}/sanctum/csrf-cookie`, { withCredentials: true }),
   register: (data) => api.post("/auth/register", data),
   login: async (data) => {
-    // Primero obtener la cookie CSRF
     await Auth.getCsrfCookie();
     return api.post("/auth/login", data);
   },
@@ -29,7 +28,7 @@ const Auth = {
 };
 
 // =====================
-// Admin Users
+// Admin
 // =====================
 const AdminUsers = {
   getAll: () => api.get("/admin/users"),
@@ -38,9 +37,6 @@ const AdminUsers = {
   delete: (id) => api.delete(`/admin/users/${id}`),
 };
 
-// =====================
-// Admin Universities
-// =====================
 const AdminUniversities = {
   getAll: () => api.get("/admin/universities"),
   create: (data) => api.post("/admin/universities", data),
@@ -49,9 +45,6 @@ const AdminUniversities = {
   delete: (id) => api.delete(`/admin/universities/${id}`),
 };
 
-// =====================
-// Admin Careers
-// =====================
 const AdminCareers = {
   getAll: () => api.get("/admin/careers"),
   create: (data) => api.post("/admin/careers", data),
@@ -60,9 +53,6 @@ const AdminCareers = {
   delete: (id) => api.delete(`/admin/careers/${id}`),
 };
 
-// =====================
-// Admin Courses
-// =====================
 const AdminCourses = {
   getAll: () => api.get("/admin/courses"),
   create: (data) => api.post("/admin/courses", data),
@@ -71,9 +61,6 @@ const AdminCourses = {
   delete: (id) => api.delete(`/admin/courses/${id}`),
 };
 
-// =====================
-// Admin Plans
-// =====================
 const AdminPlans = {
   getAll: () => api.get("/admin/plans"),
   create: (data) => api.post("/admin/plans", data),
@@ -82,9 +69,6 @@ const AdminPlans = {
   delete: (id) => api.delete(`/admin/plans/${id}`),
 };
 
-// =====================
-// Admin Subscriptions
-// =====================
 const AdminSubscriptions = {
   getAll: (params) => api.get("/user/subscriptions", { params }),
   getById: (id) => api.get(`/user/subscriptions/${id}`),
@@ -94,7 +78,7 @@ const AdminSubscriptions = {
 };
 
 // =====================
-// Public Routes
+// Public
 // =====================
 const PublicUniversities = {
   getAll: (quantity) => api.get(`/public/universities/${quantity}`),
@@ -117,18 +101,113 @@ const PublicPlans = {
 };
 
 // =====================
-// Export default
+// TestAttempts
+// =====================
+const TestAttempts = {
+  getAll: (params) => api.get("/user/test-attempts", { params }),
+  getById: (id) => api.get(`/user/test-attempts/${id}`),
+  create: (data) => api.post("/user/test-attempts", data),
+  update: (id, data) => api.put(`/user/test-attempts/${id}`, data),
+  delete: (id) => api.delete(`/user/test-attempts/${id}`),
+};
+
+// =====================
+// Favorites
+// =====================
+const Favorites = {
+  getAll: () => api.get("/user/favorites"),
+  add: (data) => api.post("/user/favorites", data),
+  remove: (id) => api.delete(`/user/favorites/${id}`),
+};
+
+// =====================
+// LearningPaths
+// =====================
+const LearningPaths = {
+  getAll: () => api.get("/user/learning-paths"),
+  getById: (id) => api.get(`/user/learning-paths/${id}`),
+  create: (data) => api.post("/user/learning-paths", data),
+  update: (id, data) => api.put(`/user/learning-paths/${id}`, data),
+  delete: (id) => api.delete(`/user/learning-paths/${id}`),
+};
+
+// =====================
+// Export default con aliases
 // =====================
 export default {
-  Auth,
-  AdminUsers,
-  AdminUniversities,
-  AdminCareers,
-  AdminCourses,
-  AdminPlans,
-  AdminSubscriptions,
-  PublicUniversities,
-  PublicCareers,
-  PublicCourses,
-  PublicPlans,
+  // Auth
+  getRegister: Auth.register,
+  getLogin: Auth.login,
+  getLogout: Auth.logout,
+  getMe: Auth.me,
+
+  // Admin Users
+  getUserAll: AdminUsers.getAll,
+  getUserById: AdminUsers.getById,
+  getUserUpdate: (data, id) => AdminUsers.update(id, data),
+  getUserDelete: AdminUsers.delete,
+
+  // Admin Universities
+  getUniversitiesAll: AdminUniversities.getAll,
+  getUniversityById: AdminUniversities.getById,
+  createUniversity: AdminUniversities.create,
+  updateUniversity: (data, id) => AdminUniversities.update(id, data),
+  deleteUniversity: AdminUniversities.delete,
+
+  // Admin Careers
+  getCareersAll: AdminCareers.getAll,
+  getCareerById: AdminCareers.getById,
+  createCareer: AdminCareers.create,
+  updateCareer: (data, id) => AdminCareers.update(id, data),
+  deleteCareer: AdminCareers.delete,
+
+  // Admin Courses
+  getCoursesAll: AdminCourses.getAll,
+  getCourseById: AdminCourses.getById,
+  createCourse: AdminCourses.create,
+  updateCourse: (data, id) => AdminCourses.update(id, data),
+  deleteCourse: AdminCourses.delete,
+
+  // Admin Plans
+  getPlansAll: AdminPlans.getAll,
+  getPlanById: AdminPlans.getById,
+  createPlan: AdminPlans.create,
+  updatePlan: (data, id) => AdminPlans.update(id, data),
+  deletePlan: AdminPlans.delete,
+
+  // Admin Subscriptions
+  getSubscriptionsAll: AdminSubscriptions.getAll,
+  getSubscriptionById: AdminSubscriptions.getById,
+  createSubscription: AdminSubscriptions.create,
+  updateSubscription: (data, id) => AdminSubscriptions.update(id, data),
+  deleteSubscription: AdminSubscriptions.delete,
+
+  // Public
+  getUniversities: PublicUniversities.getAll,
+  getUniversityBySlug: PublicUniversities.getBySlug,
+  getCareers: PublicCareers.getAll,
+  getCareerBySlug: PublicCareers.getBySlug,
+  getCourses: PublicCourses.getAll,
+  getCourseBySlug: PublicCourses.getBySlug,
+  getPlans: PublicPlans.getAll,
+  getPlanBySlug: PublicPlans.getBySlug,
+
+  // TestAttempts
+  getTestAttempts: TestAttempts.getAll,
+  getTestAttemptById: TestAttempts.getById,
+  createTestAttempt: TestAttempts.create,
+  updateTestAttempt: (data, id) => TestAttempts.update(id, data),
+  deleteTestAttempt: TestAttempts.delete,
+
+  // Favorites
+  getFavorites: Favorites.getAll,
+  addFavorite: Favorites.add,
+  removeFavorite: Favorites.remove,
+
+  // LearningPaths
+  getLearningPaths: LearningPaths.getAll,
+  getLearningPathById: LearningPaths.getById,
+  createLearningPath: LearningPaths.create,
+  updateLearningPath: (data, id) => LearningPaths.update(id, data),
+  deleteLearningPath: LearningPaths.delete,
 };
