@@ -32,7 +32,6 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
-
     if (status === 401) {
       // Si el token no es válido o expiró, limpiamos y redirigimos al login
       sessionStorage.removeItem("token");
@@ -41,7 +40,6 @@ axiosInstance.interceptors.response.use(
         window.location.href = "/login";
       }
     }
-
     // No exponemos detalles técnicos en producción
     return Promise.reject({
       message:
