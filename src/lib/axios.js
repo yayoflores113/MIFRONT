@@ -1,10 +1,10 @@
-// src/lib/axios.js
 import axios from "axios";
 
-// ✅ URL de producción fija
-const baseURL = "https://miback-1333.onrender.com/api/v1";
+// Detecta el entorno: local o producción
+const baseURL =
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:8000/api/v1";
 
-// 🔧 Configuración del cliente Axios
+// Configuración general de Axios
 const axiosInstance = axios.create({
   baseURL,
   timeout: 60000,
@@ -12,35 +12,36 @@ const axiosInstance = axios.create({
     Accept: "application/json",
     "Content-Type": "application/json",
   },
-  withCredentials: true, // déjalo en true solo si tu backend usa cookies/sesiones
+  // Default: no enviar cookies, lo haremos por endpoint según necesidad
+  withCredentials: false,
 });
 
-// 🛠️ Interceptor para agregar automáticamente el token
+// Interceptor para agregar token si existe
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = sessionStorage.getItem("token") || localStorage.getItem("auth_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      // Si usamos token, entonces enviamos cookies
+      config.withCredentials = true;
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// 🚨 Interceptor de respuesta para manejo de errores globales
+// Interceptor de respuesta para errores globales
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
     if (status === 401) {
-      // Si el token no es válido o expiró, limpiamos y redirigimos al login
       sessionStorage.removeItem("token");
       localStorage.removeItem("auth_token");
       if (window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
     }
-    // No exponemos detalles técnicos en producción
     return Promise.reject({
       message:
         error.response?.data?.message ||
