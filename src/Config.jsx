@@ -14,145 +14,128 @@ const Auth = {
 // -------------------- ADMIN USERS --------------------
 const AdminUsers = {
   getAll: () => axios.get("/admin/users"),
-  getById: (id) => axios.get(`/admin/users/${id}`),
-  update: (id, data) => axios.put(`/admin/users/${id}`, data),
-  delete: (id) => axios.delete(`/admin/users/${id}`),
+  getById: (id) => id ? axios.get(`/admin/users/${id}`) : Promise.reject("ID is undefined"),
+  update: (id, data) => id ? axios.put(`/admin/users/${id}`, data) : Promise.reject("ID is undefined"),
+  delete: (id) => id ? axios.delete(`/admin/users/${id}`) : Promise.reject("ID is undefined"),
 };
 
 // -------------------- ADMIN UNIVERSITIES --------------------
 const AdminUniversities = {
   getAll: () => axios.get("/admin/universities"),
   create: (data) => axios.post("/admin/universities", data),
-  getById: (id) => axios.get(`/admin/universities/${id}`),
-  update: (id, data) => axios.put(`/admin/universities/${id}`, data),
-  delete: (id) => axios.delete(`/admin/universities/${id}`),
+  getById: (id) => id ? axios.get(`/admin/universities/${id}`) : Promise.reject("ID is undefined"),
+  update: (id, data) => id ? axios.put(`/admin/universities/${id}`, data) : Promise.reject("ID is undefined"),
+  delete: (id) => id ? axios.delete(`/admin/universities/${id}`) : Promise.reject("ID is undefined"),
 };
 
 // -------------------- ADMIN CAREERS --------------------
 const AdminCareers = {
   getAll: () => axios.get("/admin/careers"),
   create: (data) => axios.post("/admin/careers", data),
-  getById: (id) => axios.get(`/admin/careers/${id}`),
-  update: (id, data) => axios.put(`/admin/careers/${id}`, data),
-  delete: (id) => axios.delete(`/admin/careers/${id}`),
+  getById: (id) => id ? axios.get(`/admin/careers/${id}`) : Promise.reject("ID is undefined"),
+  update: (id, data) => id ? axios.put(`/admin/careers/${id}`, data) : Promise.reject("ID is undefined"),
+  delete: (id) => id ? axios.delete(`/admin/careers/${id}`) : Promise.reject("ID is undefined"),
 };
 
 // -------------------- ADMIN COURSES --------------------
 const AdminCourses = {
   getAll: () => axios.get("/admin/courses"),
   create: (data) => axios.post("/admin/courses", data),
-  getById: (id) => axios.get(`/admin/courses/${id}`),
-  update: (id, data) => axios.put(`/admin/courses/${id}`, data),
-  delete: (id) => axios.delete(`/admin/courses/${id}`),
+  getById: (id) => id ? axios.get(`/admin/courses/${id}`) : Promise.reject("ID is undefined"),
+  update: (id, data) => id ? axios.put(`/admin/courses/${id}`, data) : Promise.reject("ID is undefined"),
+  delete: (id) => id ? axios.delete(`/admin/courses/${id}`) : Promise.reject("ID is undefined"),
 };
 
 // -------------------- ADMIN PLANS --------------------
 const AdminPlans = {
   getAll: () => axios.get("/admin/plans"),
   create: (data) => axios.post("/admin/plans", data),
-  getById: (id) => axios.get(`/admin/plans/${id}`),
-  update: (id, data) => axios.put(`/admin/plans/${id}`, data),
-  delete: (id) => axios.delete(`/admin/plans/${id}`),
+  getById: (id) => id ? axios.get(`/admin/plans/${id}`) : Promise.reject("ID is undefined"),
+  update: (id, data) => id ? axios.put(`/admin/plans/${id}`, data) : Promise.reject("ID is undefined"),
+  delete: (id) => id ? axios.delete(`/admin/plans/${id}`) : Promise.reject("ID is undefined"),
 };
 
 // -------------------- ADMIN SUBSCRIPTIONS --------------------
 const AdminSubscriptions = {
   getAll: (params) => axios.get("/admin/subscriptions", { params }),
-  getById: (id) => axios.get(`/admin/subscriptions/${id}`),
+  getById: (id) => id ? axios.get(`/admin/subscriptions/${id}`) : Promise.reject("ID is undefined"),
   create: (data) => axios.post("/admin/subscriptions", data),
-  update: (id, data) => axios.put(`/admin/subscriptions/${id}`, data),
-  delete: (id) => axios.delete(`/admin/subscriptions/${id}`),
+  update: (id, data) => id ? axios.put(`/admin/subscriptions/${id}`, data) : Promise.reject("ID is undefined"),
+  delete: (id) => id ? axios.delete(`/admin/subscriptions/${id}`) : Promise.reject("ID is undefined"),
 };
 
 // -------------------- ADMIN LEARNING PATHS --------------------
 const AdminLearningPaths = {
   getAll: () => axios.get("/admin/learning-paths"),
   create: (data) => axios.post("/admin/learning-paths", data),
-  getById: (id) => axios.get(`/admin/learning-paths/${id}`),
-  update: (id, data) => axios.put(`/admin/learning-paths/${id}`, data),
-  delete: (id) => axios.delete(`/admin/learning-paths/${id}`),
+  getById: (id) => id ? axios.get(`/admin/learning-paths/${id}`) : Promise.reject("ID is undefined"),
+  update: (id, data) => id ? axios.put(`/admin/learning-paths/${id}`, data) : Promise.reject("ID is undefined"),
+  delete: (id) => id ? axios.delete(`/admin/learning-paths/${id}`) : Promise.reject("ID is undefined"),
 };
 
 // -------------------- ADMIN DAILY EXERCISES --------------------
 const AdminDailyExercises = {
   getAll: (params = {}) => axios.get("/admin/daily-exercises", { params }),
   create: (data) => axios.post("/admin/daily-exercises", data),
-  getById: (id) => axios.get(`/admin/daily-exercises/${id}`),
-  update: (id, data) => axios.put(`/admin/daily-exercises/${id}`, data),
-  delete: (id) => axios.delete(`/admin/daily-exercises/${id}`),
+  getById: (id) => id ? axios.get(`/admin/daily-exercises/${id}`) : Promise.reject("ID is undefined"),
+  update: (id, data) => id ? axios.put(`/admin/daily-exercises/${id}`, data) : Promise.reject("ID is undefined"),
+  delete: (id) => id ? axios.delete(`/admin/daily-exercises/${id}`) : Promise.reject("ID is undefined"),
 };
 
-// -------------------- PUBLIC UNIVERSITIES --------------------
+// -------------------- PUBLIC --------------------
 const PublicUniversities = {
   getAll: (quantity = 10) => axios.get(`/public/universities/${quantity}`),
-  getBySlug: (slug) => axios.get(`/public/universities/${slug}`),
+  getBySlug: (slug) => slug ? axios.get(`/public/universities/${slug}`) : Promise.reject("Slug is undefined"),
 };
 
-// -------------------- PUBLIC CAREERS --------------------
 const PublicCareers = {
   getAll: (quantity = 10) => axios.get(`/public/careers/${quantity}`),
-  getBySlug: (slug) => axios.get(`/public/careers/${slug}`),
+  getBySlug: (slug) => slug ? axios.get(`/public/careers/${slug}`) : Promise.reject("Slug is undefined"),
 };
 
-// -------------------- PUBLIC COURSES --------------------
 const PublicCourses = {
-  getAll: (quantity = 120, params = {}) =>
-    axios.get(`${base_api_url}/public/courses`, {
-      params: { quantity, ...params },
-    }),
-  getBySlug: (slug) => axios.get(`${base_api_url}/public/courses/${slug}`),
+  getAll: (quantity = 120, params = {}) => axios.get(`${base_api_url}/public/courses`, { params: { quantity, ...params } }),
+  getBySlug: (slug) => slug ? axios.get(`${base_api_url}/public/courses/${slug}`) : Promise.reject("Slug is undefined"),
 };
 
-// -------------------- PUBLIC PLANS --------------------
 const PublicPlans = {
-  getAll: (quantity = 4, params = {}) =>
-    axios.get(`${base_api_url}/public/plans`, {
-      params: { quantity, ...params },
-    }),
-  getBySlug: (slug) => axios.get(`${base_api_url}/public/plans/${slug}`),
+  getAll: (quantity = 4, params = {}) => axios.get(`${base_api_url}/public/plans`, { params: { quantity, ...params } }),
+  getBySlug: (slug) => slug ? axios.get(`${base_api_url}/public/plans/${slug}`) : Promise.reject("Slug is undefined"),
 };
 
-// -------------------- PUBLIC TESTS --------------------
 const PublicTests = {
   getActive: () => axios.get("/public/tests/active"),
   getAll: () => axios.get("/public/tests"),
-  getById: (id) => axios.get(`/public/tests/${id}`),
+  getById: (id) => id ? axios.get(`/public/tests/${id}`) : Promise.reject("ID is undefined"),
   getQuestions: (params = {}) => axios.get("/public/questions", { params }),
-  getAnswerOptions: (params = {}) =>
-    axios.get("/public/answer-options", { params }),
+  getAnswerOptions: (params = {}) => axios.get("/public/answer-options", { params }),
 };
 
-// -------------------- TEST ATTEMPTS --------------------
 const TestAttempts = {
   create: (data) => axios.post("/user/test-attempts", data),
   getMy: () => axios.get("/user/test-attempts"),
-  getById: (id) => axios.get(`/user/test-attempts/${id}`),
-  answer: (id, data) => axios.post(`/user/test-attempts/${id}/answer`, data),
-  finish: (id) => axios.post(`/user/test-attempts/${id}/finish`),
-  getRecommendations: (id) =>
-    axios.get(`/user/test-attempts/${id}/recommendations`),
+  getById: (id) => id ? axios.get(`/user/test-attempts/${id}`) : Promise.reject("ID is undefined"),
+  answer: (id, data) => id ? axios.post(`/user/test-attempts/${id}/answer`, data) : Promise.reject("ID is undefined"),
+  finish: (id) => id ? axios.post(`/user/test-attempts/${id}/finish`) : Promise.reject("ID is undefined"),
+  getRecommendations: (id) => id ? axios.get(`/user/test-attempts/${id}/recommendations`) : Promise.reject("ID is undefined"),
 };
 
-// -------------------- FAVORITES --------------------
 const Favorites = {
   getAll: (params = {}) => axios.get("/favorites", { params }),
   toggle: (payload) => axios.post("/favorites", payload),
 };
 
-// -------------------- PUBLIC LEARNING PATHS --------------------
 const PublicLearningPaths = {
   getAll: () => axios.get("/public/learning-paths"),
-  getBySlug: (slug) => axios.get(`/public/learning-paths/${slug}`),
+  getBySlug: (slug) => slug ? axios.get(`/public/learning-paths/${slug}`) : Promise.reject("Slug is undefined"),
 };
 
-// -------------------- DAILY EXERCISES (USER) --------------------
 const DailyExercises = {
   getToday: () => axios.get("/user/daily-exercise/today"),
   submitAnswer: (data) => axios.post("/user/daily-exercise/submit", data),
   getHistory: (params = {}) => axios.get("/user/daily-exercise/history", { params }),
 };
 
-// -------------------- USER STREAK --------------------
 const UserStreak = {
   get: () => axios.get("/user/streak"),
 };
@@ -196,14 +179,14 @@ export default {
   createPlan: AdminPlans.create,
   getPlanById: AdminPlans.getById,
   updatePlan: AdminPlans.update,
-  deletePlan: AdminPlans.delete(),
+  deletePlan: AdminPlans.delete,
 
   // Admin Subscriptions
   getSubscriptionsAll: AdminSubscriptions.getAll,
   getSubscriptionById: AdminSubscriptions.getById,
   createSubscription: AdminSubscriptions.create,
   updateSubscription: AdminSubscriptions.update,
-  deleteSubscription: AdminSubscriptions.delete(),
+  deleteSubscription: AdminSubscriptions.delete,
 
   // Admin Daily Exercises
   getExercisesAll: AdminDailyExercises.getAll,
@@ -217,7 +200,7 @@ export default {
   createLearningPath: AdminLearningPaths.create,
   getLearningPathById: AdminLearningPaths.getById,
   updateLearningPath: AdminLearningPaths.update,
-  deleteLearningPath: AdminLearningPaths.delete(),
+  deleteLearningPath: AdminLearningPaths.delete,
 
   // Public
   getUniversities: PublicUniversities.getAll,
@@ -250,7 +233,7 @@ export default {
   getTodayExercise: DailyExercises.getToday,
   submitExerciseAnswer: DailyExercises.submitAnswer,
   getUserExerciseHistory: DailyExercises.getHistory,
-  
+
   // User Streak
   getUserStreak: UserStreak.get,
 };
