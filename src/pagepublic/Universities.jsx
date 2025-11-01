@@ -33,15 +33,28 @@ const PAGE_SIZE = 9;
 const uniq = (arr) => Array.from(new Set(arr.filter(Boolean)));
 const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
 
+/** ========= helper de imágenes =========
+ *  - Acepta base64 y URL absoluta
+ *  - Si viene sólo el nombre de archivo, construye ${BACKEND_BASE}/img/universidades/<archivo>
+ *  - BACKEND_BASE: intenta sacar del baseURL de axios o de VITE_BACKEND_URL
+ */
 const logoImgSrc = (val) => {
   if (!val) return "";
   const v = String(val).trim();
   if (v.startsWith("data:image")) return v;
   if (/^https?:\/\//i.test(v)) return v;
-  const backendUrl =
-    import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
-  const origin = backendUrl.replace(/\/$/, "");
-  return `${origin}/img/universidades/${v}`;
+
+  const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
+  const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
+  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
+
+  const backendOrigin = fromAxios || fromEnv || "";
+  const backendBase = backendOrigin.replace(/\/$/, "");
+
+  if (backendBase) {
+    return backendBase + "/img/universidades/" + v;
+  }
+  return "/img/universidades/" + v;
 };
 
 const Universities = () => {
@@ -179,6 +192,7 @@ const Universities = () => {
           </div>
         </div>
 
+        {/* Buscador y orden */}
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4 mb-6">
           <div className="flex-1">
             <Input
@@ -255,7 +269,9 @@ const Universities = () => {
           </Button>
         </div>
 
+        {/* Filtros */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-8">
+          {/* País */}
           <Dropdown>
             <DropdownTrigger>
               <Button
@@ -282,6 +298,7 @@ const Universities = () => {
             </DropdownMenu>
           </Dropdown>
 
+          {/* Estado */}
           <Dropdown>
             <DropdownTrigger>
               <Button
@@ -309,6 +326,7 @@ const Universities = () => {
             </DropdownMenu>
           </Dropdown>
 
+          {/* Ciudad */}
           <Dropdown>
             <DropdownTrigger>
               <Button
@@ -336,6 +354,7 @@ const Universities = () => {
             </DropdownMenu>
           </Dropdown>
 
+          {/* Solo con logo */}
           <div className="flex gap-2">
             <Button
               variant={onlyWithLogo ? "solid" : "flat"}
@@ -353,6 +372,7 @@ const Universities = () => {
           </div>
         </div>
 
+        {/* Limpieza de filtros */}
         <div className="flex items-center gap-3 mb-6">
           {(selectedCountry ||
             selectedState ||
@@ -377,12 +397,13 @@ const Universities = () => {
           )}
         </div>
 
+        {/* Texto de estado */}
         <div className="mb-6">
           <p className="text-default-500">
             Mostrando {filtered.length}{" "}
             {filtered.length === 1 ? "universidad" : "universidades"}
-            {selectedCountry ? " en " + selectedCountry : ""}{" "}
-            {searchQuery ? 'que coinciden con "' + searchQuery + '"' : ""}
+            {selectedCountry ? ` en ${selectedCountry}` : ""}{" "}
+            {searchQuery ? ` que coinciden con "${searchQuery}"` : ""}
           </p>
         </div>
 
@@ -393,6 +414,7 @@ const Universities = () => {
         )}
         {!!error && <p className="text-warning mb-4">{error}</p>}
 
+        {/* Grid de universidades */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {pageItems.map((u, index) => (
             <motion.div
@@ -409,7 +431,7 @@ const Universities = () => {
                         <Image
                           isZoomed
                           loading="lazy"
-                          alt={u.name + " logo"}
+                          alt={`${u.name} logo`}
                           src={logoImgSrc(u.logo_url)}
                           fallbackSrc="/img/universidades/placeholder.png"
                           radius="none"
@@ -510,26 +532,27 @@ const Universities = () => {
           </div>
         )}
 
+        {/* Paginación */}
         {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-12">
+          <div className="flex justify-center items-center gap-2 mt-10">
             <Button
-              size="sm"
-              variant="light"
-              isDisabled={currentPage === 1}
+              variant="flat"
+              isDisabled={currentPage <= 1}
               onPress={() => setPage((p) => Math.max(1, p - 1))}
             >
-              ← Anterior
+              Anterior
             </Button>
-            <span className="text-default-600 text-sm">
+            <span className="text-default-500">
               Página {currentPage} de {totalPages}
             </span>
             <Button
-              size="sm"
-              variant="light"
-              isDisabled={currentPage === totalPages}
-              onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
+              variant="flat"
+              isDisabled={currentPage >= totalPages}
+              onPress={() =>
+                setPage((p) => Math.min(totalPages, p + 1))
+              }
             >
-              Siguiente →
+              Siguiente
             </Button>
           </div>
         )}
