@@ -1,0 +1,43 @@
+cfdbb77 - 11 minutes ago : Merge branch 'YAYOFRONT' of https://github.com/yayoflores113/MIFRONT into YAYOFRONT
+2407a96 - 13 minutes ago : cambios
+78c630f - 4 hours ago : FEEE
+18eba63 - 4 hours ago : Merge branch 'YAYOFRONT' of https://github.com/yayoflores113/MIFRONT into YAYOFRONT
+ce97c5b - 4 hours ago : fe
+4f53b54 - 13 hours ago : Update Navbar.jsx
+363e1cf - 13 hours ago : Update Navbar.jsx
+5b89352 - 13 hours ago : Update Navbar.jsx
+21cb3e2 - 13 hours ago : Update Navbar.jsx
+eb8317e - 14 hours ago : Update Navbar.jsx
+95880ea - 14 hours ago : Update Navbar.jsx
+a4adb4f - 14 hours ago : Update Navbar.jsx
+38534cd - 14 hours ago : Update App.jsx
+523c8f1 - 15 hours ago : Mis cambios para YAYOFRONT
+3128924 - 15 hours ago : Update Courses.jsx
+1afade5 - 15 hours ago : Merge pull request #3 from yayoflores113/main
+7e87192 - 24 hours ago : Merge pull request #2 from yayoflores113/YAYOFRONT
+3f36622 - 24 hours ago : Merge branch 'main' into YAYOFRONT
+8c5b3be - 24 hours ago : cambios pago
+2077552 - 30 hours ago : Merge pull request #1 from yayoflores113/YAYOFRONT
+a2f21d2 - 30 hours ago : cambios
+e95e1b6 - 31 hours ago : mejora importante: se actualizo Config.jsx-revisenlo
+8a38d46 - 31 hours ago : mejora: se mejoro universidades-planes-cursos-carreras en pagepublic
+bc20650 - 31 hours ago : mejora: se actualizo PagePerfil.jsx
+ed217c6 - 31 hours ago : mejora: se actualizo Register.jsx
+7ba5f78 - 31 hours ago : mejora: se actualizo ProtectedRoutes.jsx
+6888861 - 32 hours ago : mejora: se actualizo Login.jsx
+09318df - 32 hours ago : mejora: se actualizo AuthUser.jsx
+fb3802d - 32 hours ago : mejora: se actualizo AuthCallback.jsx
+14b257c - 32 hours ago : mejora importante: se actualizo axios.js
+27723ac - 32 hours ago : mejora: se agrego .env
+aad1911 - 2 days ago : Fix: Restore PageAdmin and PagePerfil with capital letters
+33c6a33 - 2 days ago : Fix: Change ALL folder paths to lowercase
+dea4509 - 2 days ago : Fix: Change all paths to lowercase (pagepublic)
+71b0fee - 2 days ago : Fix: Change PagePublic to pagePublic in imports
+d6a9fc3 - 2 days ago : Arregladas rutas de Universities y Universitie para Linux/Render
+282f79d - 2 days ago : Actualizado package.json para deploy en Render
+71884a0 - 2 days ago : Arreglada ruta de import en App.jsx
+450a0ac - 2 days ago : Agregado archivo tareas.jsx para probar deploy en Render
+eca3bc3 - 2 days ago : primer commit
+452405e - 2 weeks ago : Mejora en Register.jsx
+9100cd6 - 3 weeks ago : Mejora en el dashboard administrativo: Carreras: Store y Update. Cursos: Store y Update. Universidades: All, Store y Update
+2d7444a - 3 weeks ago : Initial commit: Frontend-MIAPI (React + Vite)

@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import AuthUser from "./AuthUser";
 import { Input, Button, Image } from "@heroui/react";
 
-// ⟵ Base de API para catálogos (no interfiere con tu lógica existente)
-const API = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/api";
+// ⟵ Base de API para catálogos (actualizado a producción)
+const API = import.meta.env.VITE_API_BASE_URL || "https://miback-1333.onrender.com/api";
 
 const Register = () => {
   const { getToken } = AuthUser();

@@ -28,9 +28,18 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
 const logoImgSrc = (val) => {
   if (!val) return "";
   const v = String(val).trim();
-  if (v.startsWith("data:image")) return v;           // base64
-  if (/^https?:\/\//i.test(v)) return v;            // URL absoluta
-  return `${BACKEND_URL.replace(/\/$/, "")}/img/universidades/${v}`;
+
+  // Si es base64 o URL absoluta, usarla tal cual
+  if (v.startsWith("data:image")) return v;
+  if (/^https?:\/\//i.test(v)) return v;
+
+  // Obtener el origen del backend
+  const backendUrl =
+    import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+  const origin = backendUrl.replace(/\/$/, ""); // Quitar "/" final si existe
+
+  // Construir la URL completa
+  return `${origin}/img/universidades/${v}`;
 };
 
 const Universitie = () => {

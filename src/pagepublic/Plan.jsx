@@ -11,17 +11,7 @@ import {
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { motion } from "framer-motion";
 import Config from "../Config";
-
-// Helper para stripe checkout
-const apiOrigin = () => {
-  const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
-  const fromAxiosOrigin = axiosBase
-    ? axiosBase.replace(/\/api\/?.*$/i, "")
-    : "";
-  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "").trim();
-  const backendOrigin = (fromAxiosOrigin || fromEnv || "").replace(/\/$/, "");
-  return backendOrigin || "";
-};
+import axios, { ensureSanctum } from "../lib/axios";
 
 // utilidades pequeñas y limpias
 const cn = (...xs) => xs.filter(Boolean).join(" ");
