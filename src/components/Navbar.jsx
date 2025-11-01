@@ -18,7 +18,6 @@ const NavbarComponent = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hasScrolled, setHasScrolled] = useState(false);
 
-  // Hooks siempre se declaran al inicio
   useEffect(() => {
     const onScroll = () => setHasScrolled(window.scrollY > 0);
     onScroll();
@@ -26,28 +25,29 @@ const NavbarComponent = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Guard de rutas: no mostrar navbar en login/register
+  // No mostrar navbar en login/register
   if (pathname === "/login" || pathname === "/register") return null;
 
   const logoutUser = () => {
     Config.getLogout()
       .then(() => {
         localStorage.removeItem("auth_token");
+        localStorage.removeItem("user");
         window.location.href = "/login";
       })
       .catch((error) => console.error(error));
   };
 
   const renderLinks = () => {
-    const user = AuthUser.getUser();
-    const token = AuthUser.getToken();
+    const user = AuthUser.getUser?.(); // <- Usar ?.() para evitar errores si no existe
+    const token = AuthUser.getToken?.();
 
     if (token) {
       return (
         <>
           <NavbarItem>
             <UILink
-              href={`/${AuthUser.getRol()}`}
+              href={`/${AuthUser.getRol?.() ?? ""}`}
               className="text-sm md:text-base text-[#181818]/80 hover:text-[#181818] transition-colors"
             >
               <span className="hidden sm:inline">Bienvenid@</span>
@@ -120,27 +120,35 @@ const NavbarComponent = () => {
 
       {/* Navegación centro (desktop) */}
       <NavbarContent className="hidden lg:flex gap-6" justify="center">
-        {["/", "/universities", "/careers", "/courses", "/plans"].map((route, i) => {
-          const labels = ["Home", "Universidades", "Carreras", "Cursos", "Planes"];
-          return (
-            <NavbarItem key={i} isActive={pathname === route}>
-              <UILink
-                href={route}
-                aria-current={pathname === route ? "page" : undefined}
-                className={`group relative text-[#181818]/80 hover:text-[#181818] transition-colors ${
-                  isActive(route) && "text-[#181818]"
-                }`}
-              >
-                {labels[i]}
-                <span
-                  className={`pointer-events-none absolute -bottom-1 left-0 h-[2px] w-0 bg-[#2CBFF0] transition-[width] duration-200 group-hover:w-full ${
-                    isActive(route) && "w-full"
+        {["/", "/universities", "/careers", "/courses", "/plans"].map(
+          (route, i) => {
+            const labels = [
+              "Home",
+              "Universidades",
+              "Carreras",
+              "Cursos",
+              "Planes",
+            ];
+            return (
+              <NavbarItem key={i} isActive={pathname === route}>
+                <UILink
+                  href={route}
+                  aria-current={pathname === route ? "page" : undefined}
+                  className={`group relative text-[#181818]/80 hover:text-[#181818] transition-colors ${
+                    isActive(route) && "text-[#181818]"
                   }`}
-                />
-              </UILink>
-            </NavbarItem>
-          );
-        })}
+                >
+                  {labels[i]}
+                  <span
+                    className={`pointer-events-none absolute -bottom-1 left-0 h-[2px] w-0 bg-[#2CBFF0] transition-[width] duration-200 group-hover:w-full ${
+                      isActive(route) && "w-full"
+                    }`}
+                  />
+                </UILink>
+              </NavbarItem>
+            );
+          }
+        )}
       </NavbarContent>
 
       {/* Acciones derecha (desktop) */}
@@ -158,34 +166,42 @@ const NavbarComponent = () => {
 
       {/* Menú (mobile) */}
       <NavbarMenu className="pt-2">
-        {["/", "/universities", "/careers", "/courses", "/plans"].map((route, i) => {
-          const labels = ["Home", "Universidades", "Carreras", "Cursos", "Planes"];
-          return (
-            <NavbarMenuItem key={i} isActive={pathname === route}>
-              <UILink
-                href={route}
-                size="lg"
-                aria-current={pathname === route ? "page" : undefined}
-                className={`block rounded-lg px-2 py-2 text-[#181818]/90 hover:bg-black/5 ${
-                  isActive(route) && "bg-black/[0.04] font-medium"
-                }`}
-              >
-                {labels[i]}
-              </UILink>
-            </NavbarMenuItem>
-          );
-        })}
+        {["/", "/universities", "/careers", "/courses", "/plans"].map(
+          (route, i) => {
+            const labels = [
+              "Home",
+              "Universidades",
+              "Carreras",
+              "Cursos",
+              "Planes",
+            ];
+            return (
+              <NavbarMenuItem key={i} isActive={pathname === route}>
+                <UILink
+                  href={route}
+                  size="lg"
+                  aria-current={pathname === route ? "page" : undefined}
+                  className={`block rounded-lg px-2 py-2 text-[#181818]/90 hover:bg-black/5 ${
+                    isActive(route) && "bg-black/[0.04] font-medium"
+                  }`}
+                >
+                  {labels[i]}
+                </UILink>
+              </NavbarMenuItem>
+            );
+          }
+        )}
 
         {/* Acciones (mobile) */}
         <div className="mt-3 border-t border-black/5 pt-3">
-          {AuthUser.getToken() ? (
+          {AuthUser.getToken?.() ? (
             <>
               <NavbarMenuItem>
                 <UILink
-                  href={`/${AuthUser.getRol()}`}
+                  href={`/${AuthUser.getRol?.() ?? ""}`}
                   className="block rounded-lg px-2 py-2 text-[#181818] hover:bg-black/5"
                 >
-                  Administración | {AuthUser.getUser()?.name ?? "Usuario"}
+                  Administración | {AuthUser.getUser?.()?.name ?? "Usuario"}
                 </UILink>
               </NavbarMenuItem>
               <NavbarMenuItem>
