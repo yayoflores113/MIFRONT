@@ -34,10 +34,10 @@ const PAGE_SIZE = 9;
 const uniq = (arr) => Array.from(new Set(arr.filter(Boolean)));
 const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
 
-/** ========= helper de imágenes (mismo criterio que usas donde sí carga) =========
- *  - Acepta base64 y URL absoluta tal cual
+/** ========= helper de imágenes =========
+ *  - Acepta base64 y URL absoluta
  *  - Si viene sólo el nombre de archivo, construye `${ORIGEN_BACK}/img/universidades/<archivo>`
- *  - ORIGEN_BACK: intenta sacar del baseURL de axios (quitando /api/...), o de VITE_BACKEND_URL
+ *  - ORIGEN_BACK: intenta sacar del baseURL de axios o de VITE_BACKEND_URL
  */
 const logoImgSrc = (val) => {
   if (!val) return "";
@@ -50,16 +50,16 @@ const logoImgSrc = (val) => {
   // si era .../api/v1, quita el /api/...
   const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
   // variable de entorno como respaldo
- const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
-  const backendOrigin = fromAxios || fromEnv || "";
+  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
 
-  const origin = backendOrigin.replace(/\/$/, "");
-  return origin
-    ? `${origin}/img/universidades/${v}`
+  const backendOrigin = fromAxios || fromEnv || "";
+  const backendBase = backendOrigin.replace(/\/$/, ""); // 👈 nombre cambiado (antes era origin)
+
+  return backendBase
+    ? `${backendBase}/img/universidades/${v}`
     : `/img/universidades/${v}`;
 };
 
-// rafce
 const Universities = () => {
   // Data
   const [universities, setUniversities] = React.useState([]);
@@ -72,7 +72,7 @@ const Universities = () => {
   const [selectedState, setSelectedState] = React.useState(null);
   const [selectedCity, setSelectedCity] = React.useState(null);
   const [onlyWithLogo, setOnlyWithLogo] = React.useState(false);
-  const [sortKey, setSortKey] = React.useState("relevance"); // relevance | name_asc | name_desc
+  const [sortKey, setSortKey] = React.useState("relevance");
 
   // Pagination
   const [page, setPage] = React.useState(1);
@@ -128,7 +128,6 @@ const Universities = () => {
   const filtered = React.useMemo(() => {
     let res = universities.slice();
 
-    // búsqueda
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       res = res.filter((u) =>
@@ -140,13 +139,11 @@ const Universities = () => {
       );
     }
 
-    // filtros
     if (selectedCountry) res = res.filter((u) => u.country === selectedCountry);
     if (selectedState) res = res.filter((u) => u.state === selectedState);
     if (selectedCity) res = res.filter((u) => u.city === selectedCity);
     if (onlyWithLogo) res = res.filter((u) => !!u.logo_url);
 
-    // orden
     res.sort((a, b) => {
       switch (sortKey) {
         case "name_asc":
@@ -185,7 +182,6 @@ const Universities = () => {
     return filtered.slice(start, start + PAGE_SIZE);
   }, [filtered, currentPage]);
 
-  // Reset de hijos al cambiar padres
   React.useEffect(() => {
     setSelectedState(null);
     setSelectedCity(null);
@@ -456,7 +452,7 @@ const Universities = () => {
                             wrapper:
                               "w-full h-full flex items-center justify-center z-0",
                             img: "max-h-full max-w-full object-contain p-6",
-                            zoomedWrapper: "z-0", // 👈 evita que el overlay del zoom tape el chip
+                            zoomedWrapper: "z-0",
                           }}
                         />
                       ) : (
@@ -542,45 +538,35 @@ const Universities = () => {
         {/* Empty */}
         {!loading && filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <MagnifyingGlassIcon className="text-default-300 mb-4 w-12" />
-            <h3 className="text-xl font-semibold mb-2">
-              No se encontraron universidades
-            </h3>
-            <p className="text-default-500 max-w-md mb-6">
-              Ajusta los filtros o el término de búsqueda para ver más
-              resultados.
+            <AcademicCapIcon className="w-12 text-default-400 mb-3" />
+            <p className="text-default-500 text-lg">
+              No se encontraron universidades que coincidan con tu búsqueda.
             </p>
-            <Button
-              variant="flat"
-              color="primary"
-              onPress={() => {
-                setSelectedCountry(null);
-                setSelectedState(null);
-                setSelectedCity(null);
-                setOnlyWithLogo(false);
-                setSearchQuery("");
-                setSortKey("relevance");
-                setPage(1);
-              }}
-            >
-              Limpiar filtros
-            </Button>
           </div>
         )}
 
         {/* Pagination */}
-        {filtered.length > 0 && (
-          <div className="flex justify-center mt-12 flex-wrap gap-1">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <Button
-                key={p}
-                variant={p === currentPage ? "flat" : "light"}
-                className="mx-0.5"
-                onPress={() => setPage(p)}
-              >
-                {p}
-              </Button>
-            ))}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-12">
+            <Button
+              size="sm"
+              variant="light"
+              isDisabled={currentPage === 1}
+              onPress={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              ← Anterior
+            </Button>
+            <span className="text-default-600 text-sm">
+              Página {currentPage} de {totalPages}
+            </span>
+            <Button
+              size="sm"
+              variant="light"
+              isDisabled={currentPage === totalPages}
+              onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Siguiente →
+            </Button>
           </div>
         )}
       </div>

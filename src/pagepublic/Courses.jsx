@@ -39,21 +39,21 @@ const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
 // Helper para obtener el origen de la API
 const apiOrigin = () => {
   const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
-  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim(); "";
-
+  const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
+  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
   return fromAxios || fromEnv || "";
 };
 
-// helper de: (carpeta /img/cursos)
 const courseImgSrc = (val) => {
   if (!val) return "";
-  if (val.startsWith("data:image")) return val;
-  if (/^https?:\/\//i.test(val)) return val;
+  const v = String(val).trim();
+  if (v.startsWith("data:image")) return v;
+  if (/^https?:\/\//i.test(v)) return v;
 
-  const backendOrigin = apiOrigin();
+  const backendOrigin = apiOrigin().replace(/\/$/, "");
   return backendOrigin
-    ? `${backendOrigin.replace(/\/$/, "")}/img/cursos/${val}`
-    : `/img/cursos/${val}`;
+    ? `${backendOrigin}/img/cursos/${v}`
+    : `/img/cursos/${v}`;
 };
 
 const centsToCurrency = (cents, locale = "es-MX", currency = "MXN") =>
