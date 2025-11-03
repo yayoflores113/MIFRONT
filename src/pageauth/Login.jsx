@@ -20,9 +20,11 @@ const Login = () => {
   const location = useLocation();
   const nextPath = location.state?.next || "/";
 
+  // ✅ URL base según entorno
+  const API_BASE_URL = (import.meta?.env?.VITE_API_BASE_URL || "https://miback-1333.onrender.com/api/v1").trim().replace('/api/v1', '');
+
   useEffect(() => {
     if (getToken()) {
-      // Si ya hay token, redirige
       navigate(nextPath, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -34,10 +36,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // ⚡ Obtener CSRF cookie (si usas Sanctum)
-      await axios.get("/sanctum/csrf-cookie");
-
-      // Login en backend
+      // ✅ Login directo - SIN CSRF porque lo excluimos en el backend
       const resp = await Config.getLogin({ email, password });
       const res = resp?.data || {};
 
@@ -50,10 +49,7 @@ const Login = () => {
           const token = res.token;
           const rol = user?.roles?.[0]?.name || "user";
 
-          // 🔥 Guardar usuario + token + rol
           setToken(user, token, rol);
-
-          // ⚡ Configurar axios con token para futuras peticiones
           axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
           console.log("=== LOGIN EXITOSO ===");
@@ -62,7 +58,6 @@ const Login = () => {
           console.log("Rol:", rol);
           console.log("=====================");
 
-          // Redirigir
           navigate(nextPath, { replace: true });
         }, 300);
       } else {
@@ -72,16 +67,27 @@ const Login = () => {
     } catch (err) {
       console.error("Error login:", err);
       setStatus("danger");
-      setMessage("Ocurrió un error al iniciar sesión.");
+      
+      // ✅ Mensajes de error específicos
+      if (err.response?.status === 401) {
+        setMessage("Correo o contraseña incorrectos.");
+      } else if (err.response?.status === 422) {
+        setMessage(err.response?.data?.message || "Por favor verifica los datos ingresados.");
+      } else if (err.response?.status === 500) {
+        setMessage("Error en el servidor. Intenta más tarde.");
+      } else {
+        setMessage(err.response?.data?.message || "Ocurrió un error al iniciar sesión.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const isError = status === "danger" && !!message;
-  const GOOGLE_REDIRECT = "http://localhost:8000/api/v1/auth/google/redirect";
-  const MICROSOFT_REDIRECT =
-    "http://localhost:8000/api/v1/auth/microsoft/redirect";
+  
+  // ✅ URLs dinámicas para OAuth
+  const GOOGLE_REDIRECT = `${API_BASE_URL}/api/v1/auth/google/redirect`;
+  const MICROSOFT_REDIRECT = `${API_BASE_URL}/api/v1/auth/microsoft/redirect`;
 
   return (
     <div className="min-h-screen bg-[#FEFEFE] text-[#181818]">
@@ -243,6 +249,7 @@ const Login = () => {
           </div>
         </section>
 
+        {/* Imagen lateral */}
         <aside className="relative hidden md:block overflow-hidden">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#181818] via-[#252526]/70 to-[#181818]" />
           <div className="pointer-events-none absolute -top-10 -left-10 h-56 w-56 rounded-full bg-white/15 blur-2xl" />
