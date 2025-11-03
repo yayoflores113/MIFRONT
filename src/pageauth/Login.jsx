@@ -40,14 +40,7 @@ const Login = () => {
     setStatus(null);
 
     try {
-      // 1. Obtener cookie CSRF (si usas Sanctum)
-      try {
-        await axios.get("/sanctum/csrf-cookie");
-      } catch (csrfError) {
-        console.warn("CSRF cookie no disponible:", csrfError);
-      }
-
-      // 2. Hacer login
+      // 🔥 Login directo con tokens (sin CSRF cookie necesario)
       const resp = await Config.getLogin({ email, password });
       const res = resp?.data || {};
 
@@ -59,7 +52,7 @@ const Login = () => {
 
         const user = res.user;
         const token = res.token;
-        const rol = user?.roles?.[0]?.name || res.rol || "user";
+        const rol = res.rol || user?.roles?.[0]?.name || "user";
 
         // 🔥 Guardar usuario + token + rol
         setToken(user, token, rol);
