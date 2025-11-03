@@ -6,7 +6,6 @@ import { Form, Input, Button, Image, Alert, Divider } from "@heroui/react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import axios from "../lib/axios";
 
-
 const Login = () => {
   const { setToken, getToken } = AuthUser();
 
@@ -21,9 +20,13 @@ const Login = () => {
   const location = useLocation();
   const nextPath = location.state?.next || "/";
 
+  // 🔥 URLs dinámicas según entorno
+  const API_BASE = import.meta.env.VITE_API_URL || "https://miback-1333.onrender.com";
+  const GOOGLE_REDIRECT = `${API_BASE}/api/v1/auth/google/redirect`;
+  const MICROSOFT_REDIRECT = `${API_BASE}/api/v1/auth/microsoft/redirect`;
+
   useEffect(() => {
     if (getToken()) {
-      // Si ya hay token, redirige
       navigate(nextPath, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -33,83 +36,73 @@ const Login = () => {
     e.preventDefault();
     if (loading) return;
     setLoading(true);
+    setMessage("");
+    setStatus(null);
 
     try {
-
-      // ⚡ Obtener CSRF cookie (si usas Sanctum)
-      await axios.get("/sanctum/csrf-cookie");
-
-      // Login en backend
-
-      // 1. Obtener cookie CSRF
-      await ensureSanctum();
+      // 1. Obtener cookie CSRF (si usas Sanctum)
+      try {
+        await axios.get("/sanctum/csrf-cookie");
+      } catch (csrfError) {
+        console.warn("CSRF cookie no disponible:", csrfError);
+      }
 
       // 2. Hacer login
-
       const resp = await Config.getLogin({ email, password });
       const res = resp?.data || {};
 
+      console.log("📡 Respuesta del servidor:", res);
+
       if (res.success) {
         setStatus("success");
-
         setMessage(res.message || "Logueado correctamente");
 
+        const user = res.user;
+        const token = res.token;
+        const rol = user?.roles?.[0]?.name || res.rol || "user";
+
+        // 🔥 Guardar usuario + token + rol
+        setToken(user, token, rol);
+
+        // ⚡ Configurar axios con token para futuras peticiones
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+        console.log("✅ LOGIN EXITOSO");
+        console.log("Usuario:", user);
+        console.log("Token:", token);
+        console.log("Rol:", rol);
+
+        // Redirigir después de 300ms
         setTimeout(() => {
-          const user = res.user;
-          const token = res.token;
-          const rol = user?.roles?.[0]?.name || "user";
-
-          // 🔥 Guardar usuario + token + rol
-          setToken(user, token, rol);
-
-          // ⚡ Configurar axios con token para futuras peticiones
-          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-          console.log("=== LOGIN EXITOSO ===");
-          console.log("Usuario:", user);
-          console.log("Token:", token);
-          console.log("Rol:", rol);
-          console.log("=====================");
-
-          // Redirigir
           navigate(nextPath, { replace: true });
         }, 300);
-
-        setMessage(res.message || "Logueado");
-
-        setTimeout(() => {
-          // Obtener rol de la respuesta (ahora viene en res.rol)
-          const userRol = res.rol || "user";
-
-          // Guardar con token = null (es el segundo parámetro)
-          setToken(res.user, null, userRol);
-
-          // Navegar según el rol
-          if (userRol === "admin") {
-            navigate("/admin", { replace: true });
-          } else {
-            navigate(nextPath, { replace: true });
-          }
-        }, 600);
 
       } else {
         setStatus("danger");
         setMessage(res.message || "Correo o contraseña incorrectos");
       }
+
     } catch (err) {
-      console.error("Error login:", err);
+      console.error("❌ Error en login:", err);
+      console.error("Detalles:", err.response?.data);
+      
       setStatus("danger");
-      setMessage("Ocurrió un error al iniciar sesión.");
-      console.error("Error en login:", err);
+      
+      // Mostrar mensaje de error más específico
+      const errorMsg = 
+        err.response?.data?.message || 
+        err.response?.data?.error ||
+        err.message ||
+        "Error al iniciar sesión. Verifica tu conexión.";
+      
+      setMessage(errorMsg);
+      
     } finally {
       setLoading(false);
     }
   };
 
   const isError = status === "danger" && !!message;
-  const GOOGLE_REDIRECT = "http://localhost:8000/api/v1/auth/google/redirect";
-  const MICROSOFT_REDIRECT =
-    "http://localhost:8000/api/v1/auth/microsoft/redirect";
 
   return (
     <div className="min-h-screen bg-[#FEFEFE] text-[#181818]">
