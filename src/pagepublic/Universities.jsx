@@ -35,8 +35,13 @@ const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
 
 /** ========= helper de imágenes =========
  *  - Acepta base64 y URL absoluta
+<<<<<<< HEAD
  *  - Si viene sólo el nombre de archivo, construye ${BACKEND_BASE}/img/universidades/<archivo>
  *  - BACKEND_BASE: intenta sacar del baseURL de axios o de VITE_BACKEND_URL
+=======
+ *  - Si viene sólo el nombre de archivo, construye `${ORIGEN_BACK}/img/universidades/<archivo>`
+ *  - ORIGEN_BACK: intenta sacar del baseURL de axios o de VITE_BACKEND_URL
+>>>>>>> d0cff049c7d38dcd075dc7a1d189e32065000e9c
  */
 const logoImgSrc = (val) => {
   if (!val) return "";
@@ -47,6 +52,7 @@ const logoImgSrc = (val) => {
   // intenta leer baseURL de axios global si existe
   const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
   const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
+<<<<<<< HEAD
 
   // variable de entorno como respaldo
   const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
@@ -58,6 +64,17 @@ const logoImgSrc = (val) => {
     return backendBase + "/img/universidades/" + v;
   }
   return "/img/universidades/" + v;
+=======
+  // variable de entorno como respaldo
+  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
+
+  const backendOrigin = fromAxios || fromEnv || "";
+  const backendBase = backendOrigin.replace(/\/$/, ""); // 👈 nombre cambiado (antes era origin)
+
+  return backendBase
+    ? `${backendBase}/img/universidades/${v}`
+    : `/img/universidades/${v}`;
+>>>>>>> d0cff049c7d38dcd075dc7a1d189e32065000e9c
 };
 
 const Universities = () => {
@@ -535,6 +552,7 @@ const Universities = () => {
           </div>
         )}
 
+<<<<<<< HEAD
         {/* Paginación */}
         {totalPages > 1 && (
           <div className="flex justify-center items-center gap-2 mt-10">
@@ -556,6 +574,29 @@ const Universities = () => {
               }
             >
               Siguiente
+=======
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-12">
+            <Button
+              size="sm"
+              variant="light"
+              isDisabled={currentPage === 1}
+              onPress={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              ← Anterior
+            </Button>
+            <span className="text-default-600 text-sm">
+              Página {currentPage} de {totalPages}
+            </span>
+            <Button
+              size="sm"
+              variant="light"
+              isDisabled={currentPage === totalPages}
+              onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Siguiente →
+>>>>>>> d0cff049c7d38dcd075dc7a1d189e32065000e9c
             </Button>
           </div>
         )}
