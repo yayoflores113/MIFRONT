@@ -1,3 +1,4 @@
+// src/Config.jsx
 import axios from "./lib/axios";
 
 const base_api_url = "/api/v1"; // axios.js ya tiene baseURL
@@ -186,6 +187,13 @@ const AdminDailyExercises = {
 const UserStreak = {
   get: () => axios.get("/user/streak"),
 };
+
+// -------------------- EXPORTS NOMBRADOS (añadidos) --------------------
+// OJO: no cambiamos la lógica; solo exponemos atajos nombrados
+export const getLogin = (payload) => Auth.login(payload);
+export const getRegister = (payload) => Auth.register(payload);
+export const getLogout = () => Auth.logout();
+export const getMe = () => Auth.me();
 
 // -------------------- EXPORT DEFAULT --------------------
 export default {
