@@ -1,14 +1,14 @@
 import axios from "axios";
 
-const base_api_url = (
-  import.meta?.env?.VITE_API_BASE_URL ||
-  "https://miback-1333.onrender.com/api/v1"
-).trim();
+const base_api_url = (import.meta?.env?.VITE_API_BASE_URL || "https://miback-1333.onrender.com/api/v1").trim();
+
+// ✅ Configurar axios para enviar cookies (CSRF)
+axios.defaults.withCredentials = true;
 
 // 🔥 CONFIGURAR AXIOS PARA ENVIAR EL TOKEN AUTOMÁTICAMENTE
 axios.interceptors.request.use(
   (config) => {
-    const token = JSON.parse(sessionStorage.getItem("token"));
+    const token = JSON.parse(sessionStorage.getItem('token'));
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -29,6 +29,12 @@ export default {
   getRegister: (data) => axios.post(`${base_api_url}/auth/register`, data),
   getLogin: (data) => axios.post(`${base_api_url}/auth/login`, data),
   getLogout: (data) => axios.post(`${base_api_url}/auth/logout`, data),
+
+  // ✅ Nueva función para obtener CSRF token
+  getCsrfToken: () => {
+    const backendUrl = base_api_url.replace('/api/v1', '');
+    return axios.get(`${backendUrl}/sanctum/csrf-cookie`);
+  },
 
   // ROL ADMIN
   getUserAll: () => axios.get(`${base_api_url}/admin/users`),
@@ -143,12 +149,12 @@ export default {
   // ========================================
   // 🎯 DAILY EXERCISES (NUEVO - privado)
   // ========================================
-
+  
   /**
    * Obtener el ejercicio del día para el usuario autenticado
    * @returns {Promise} Ejercicio disponible o información de completado
    */
-  getTodayExercise: () =>
+  getTodayExercise: () => 
     axios.get(`${base_api_url}/user/daily-exercise/today`),
 
   /**
@@ -163,7 +169,8 @@ export default {
    * Obtener la racha actual del usuario
    * @returns {Promise} Información de racha y puntos
    */
-  getUserStreak: () => axios.get(`${base_api_url}/user/streak`),
+  getUserStreak: () => 
+    axios.get(`${base_api_url}/user/streak`),
 
   /**
    * Obtener historial de ejercicios completados
@@ -176,12 +183,12 @@ export default {
   // ========================================
   // 🔧 ADMIN - DAILY EXERCISES (NUEVO)
   // ========================================
-
+  
   /**
    * ADMIN: Obtener todos los ejercicios
    * @param {Object} params - Filtros opcionales (course_id, difficulty, etc.)
    */
-  getExercisesAll: (params = {}) =>
+  getExercisesAll: (params = {}) => 
     axios.get(`${base_api_url}/admin/daily-exercises`, { params }),
 
   /**
