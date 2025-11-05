@@ -4,35 +4,22 @@ import { useNavigate } from "react-router-dom";
 import AuthUser from "./AuthUser";
 import { Input, Button, Image } from "@heroui/react";
 
-// Genera la cookie CSRF en la RAÍZ del backend (no en /api/v1)
-const getCsrfCookie = async () => {
-  const API_ORIGIN = (import.meta.env.VITE_BACKEND_URL || "").replace(
-    /\/+$/,
-    ""
-  );
-  await fetch(`${API_ORIGIN}/sanctum/csrf-cookie`, {
-    method: "GET",
-    credentials: "include",
-  });
-};
-
-// Base de API para catálogos - Usa VITE_BACKEND_URL sin /api/v1
-const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL || "https://miback-1333.onrender.com";
+// ⟵ Base de API para catálogos (actualizado a producción)
+const API = import.meta.env.VITE_API_BASE_URL || "https://miback-1333.onrender.com/api";
 
 const Register = () => {
-  const { getToken, setToken } = AuthUser();
+  const { getToken } = AuthUser();
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
 
-  // Estados adicionales
+  // ⟵ Nuevos estados (solo agregados)
   const [birthDate, setBirthDate] = useState("");
   const [universityId, setUniversityId] = useState("");
   const [matricula, setMatricula] = useState("");
   const [countryId, setCountryId] = useState("");
 
-  // Catálogos y búsqueda local para Universidad
+  // ⟵ Catálogos y búsqueda local para Universidad
   const [universities, setUniversities] = useState([]);
   const [countries, setCountries] = useState([]);
   const [queryUni, setQueryUni] = useState("");
@@ -46,13 +33,13 @@ const Register = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Carga de catálogos
+  // ⟵ Carga de catálogos (nuevo useEffect independiente, no toca el tuyo)
   useEffect(() => {
     const loadCatalogs = async () => {
       try {
         const [unisRes, ctrsRes] = await Promise.all([
-          fetch(`${BACKEND_URL}/api/v1/public/universities/5000`),
-          fetch(`${BACKEND_URL}/api/v1/public/countries`),
+          fetch(`${API}/v1/public/universities/5000`),
+          fetch(`${API}/v1/public/countries`),
         ]);
         const [unis, ctrs] = await Promise.all([
           unisRes.json(),
@@ -66,13 +53,14 @@ const Register = () => {
         setUniversities(uniData.filter((u) => u.id && u.name));
         setCountries(Array.isArray(ctrs) ? ctrs : []);
       } catch (e) {
+        // Silencioso para no alterar tu UX; el form sigue usable
         console.error("No fue posible cargar catálogos", e);
       }
     };
     loadCatalogs();
   }, []);
 
-  // Filtro local por nombre de universidad
+  // ⟵ Filtro local por nombre de universidad (búsqueda client-side)
   const filteredUniversities = queryUni.trim()
     ? universities.filter((u) =>
         (u.name || "").toLowerCase().includes(queryUni.trim().toLowerCase())
@@ -82,48 +70,26 @@ const Register = () => {
   const submitRegistro = async (e) => {
     e.preventDefault();
 
-    try {
-      // 1) Asegurar cookie CSRF en el ORIGEN del backend
-      await getCsrfCookie();
-
-      // 2. Hacer registro
-      const { data } = await Config.getRegister({
-        name,
-        email,
-        password,
-        birth_date: birthDate || null,
-        university_id: universityId || null,
-        matricula: matricula || null,
-        country_id: countryId || null,
-      });
-
+    // ⟵ Mantengo tu misma llamada y flujo; solo PASO campos extra
+    Config.getRegister({
+      name,
+      email,
+      password,
+      // nuevos campos (serán ignorados si el backend no los usa aún)
+      birth_date: birthDate || null,
+      university_id: universityId || null,
+      matricula: matricula || null,
+      country_id: countryId || null,
+    }).then(({ data }) => {
       if (data.success) {
-        // Si el backend autologa después del registro
-        if (data.user && data.rol) {
-          const userRol = data.rol || "user";
-          setToken(data.user, null, userRol);
-
-          // Navegar según rol
-          if (userRol === "admin") {
-            navigate("/admin", { replace: true });
-          } else {
-            navigate("/", { replace: true });
-          }
-        } else {
-          // Si no autologa, ir a login
-          navigate("/login");
-        }
+        navigate("/login");
       }
-    } catch (err) {
-      console.error("Error en registro:", err);
-      // Mostrar mensaje de error al usuario
-      alert(err.message || "Error al registrarse");
-    }
+    });
   };
 
   return (
     <div className="h-screen overflow-hidden bg-[#FEFEFE] text-[#181818]">
-      {/* halos sutiles de fondo */}
+      {/* halos sutiles de fondo (igual que en Login) */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute -top-36 -left-24 h-80 w-80 rounded-full bg-[#2CBFF0] opacity-[0.08] blur-3xl" />
         <div className="absolute -bottom-28 -right-24 h-96 w-96 rounded-full bg-[#181818] opacity-[0.06] blur-3xl" />
@@ -131,7 +97,7 @@ const Register = () => {
 
       {/* Split fullscreen */}
       <div className="grid grid-cols-1 md:grid-cols-2 h-full">
-        {/* IZQUIERDA: FORM */}
+        {/* IZQUIERDA: FORM visualmente igual al login */}
         <section className="flex items-center justify-center px-6 md:px-12">
           <div className="w-full max-w-sm">
             {/* encabezado */}
@@ -148,11 +114,12 @@ const Register = () => {
               </p>
             </div>
 
+            {/* Mantengo tu estructura: inputs controlados y botón con onClick */}
             <form
               className="mt-8 flex flex-col gap-5"
               onSubmit={submitRegistro}
             >
-              {/* Nombre completo */}
+              {/* Nombre completo (ya usabas 'name') */}
               <Input
                 type="text"
                 name="name"
@@ -168,7 +135,7 @@ const Register = () => {
                 }}
               />
 
-              {/* Fecha de nacimiento */}
+              {/* Fecha de nacimiento (nuevo) */}
               <Input
                 type="date"
                 name="birth_date"
@@ -215,9 +182,8 @@ const Register = () => {
                 }}
               />
 
-              {/* Universidad/Campus */}
+              {/* Universidad/Campus (nuevo): búsqueda local + dropdown */}
               <div className="flex flex-col gap-2">
-                <label className="text-sm">Universidad / Campus</label>
                 <select
                   name="university_id"
                   value={universityId}
@@ -233,7 +199,7 @@ const Register = () => {
                 </select>
               </div>
 
-              {/* Matrícula */}
+              {/* Matrícula (nuevo) */}
               <Input
                 type="text"
                 name="matricula"
@@ -249,7 +215,7 @@ const Register = () => {
                 }}
               />
 
-              {/* País/Región */}
+              {/* País/Región (nuevo) */}
               <div className="flex flex-col gap-2">
                 <label className="text-sm">País / Región</label>
                 <select
@@ -271,6 +237,7 @@ const Register = () => {
                 type="submit"
                 radius="md"
                 className="h-11 font-semibold tracking-wide text-[#181818] bg-gradient-to-r from-[#2CBFF0] to-[#78dcff] hover:opacity-95"
+                onClick={submitRegistro}
               >
                 Crear cuenta
               </Button>
@@ -299,7 +266,7 @@ const Register = () => {
           </div>
         </section>
 
-        {/* DERECHA: HERO */}
+        {/* DERECHA: HERO como en Login */}
         <aside className="relative hidden md:block overflow-hidden">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#181818] via-[#252526]/70 to-[#181818]" />
           <div className="pointer-events-none absolute -top-10 -left-10 h-56 w-56 rounded-full bg-white/15 blur-2xl" />
@@ -313,8 +280,8 @@ const Register = () => {
                 alt="mi"
                 src="MI.png"
                 className="block"
-                disableAnimation
-                disableSkeleton
+                disableAnimation // ⟵ quita el fade-in
+                disableSkeleton // ⟵ quita el efecto de carga
               />
             </div>
           </div>
