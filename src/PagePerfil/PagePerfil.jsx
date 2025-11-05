@@ -28,7 +28,7 @@ const PagePerfil = () => {
     const loadUserData = async () => {
       try {
         await initSanctum();
-        // Tu axios ya tiene baseURL .../api/v1, por eso aquí NO repetimos /api/v1
+        // Tu axios ya tiene baseURL .../api/v1 → aquí NO repitas /api/v1
         const { data } = await axios.get("/auth/me");
         const userData = data?.user || data?.data || data;
 
