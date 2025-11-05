@@ -1,7 +1,7 @@
 // src/Config.jsx
 import axios from "./lib/axios";
 
-const base_api_url = "/api/v1"; // axios.js ya tiene baseURL
+const base_api_url = ""; // No le muebles; ya está configurado en lib/axios.js
 
 // ============================================
 // AUTH (con Sanctum stateful)
