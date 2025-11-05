@@ -17,28 +17,36 @@ import {
 } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/24/solid";
 import Config from "../Config";
-import axios, { ensureSanctum } from "../lib/axios";
 
 /** Helper de imagen (mismo criterio que tu catálogo de cursos)
  * - base64 o URL absoluta → se usa tal cual
  * - nombre de archivo → construye `${backend}/img/cursos/<archivo>`
  */
 
+// Helper para stripe
+const apiOrigin = () => {
+  const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
+  const fromAxiosOrigin = axiosBase
+    ? axiosBase.replace(/\/api\/?.*$/i, "")
+    : "";
+const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
+  const backendOrigin = (fromAxiosOrigin || fromEnv || "").replace(/\/$/, "");
+  return backendOrigin || "";
+};
+
 const courseImgSrc = (val) => {
   if (!val) return "";
   const v = String(val).trim();
-
-  // Si es base64 o URL absoluta, usarla tal cual
   if (v.startsWith("data:image")) return v;
   if (/^https?:\/\//i.test(v)) return v;
 
-  // Obtener el origen del backend
-  const backendUrl =
-    import.meta.env.VITE_BACKEND_URL || "https://miback-1333.onrender.com";
-  const origin = backendUrl.replace(/\/$/, ""); // Quitar "/" final si existe
-
-  // Construir la URL completa
-  return `${origin}/img/cursos/${v}`;
+  const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
+  const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
+  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "").trim();
+  const backendOrigin = (fromAxios || fromEnv || "").replace(/\/$/, "");
+  return backendOrigin
+    ? `${backendOrigin}/img/cursos/${v}`
+    : `/img/cursos/${v}`;
 };
 
 const centsToCurrency = (cents, locale = "es-MX", currency = "MXN") =>
@@ -50,10 +58,9 @@ const Course = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
 
-  const [detail, setDetail] = React.useState(null);
+  const [detail, setDetail] = React.useState(null); // { course, related }
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
-  const [loadingCheckout, setLoadingCheckout] = React.useState(false);
 
   React.useEffect(() => {
     let active = true;
@@ -82,49 +89,51 @@ const Course = () => {
   const career = c?.career;
   const university = c?.career?.university;
 
+  // handler stripe
+  const apiOrigin = () => {
+    const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
+    const fromAxiosOrigin = axiosBase
+      ? axiosBase.replace(/\/api\/?.*$/i, "")
+      : "";
+    const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "").trim();
+    const backendOrigin = (fromAxiosOrigin || fromEnv || "").replace(/\/$/, "");
+    return backendOrigin || "";
+  };
+
   const handleBuyCourse = async () => {
     if (!detail?.course) return;
 
-    try {
-      setLoadingCheckout(true);
+    const slug = detail.course.slug;
+    const success = `${window.location.origin}/courses/${slug}?status=success`;
+    const cancel = `${window.location.origin}/courses/${slug}?status=cancel`;
 
-      // 1. Asegurar cookie CSRF
-      await ensureSanctum();
+    const body = {
+      mode: "payment",
+      amount_cents: Number(detail.course.price_cents || 0), // en centavos
+      currency: (detail.course.currency || "MXN").toUpperCase(),
+      product_name: detail.course.title || "Curso",
+      success_url: success,
+      cancel_url: cancel,
+      metadata: {
+        kind: "course",
+        course_id: detail.course.id,
+        course_slug: slug,
+      },
+    };
 
-      const slug = detail.course.slug;
-      const frontendUrl = window.location.origin;
+    const url = `${apiOrigin()}/api/v1/checkout`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
 
-      // 2. Preparar datos del checkout
-      const body = {
-        mode: "payment",
-        amount_cents: Number(detail.course.price_cents || 0),
-        currency: (detail.course.currency || "MXN").toUpperCase(),
-        product_name: detail.course.title || "Curso",
-        success_url: `${frontendUrl}/courses/${slug}?status=success`,
-        cancel_url: `${frontendUrl}/courses/${slug}?status=cancel`,
-        metadata: {
-          kind: "course",
-          course_id: detail.course.id,
-          course_slug: slug,
-        },
-      };
-
-      const { data } = await axios.post("/api/v1/checkout", body);
-
-      // 4. Redirigir a Stripe
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        console.error("Stripe checkout error:", data);
-        alert("No se pudo iniciar el pago. Intenta nuevamente.");
-      }
-    } catch (error) {
-      console.error("Error en handleBuyCourse:", error);
-      alert(
-        "Ocurrió un error al procesar el pago. Por favor, intenta de nuevo."
-      );
-    } finally {
-      setLoadingCheckout(false);
+    const data = await res.json();
+    if (data?.url) {
+      window.location.href = data.url; // Stripe Checkout
+    } else {
+      console.error("Stripe checkout error:", data);
+      alert("No se pudo iniciar el pago. Intenta nuevamente.");
     }
   };
 
@@ -241,10 +250,8 @@ const Course = () => {
                     className="bg-[#2EB86A] text-white"
                     variant="solid"
                     onPress={handleBuyCourse}
-                    isLoading={loadingCheckout}
-                    isDisabled={loadingCheckout}
                   >
-                    {loadingCheckout ? "Procesando..." : "Comprar"}
+                    Comprar
                   </Button>
 
                   <div className="text-lg font-bold">

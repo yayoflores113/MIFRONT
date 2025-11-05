@@ -25,18 +25,16 @@ import Config from "../Config";
 const careerImgSrc = (val) => {
   if (!val) return "";
   const v = String(val).trim();
-
-  // Si es base64 o URL absoluta, usarla tal cual
   if (v.startsWith("data:image")) return v;
   if (/^https?:\/\//i.test(v)) return v;
 
-  // Obtener el origen del backend
-  const backendUrl =
-    import.meta.env.VITE_BACKEND_URL || "https://miback-1333.onrender.com";
-  const origin = backendUrl.replace(/\/$/, ""); // Quitar "/" final si existe
-
-  // Construir la URL completa
-  return `${origin}/img/carreras/${v}`;
+  const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
+  const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
+const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
+  const backendOrigin = (fromAxios || fromEnv || "").replace(/\/$/, "");
+  return backendOrigin
+    ? `${backendOrigin}/img/carreras/${v}`
+    : `/img/carreras/${v}`;
 };
 
 const prettyTerms = (arr, unit) => {

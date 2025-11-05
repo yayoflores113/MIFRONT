@@ -4,9 +4,8 @@ import { useNavigate } from "react-router-dom";
 import AuthUser from "./AuthUser";
 import { Input, Button, Image } from "@heroui/react";
 
-// Base de API para catálogos (no interfiere con tu lógica existente)
-const API =
-  import.meta.env.VITE_API_BASE_URL || "https://miback-1333.onrender.com/api";
+// ⟵ Base de API para catálogos (actualizado a producción)
+const API = import.meta.env.VITE_API_BASE_URL || "https://miback-1333.onrender.com/api";
 
 const Register = () => {
   const { getToken } = AuthUser();
@@ -71,42 +70,21 @@ const Register = () => {
   const submitRegistro = async (e) => {
     e.preventDefault();
 
-    try {
-      // 1. Asegurar cookie CSRF
-      await ensureSanctum();
-
-      // 2. Hacer registro
-      const { data } = await Config.getRegister({
-        name,
-        email,
-        password,
-        birth_date: birthDate || null,
-        university_id: universityId || null,
-        matricula: matricula || null,
-        country_id: countryId || null,
-      });
-
+    // ⟵ Mantengo tu misma llamada y flujo; solo PASO campos extra
+    Config.getRegister({
+      name,
+      email,
+      password,
+      // nuevos campos (serán ignorados si el backend no los usa aún)
+      birth_date: birthDate || null,
+      university_id: universityId || null,
+      matricula: matricula || null,
+      country_id: countryId || null,
+    }).then(({ data }) => {
       if (data.success) {
-        // Si el backend autologa después del registro
-        if (data.user && data.rol) {
-          const userRol = data.rol || "user";
-          setToken(data.user, null, userRol);
-
-          // Navegar según rol
-          if (userRol === "admin") {
-            navigate("/admin", { replace: true });
-          } else {
-            navigate("/", { replace: true });
-          }
-        } else {
-          // Si no autologa, ir a login
-          navigate("/login");
-        }
+        navigate("/login");
       }
-    } catch (err) {
-      console.error("Error en registro:", err);
-      // Mostrar mensaje de error al usuario
-    }
+    });
   };
 
   return (

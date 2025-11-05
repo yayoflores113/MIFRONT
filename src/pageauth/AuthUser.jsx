@@ -1,10 +1,10 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const AuthUser = () => {
   const navigate = useNavigate();
 
-  // Helper seguro para JSON.parse
+  // helper seguro para JSON.parse
   const safeParse = (val, fallback = null) => {
     try {
       return val ? JSON.parse(val) : fallback;
@@ -13,53 +13,39 @@ const AuthUser = () => {
     }
   };
 
-  // SOLO guardamos user y rol (NO token)
+  const getToken = () => safeParse(sessionStorage.getItem("token"), null);
   const getUser = () => safeParse(sessionStorage.getItem("user"), null);
-  const getRol = () => sessionStorage.getItem("rol") || null;
+  const getRol = () => safeParse(sessionStorage.getItem("rol"), null);
 
-  // Estados con inicializadores perezosos
+  // estados con inicializadores perezosos
+  const [token, setToken] = useState(() => getToken());
   const [user, setUser] = useState(() => getUser());
   const [rol, setRol] = useState(() => getRol());
 
-  // setToken ahora solo recibe (user, token=null, rol)
-  // El token siempre será null porque usamos Sanctum stateful
   const saveToken = (userValue, tokenValue, rolValue) => {
-    // Persistir solo user y rol
+    // persiste primero
     sessionStorage.setItem("user", JSON.stringify(userValue));
-    sessionStorage.setItem("rol", rolValue);
+    sessionStorage.setItem("token", JSON.stringify(tokenValue));
+    sessionStorage.setItem("rol", JSON.stringify(rolValue));
 
-    // NO guardar token en ningún lado
-    // Las cookies (miapi_session y XSRF-TOKEN) manejan la autenticación
-
-    // Sincronizar estado local
+    // luego sincroniza estado local
     setUser(userValue);
+    setToken(tokenValue);
     setRol(rolValue);
 
-    // Navegación según rol
-    if (rolValue === "admin") {
-      navigate("/admin");
-    } else if (rolValue === "user") {
-      navigate("/user");
-    } else {
-      navigate("/");
-    }
+    // navegación según rol (misma lógica: admin | user)
+    if (rolValue === "admin") navigate("/admin");
+    if (rolValue === "user") navigate("/user");
   };
 
   const getLogout = () => {
     sessionStorage.clear();
-    // NO limpiar localStorage aquí (no lo usamos)
     navigate("/");
-  };
-
-  // getToken ahora verifica si hay usuario autenticado (no token)
-  const getToken = () => {
-    // En Sanctum stateful, "estar autenticado" = tener user guardado
-    return getUser() ? true : null;
   };
 
   return {
     setToken: saveToken,
-    token: getToken(), // Devuelve true/null según si hay sesión
+    token,
     user,
     rol,
     getToken,
