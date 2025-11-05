@@ -4,19 +4,7 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import Config from "../Config";
 import { Form, Input, Button, Image, Alert, Divider } from "@heroui/react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
-import axios from "../lib/axios";
-
-//Genera la cookie CSRF en la RAÍZ del backend (no /api/v1)
-const getCsrfCookie = async () => {
-  const API_ORIGIN = (import.meta.env.VITE_BACKEND_URL || "").replace(
-    /\/+$/,
-    ""
-  );
-  await fetch(`${API_ORIGIN}/sanctum/csrf-cookie`, {
-    method: "GET",
-    credentials: "include",
-  });
-};
+import { ensureSanctum } from "../lib/axios";
 
 const Login = () => {
   const { setToken, getToken } = AuthUser();
@@ -32,7 +20,6 @@ const Login = () => {
   const location = useLocation();
   const nextPath = location.state?.next || "/";
 
-<<<<<<< HEAD
   const BACKEND_URL =
     import.meta.env.VITE_BACKEND_URL || "https://miback-1333.onrender.com";
   const GOOGLE_REDIRECT = `${BACKEND_URL}/api/v1/auth/google`;
@@ -40,17 +27,6 @@ const Login = () => {
 
   useEffect(() => {
     if (getToken()) navigate(nextPath);
-=======
-  // 🔥 URLs dinámicas según entorno
-  const API_BASE = import.meta.env.VITE_API_URL || "https://miback-1333.onrender.com";
-  const GOOGLE_REDIRECT = `${API_BASE}/api/v1/auth/google/redirect`;
-  const MICROSOFT_REDIRECT = `${API_BASE}/api/v1/auth/microsoft/redirect`;
-
-  useEffect(() => {
-    if (getToken()) {
-      navigate(nextPath, { replace: true });
-    }
->>>>>>> d0cff049c7d38dcd075dc7a1d189e32065000e9c
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -58,45 +34,20 @@ const Login = () => {
     e.preventDefault();
     if (loading) return;
     setLoading(true);
-    setMessage("");
-    setStatus(null);
 
     try {
-<<<<<<< HEAD
-      // 1) Generar cookies CSRF + sesión en el ORIGEN del backend
-      await getCsrfCookie();
+      // 1. Obtener cookie CSRF
+      await ensureSanctum();
 
       // 2. Hacer login
-=======
-      // 🔥 Login directo con tokens (sin CSRF cookie necesario)
->>>>>>> d0cff049c7d38dcd075dc7a1d189e32065000e9c
       const resp = await Config.getLogin({ email, password });
       const res = resp?.data || {};
-
-      console.log("📡 Respuesta del servidor:", res);
 
       if (res.success) {
         setStatus("success");
         setMessage(res.message || "Logueado");
 
-        const user = res.user;
-        const token = res.token;
-        const rol = res.rol || user?.roles?.[0]?.name || "user";
-
-        // 🔥 Guardar usuario + token + rol
-        setToken(user, token, rol);
-
-        // ⚡ Configurar axios con token para futuras peticiones
-        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-        console.log("✅ LOGIN EXITOSO");
-        console.log("Usuario:", user);
-        console.log("Token:", token);
-        console.log("Rol:", rol);
-
-        // Redirigir después de 300ms
         setTimeout(() => {
-<<<<<<< HEAD
           const userRol = res.rol || "user";
           setToken(res.user, null, userRol);
 
@@ -106,37 +57,14 @@ const Login = () => {
             navigate(nextPath, { replace: true });
           }
         }, 600);
-=======
-          navigate(nextPath, { replace: true });
-        }, 300);
-
->>>>>>> d0cff049c7d38dcd075dc7a1d189e32065000e9c
       } else {
         setStatus("danger");
         setMessage(res.message || "Correo o contraseña incorrectos");
       }
-
     } catch (err) {
-<<<<<<< HEAD
       setStatus("danger");
       setMessage(err.message || "Ocurrió un error al iniciar sesión.");
       console.error("Error en login:", err);
-=======
-      console.error("❌ Error en login:", err);
-      console.error("Detalles:", err.response?.data);
-      
-      setStatus("danger");
-      
-      // Mostrar mensaje de error más específico
-      const errorMsg = 
-        err.response?.data?.message || 
-        err.response?.data?.error ||
-        err.message ||
-        "Error al iniciar sesión. Verifica tu conexión.";
-      
-      setMessage(errorMsg);
-      
->>>>>>> d0cff049c7d38dcd075dc7a1d189e32065000e9c
     } finally {
       setLoading(false);
     }
