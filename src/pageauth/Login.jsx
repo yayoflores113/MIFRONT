@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import AuthUser from "./AuthUser";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import Config from "../Config";
+import axios from "axios";
 import { Form, Input, Button, Image, Alert, Divider } from "@heroui/react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
-import axios from "../lib/axios";
 
 const Login = () => {
   const { setToken, getToken } = AuthUser();
@@ -20,10 +20,8 @@ const Login = () => {
   const location = useLocation();
   const nextPath = location.state?.next || "/";
 
-  // 🔥 URLs dinámicas según entorno
-  const API_BASE = import.meta.env.VITE_API_URL || "https://miback-1333.onrender.com";
-  const GOOGLE_REDIRECT = `${API_BASE}/api/v1/auth/google/redirect`;
-  const MICROSOFT_REDIRECT = `${API_BASE}/api/v1/auth/microsoft/redirect`;
+  // ✅ URL base según entorno
+  const API_BASE_URL = (import.meta?.env?.VITE_API_BASE_URL || "https://miback-1333.onrender.com/api/v1").trim().replace('/api/v1', '');
 
   useEffect(() => {
     if (getToken()) {
@@ -36,66 +34,60 @@ const Login = () => {
     e.preventDefault();
     if (loading) return;
     setLoading(true);
-    setMessage("");
-    setStatus(null);
 
     try {
-      // 🔥 Login directo con tokens (sin CSRF cookie necesario)
+      // ✅ Login directo - SIN CSRF porque lo excluimos en el backend
       const resp = await Config.getLogin({ email, password });
       const res = resp?.data || {};
-
-      console.log("📡 Respuesta del servidor:", res);
 
       if (res.success) {
         setStatus("success");
         setMessage(res.message || "Logueado correctamente");
 
-        const user = res.user;
-        const token = res.token;
-        const rol = res.rol || user?.roles?.[0]?.name || "user";
-
-        // 🔥 Guardar usuario + token + rol
-        setToken(user, token, rol);
-
-        // ⚡ Configurar axios con token para futuras peticiones
-        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-        console.log("✅ LOGIN EXITOSO");
-        console.log("Usuario:", user);
-        console.log("Token:", token);
-        console.log("Rol:", rol);
-
-        // Redirigir después de 300ms
         setTimeout(() => {
+          const user = res.user;
+          const token = res.token;
+          const rol = user?.roles?.[0]?.name || "user";
+
+          setToken(user, token, rol);
+          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+          console.log("=== LOGIN EXITOSO ===");
+          console.log("Usuario:", user);
+          console.log("Token:", token);
+          console.log("Rol:", rol);
+          console.log("=====================");
+
           navigate(nextPath, { replace: true });
         }, 300);
-
       } else {
         setStatus("danger");
         setMessage(res.message || "Correo o contraseña incorrectos");
       }
-
     } catch (err) {
-      console.error("❌ Error en login:", err);
-      console.error("Detalles:", err.response?.data);
-      
+      console.error("Error login:", err);
       setStatus("danger");
       
-      // Mostrar mensaje de error más específico
-      const errorMsg = 
-        err.response?.data?.message || 
-        err.response?.data?.error ||
-        err.message ||
-        "Error al iniciar sesión. Verifica tu conexión.";
-      
-      setMessage(errorMsg);
-      
+      // ✅ Mensajes de error específicos
+      if (err.response?.status === 401) {
+        setMessage("Correo o contraseña incorrectos.");
+      } else if (err.response?.status === 422) {
+        setMessage(err.response?.data?.message || "Por favor verifica los datos ingresados.");
+      } else if (err.response?.status === 500) {
+        setMessage("Error en el servidor. Intenta más tarde.");
+      } else {
+        setMessage(err.response?.data?.message || "Ocurrió un error al iniciar sesión.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const isError = status === "danger" && !!message;
+  
+  // ✅ URLs dinámicas para OAuth
+  const GOOGLE_REDIRECT = `${API_BASE_URL}/api/v1/auth/google/redirect`;
+  const MICROSOFT_REDIRECT = `${API_BASE_URL}/api/v1/auth/microsoft/redirect`;
 
   return (
     <div className="min-h-screen bg-[#FEFEFE] text-[#181818]">
@@ -257,6 +249,7 @@ const Login = () => {
           </div>
         </section>
 
+        {/* Imagen lateral */}
         <aside className="relative hidden md:block overflow-hidden">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#181818] via-[#252526]/70 to-[#181818]" />
           <div className="pointer-events-none absolute -top-10 -left-10 h-56 w-56 rounded-full bg-white/15 blur-2xl" />
