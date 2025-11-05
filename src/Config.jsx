@@ -1,13 +1,9 @@
-import axios from "./lib/axios";
+import axios from "axios";
 
 const base_api_url = (
   import.meta?.env?.VITE_API_BASE_URL ||
   "https://miback-1333.onrender.com/api/v1"
 ).trim();
-const base_origin = new URL(base_api_url).origin;
-// Garantiza que el navegador reciba XSRF-TOKEN (dominio .onrender.com)
-const ensureCsrf = () =>
-  axios.get(`${base_origin}/sanctum/csrf-cookie`, { withCredentials: true });
 
 // 🔥 CONFIGURAR AXIOS PARA ENVIAR EL TOKEN AUTOMÁTICAMENTE
 axios.interceptors.request.use(
@@ -31,12 +27,7 @@ export default {
 
   // AUTH
   getRegister: (data) => axios.post(`${base_api_url}/auth/register`, data),
-  getLogin: async (data) => {
-    await ensureCsrf();
-    return axios.post(`${base_api_url}/auth/login`, data, {
-      withCredentials: true,
-    });
-  },
+  getLogin: (data) => axios.post(`${base_api_url}/auth/login`, data),
   getLogout: (data) => axios.post(`${base_api_url}/auth/logout`, data),
 
   // ROL ADMIN
