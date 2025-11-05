@@ -112,7 +112,7 @@ const Universities = () => {
           : Array.isArray(data?.data)
           ? data.data
           : [];
-        // Asegura que todos los IDs de universidades sean number
+        // 🔧 Asegura que todos los IDs de universidades sean number
         setUniversities(list.map((u) => ({ ...u, id: toInt(u.id) })));
       } catch (e) {
         console.error("Universities fetch error:", e);

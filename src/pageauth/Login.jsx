@@ -1,22 +1,10 @@
 import React, { useEffect, useState } from "react";
 import AuthUser from "./AuthUser";
-import { useNavigate, Link, useLocation } from "react-router-dom";
-import { getLogin } from "../Config";
+import { useNavigate, Link, useLocation } from "react-router-dom"; // <-- añadido useLocation
+import Config from "../Config";
 import { Form, Input, Button, Image, Alert, Divider } from "@heroui/react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
-
-// Mejor pide el CSRF en la RAÍZ del backend (no bajo /api/v1)
-const getCsrfCookie = async () => {
-  const API_ORIGIN = (import.meta.env.VITE_BACKEND_URL || "").replace(
-    /\/+$/,
-    ""
-  );
-  await fetch(`${API_ORIGIN}/sanctum/csrf-cookie`, {
-    method: "GET",
-    credentials: "include",
-    headers: { "X-Requested-With": "XMLHttpRequest" },
-  });
-};
+import { ensureSanctum } from "../lib/axios";
 
 const Login = () => {
   const { setToken, getToken } = AuthUser();
@@ -25,20 +13,15 @@ const Login = () => {
   const [showPwd, setShowPwd] = useState(false);
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
-  const [status, setStatus] = useState(null);
+  const [status, setStatus] = useState(null); // 'success' | 'danger' | null
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-  const location = useLocation();
+  const location = useLocation(); // <-- para leer state.next
   const nextPath = location.state?.next || "/";
 
-  const BACKEND_URL =
-    import.meta.env.VITE_BACKEND_URL || "https://miback-1333.onrender.com";
-  const GOOGLE_REDIRECT = `${BACKEND_URL}/api/v1/auth/google`;
-  const MICROSOFT_REDIRECT = `${BACKEND_URL}/api/v1/auth/microsoft`;
-
   useEffect(() => {
-    if (getToken()) navigate(nextPath);
+    if (getToken()) navigate(nextPath); // <-- respeta retorno si ya hay sesión
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -48,11 +31,11 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // 1) Generar cookies CSRF + sesión en el ORIGEN del backend
-      await getCsrfCookie();
+      // 1. Obtener cookie CSRF
+      await ensureSanctum();
 
       // 2. Hacer login
-      const resp = await getLogin({ email, password });
+      const resp = await Config.getLogin({ email, password });
       const res = resp?.data || {};
 
       if (res.success) {
@@ -60,9 +43,13 @@ const Login = () => {
         setMessage(res.message || "Logueado");
 
         setTimeout(() => {
+          // Obtener rol de la respuesta (ahora viene en res.rol)
           const userRol = res.rol || "user";
+
+          // Guardar con token = null (es el segundo parámetro)
           setToken(res.user, null, userRol);
 
+          // Navegar según el rol
           if (userRol === "admin") {
             navigate("/admin", { replace: true });
           } else {
@@ -75,7 +62,7 @@ const Login = () => {
       }
     } catch (err) {
       setStatus("danger");
-      setMessage(err.message || "Ocurrió un error al iniciar sesión.");
+      setMessage("Ocurrió un error al iniciar sesión.");
       console.error("Error en login:", err);
     } finally {
       setLoading(false);
@@ -83,6 +70,10 @@ const Login = () => {
   };
 
   const isError = status === "danger" && !!message;
+  const GOOGLE_REDIRECT =
+    "https://miback-1333.onrender.com/api/v1/auth/google/callback";
+  const MICROSOFT_REDIRECT =
+    "https://miback-1333.onrender.com/api/v1/auth/microsoft/callback";
 
   return (
     <div className="min-h-screen bg-[#FEFEFE] text-[#181818]">
@@ -94,7 +85,7 @@ const Login = () => {
 
       {/* Layout 2 columnas */}
       <div className="grid grid-cols-1 md:grid-cols-2 min-h-screen">
-        {/* IZQUIERDA: formulario */}
+        {/* IZQUIERDA: formulario (centrado) */}
         <section className="flex items-center justify-center px-6 md:px-12 py-10">
           <div className="w-full max-w-sm">
             {/* Encabezado */}
@@ -113,7 +104,7 @@ const Login = () => {
               </p>
             </div>
 
-            {/* Form */}
+            {/* Form (HeroUI) */}
             <Form
               className="mt-8 flex flex-col gap-5"
               validationBehavior="aria"

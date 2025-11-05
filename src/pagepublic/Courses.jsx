@@ -23,7 +23,6 @@ import {
   ChevronDownIcon,
   FunnelIcon,
   LinkIcon,
-  ShoppingCartIcon,
 } from "@heroicons/react/24/outline";
 import { StarIcon, AcademicCapIcon } from "@heroicons/react/24/solid";
 import { motion } from "framer-motion";
@@ -36,24 +35,22 @@ const PAGE_SIZE = 9;
 const uniq = (arr) => Array.from(new Set(arr.filter(Boolean)));
 const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
 
-// Helper para obtener el origen de la API
-const apiOrigin = () => {
-  const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
-  const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
-  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
-  return fromAxios || fromEnv || "";
-};
-
+// helper de: (carpeta /img/cursos)
 const courseImgSrc = (val) => {
   if (!val) return "";
   const v = String(val).trim();
+
+  // Si es base64 o URL absoluta, usarla tal cual
   if (v.startsWith("data:image")) return v;
   if (/^https?:\/\//i.test(v)) return v;
 
-  const backendOrigin = apiOrigin().replace(/\/$/, "");
-  return backendOrigin
-    ? `${backendOrigin}/img/cursos/${v}`
-    : `/img/cursos/${v}`;
+  // Obtener el origen del backend
+  const backendUrl =
+    import.meta.env.VITE_BACKEND_URL || "https://miback-1333.onrender.com";
+  const origin = backendUrl.replace(/\/$/, ""); // Quitar "/" final si existe
+
+  // Construir la URL completa
+  return `${origin}/img/cursos/${v}`;
 };
 
 const centsToCurrency = (cents, locale = "es-MX", currency = "MXN") =>
@@ -73,128 +70,24 @@ const Courses = () => {
   const [courses, setCourses] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
-  const [checkoutLoading, setCheckoutLoading] = React.useState(null);
 
   // Search & sort
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [sortKey, setSortKey] = React.useState("popular");
+  const [sortKey, setSortKey] = React.useState("popular"); // popular | rating | newest | price_low | price_high
 
   // Filters
-  const [selectedRatings, setSelectedRatings] = React.useState([]);
-  const [selectedLevels, setSelectedLevels] = React.useState([]);
-  const [selectedTopics, setSelectedTopics] = React.useState([]);
-  const [selectedProvider, setSelectedProvider] = React.useState([]);
-  const [selectedDifficulty, setSelectedDifficulty] = React.useState([]);
-  const [selectedHours, setSelectedHours] = React.useState([]);
-  const [selectedPrice, setSelectedPrice] = React.useState([]);
+  const [selectedRatings, setSelectedRatings] = React.useState([]); // ["4.5-5","4-4.5","3-4"]
+  const [selectedLevels, setSelectedLevels] = React.useState([]); // db.level
+  const [selectedTopics, setSelectedTopics] = React.useState([]); // db.topic
+  const [selectedProvider, setSelectedProvider] = React.useState([]); // db.provider
+  const [selectedDifficulty, setSelectedDifficulty] = React.useState([]); // db.difficulty
+  const [selectedHours, setSelectedHours] = React.useState([]); // hourBuckets keys
+  const [selectedPrice, setSelectedPrice] = React.useState([]); // ["free","paid","premium"]
 
   // Pagination
   const [page, setPage] = React.useState(1);
 
-  // 🔥 Función para manejar checkout de cursos
-  const handleCourseCheckout = async (course) => {
-    // 🔍 DEBUG: Ver TODO el objeto del curso
-    console.log("🔍 Curso completo:", course);
-    console.log("🔍 price_cents RAW:", course.price_cents);
-    console.log("🔍 price_cents TYPE:", typeof course.price_cents);
-    console.log("🔍 is_free:", course.is_free);
-    console.log("🔍 is_premium:", course.is_premium);
-    
-    // Validar que el curso tenga precio
-    const amountCents = Number(course.price_cents || 0);
-    
-    console.log("🔍 amountCents convertido:", amountCents);
-    
-    if (amountCents <= 0 || course.is_free) {
-      alert(`Este curso no tiene precio válido.\n\nDatos:\n- price_cents: ${course.price_cents}\n- is_free: ${course.is_free}\n- Convertido: ${amountCents}`);
-      return;
-    }
-
-    if (!course.title || !course.slug || !course.id) {
-      alert("Información del curso incompleta. Por favor, recarga la página.");
-      return;
-    }
-
-    setCheckoutLoading(course.id);
-    
-    const slug = course.slug;
-    const success = `${window.location.origin}/courses/${slug}?status=success`;
-    const cancel = `${window.location.origin}/courses?status=cancel`;
-
-    const body = {
-      mode: "payment",
-      amount_cents: amountCents,
-      currency: "MXN",
-      product_name: course.title,
-      success_url: success,
-      cancel_url: cancel,
-      metadata: {
-        kind: "course",
-        course_id: course.id,
-        course_slug: slug,
-        provider: course.provider || "",
-        topic: course.topic || "",
-      },
-    };
-
-    try {
-      const origin = apiOrigin();
-      const url = `${origin}/api/v1/checkout`;
-      
-      // 🔍 DEBUG: Ver qué URL se está usando
-      console.log("🔵 API Origin:", origin);
-      console.log("🔵 Checkout URL completa:", url);
-      console.log("🔵 Body a enviar:", JSON.stringify(body, null, 2));
-      
-      if (!origin || origin === "" || origin === "http://" || origin === "https://") {
-        throw new Error("URL del backend no configurada correctamente. Verifica VITE_BACKEND_URL en .env");
-      }
-      
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          // Si usas autenticación con token:
-          // "Authorization": `Bearer ${tu_token}`
-        },
-        body: JSON.stringify(body),
-      });
-
-      console.log("🔵 Response status:", res.status);
-      
-      // Intentar leer la respuesta como JSON
-      let data;
-      const contentType = res.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        data = await res.json();
-      } else {
-        const text = await res.text();
-        console.error("❌ Response no es JSON:", text);
-        throw new Error(`Servidor retornó ${res.status}: ${text.substring(0, 200)}`);
-      }
-      
-      console.log("🔵 Response data:", data);
-      
-      if (!res.ok) {
-        throw new Error(data?.message || data?.error || `Error ${res.status}`);
-      }
-      
-      if (data?.url) {
-        console.log("✅ Redirigiendo a Stripe:", data.url);
-        window.location.href = data.url;
-      } else {
-        console.error("❌ No se recibió URL de checkout:", data);
-        alert(`Error: ${data?.message || "No se pudo crear la sesión de pago"}`);
-        setCheckoutLoading(null);
-      }
-    } catch (err) {
-      console.error("❌ Checkout error completo:", err);
-      alert(`Error: ${err.message || "No se pudo conectar con el servidor"}`);
-      setCheckoutLoading(null);
-    }
-  };
-
-  // Fetch inicial
+  // Fetch inicial (mismo patrón que Universities/Careers)
   React.useEffect(() => {
     let active = true;
     (async () => {
@@ -223,7 +116,7 @@ const Courses = () => {
     };
   }, []);
 
-  // Opciones para filtros
+  // Opciones para filtros (derivadas del dataset)
   const levels = React.useMemo(
     () => uniq(courses.map((c) => c.level)).sort(),
     [courses]
@@ -245,6 +138,7 @@ const Courses = () => {
   const filtered = React.useMemo(() => {
     let res = courses.slice();
 
+    // search (title, description, provider, topic)
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       res = res.filter((c) =>
@@ -256,6 +150,7 @@ const Courses = () => {
       );
     }
 
+    // ratings
     if (selectedRatings.length) {
       res = res.filter((c) => {
         const val = Number(c.rating_avg || 0);
@@ -266,6 +161,7 @@ const Courses = () => {
       });
     }
 
+    // level/topic/provider/difficulty
     if (selectedLevels.length)
       res = res.filter((c) => selectedLevels.includes(c.level));
     if (selectedTopics.length)
@@ -275,6 +171,7 @@ const Courses = () => {
     if (selectedDifficulty.length)
       res = res.filter((c) => selectedDifficulty.includes(c.difficulty));
 
+    // hours
     if (selectedHours.length) {
       res = res.filter((c) => {
         const h = Number(c.hours || 0);
@@ -284,6 +181,7 @@ const Courses = () => {
       });
     }
 
+    // price (is_free / is_premium / paid)
     if (selectedPrice.length) {
       res = res.filter(
         (c) =>
@@ -296,6 +194,7 @@ const Courses = () => {
       );
     }
 
+    // orden (local)
     res.sort((a, b) => {
       switch (sortKey) {
         case "popular":
@@ -335,6 +234,7 @@ const Courses = () => {
     return filtered.slice(start, start + PAGE_SIZE);
   }, [filtered, currentPage]);
 
+  // Reset al cambiar filtros principales
   React.useEffect(() => {
     setPage(1);
   }, [
@@ -370,7 +270,7 @@ const Courses = () => {
           <div>
             <h1 className="text-4xl font-bold mb-2">Cursos</h1>
             <p className="text-default-600 max-w-2xl">
-              Catálogo público con búsqueda, filtros y pago directo.
+              Catálogo público con búsqueda, filtros y ordenamiento.
             </p>
           </div>
         </div>
@@ -581,17 +481,18 @@ const Courses = () => {
             )}
             {!!error && <p className="text-warning mb-4">{error}</p>}
 
+            {/* Count */}
             {!loading && (
               <div className="mb-6">
                 <p className="text-default-500">
                   Mostrando {filtered.length}{" "}
                   {filtered.length === 1 ? "curso" : "cursos"}
-                  {searchQuery ? ` que coinciden con "${searchQuery}"` : ""}
+                  {searchQuery ? ` que coinciden con “${searchQuery}”` : ""}
                 </p>
               </div>
             )}
 
-            {/* Lista */}
+            {/* Lista estilo Udemy */}
             <div className="grid grid-cols-1 gap-6">
               {pageItems.map((c, index) => (
                 <motion.div
@@ -645,7 +546,7 @@ const Courses = () => {
                           <div className="flex flex-col md:flex-row justify-between">
                             <div className="flex-grow pr-4">
                               <Link to={`/courses/${c.slug}`}>
-                                <h3 className="font-bold text-xl mb-2 line-clamp-2 hover:text-[#2CBFF0] transition">
+                                <h3 className="font-bold text-xl mb-2 line-clamp-2">
                                   {c.title}
                                 </h3>
                               </Link>
@@ -692,61 +593,38 @@ const Courses = () => {
                             </div>
 
                             <div className="flex flex-col items-end justify-between mt-4 md:mt-0">
-                              <div className="text-right mb-4">
+                              <div className="text-right">
                                 {c.is_free ? (
                                   <span className="font-bold text-lg text-[#181818]">
                                     Gratis
                                   </span>
                                 ) : (
-                                  <div className="flex flex-col items-end gap-1">
-                                    <span className="font-bold text-lg text-[#181818]">
-                                      {centsToCurrency(c.price_cents)}
-                                    </span>
-                                    <span className="text-xs text-default-400">
-                                      ({c.price_cents} centavos)
-                                    </span>
-                                  </div>
+                                  <span className="font-bold text-lg text-[#181818]">
+                                    {centsToCurrency(c.price_cents)}
+                                  </span>
                                 )}
                               </div>
 
-                              <div className="flex flex-col gap-2 w-full md:w-auto">
-                                {!c.is_free && (
-                                  <Button
-                                    onPress={() => handleCourseCheckout(c)}
-                                    isLoading={checkoutLoading === c.id}
-                                    className="bg-[#2CBFF0] text-white font-semibold"
-                                    startContent={
-                                      checkoutLoading !== c.id && (
-                                        <ShoppingCartIcon className="w-5" />
-                                      )
-                                    }
-                                  >
-                                    {checkoutLoading === c.id
-                                      ? "Procesando..."
-                                      : `Comprar ${centsToCurrency(c.price_cents)}`}
-                                  </Button>
-                                )}
-
+                              <div className="mt-3 flex gap-2">
                                 {c.url && (
                                   <Button
                                     as="a"
                                     href={c.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    variant="flat"
+                                    variant="light"
+                                    className="text-[#2CBFF0]"
                                     startContent={<LinkIcon className="w-4" />}
                                   >
                                     Ir al proveedor
                                   </Button>
                                 )}
-
                                 <Button
                                   as={Link}
                                   to={`/courses/${c.slug}`}
-                                  variant="light"
-                                  className="text-[#2CBFF0]"
+                                  className="bg-[#2CBFF0] text-white"
                                 >
-                                  Ver detalles
+                                  Ver curso
                                 </Button>
                               </div>
                             </div>

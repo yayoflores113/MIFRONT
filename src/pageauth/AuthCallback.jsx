@@ -1,97 +1,76 @@
-// src/page/AuthCallback.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-// Usa namespace import para evitar problemas de export default vs nombrados
-import * as Config from "../Config";
-// Si necesitas fallback, importaremos axios on-demand
-// import axios from "../lib/axios"; // no es necesario si funciona Config.getMe()
+import Config from "../Config";
+import AuthUser from "./AuthUser";
+import { ensureSanctum } from "../lib/axios";
 
 export default function AuthCallback() {
   const navigate = useNavigate();
+  const { setToken } = AuthUser();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState("loading"); // loading | success | error
-
-  // CSRF en la RAÍZ del backend (no bajo /api/v1)
-  const getCsrfCookie = async () => {
-    const API_ORIGIN = (import.meta.env.VITE_BACKEND_URL || "").replace(
-      /\/+$/,
-      ""
-    );
-    await fetch(`${API_ORIGIN}/sanctum/csrf-cookie`, {
-      method: "GET",
-      credentials: "include",
-      headers: { "X-Requested-With": "XMLHttpRequest" },
-    });
-  };
 
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // 1) Verificar error OAuth
+        // 1. Verificar si hubo error en OAuth
         const error = searchParams.get("error");
         if (error) {
           console.error("Error OAuth:", error);
           setStatus("error");
-          setTimeout(() => navigate("/login", { replace: true }), 1200);
+          setTimeout(() => navigate("/login", { replace: true }), 2000);
           return;
         }
 
-        // 2) Verificar éxito OAuth
-        const success = searchParams.get("success");
-        if (!success) {
-          console.error("No se confirmó la autenticación");
+        // 2. Obtener datos codificados
+        const encodedData = searchParams.get("data");
+        if (!encodedData) {
+          console.error("No hay datos del usuario");
           setStatus("error");
-          setTimeout(() => navigate("/login", { replace: true }), 1200);
+          setTimeout(() => navigate("/login", { replace: true }), 2000);
           return;
         }
 
-        // 3) Generar cookies CSRF/sesión en la raíz (evita /api/v1)
-        await getCsrfCookie();
+        // 3. Decodificar datos
+        const userData = JSON.parse(atob(encodedData));
+        console.log("Datos recibidos de OAuth:", userData);
 
-        // 4) Obtener datos del usuario
-        let resp;
-        if (typeof Config?.getMe === "function") {
-          resp = await Config.getMe(); // Debe llamar a /auth/me con tu axios (baseURL .../api/v1)
-        } else {
-          // Fallback directo (por si Config no expone getMe)
-          const { default: axios } = await import("../lib/axios");
-          resp = await axios.get("/auth/me"); // NO repitas /api/v1
-        }
+        // 4. Asegurar cookie CSRF
+        await ensureSanctum();
 
+        // 5. Verificar sesión con el backend
+        const resp = await Config.getMe();
         const data = resp?.data || {};
-        if (!data?.user) {
-          console.error("No se pudo obtener datos del usuario");
-          setStatus("error");
-          setTimeout(() => navigate("/login", { replace: true }), 1200);
-          return;
-        }
 
-        const user = data.user;
-        const rol = user.rol || user.roles?.[0]?.name || "user";
+        // 6. Extraer user completo del backend
+        const fullUser = data.user ?? data.data ?? data;
+        const rol = userData.rol || fullUser?.roles?.[0]?.name || "user";
 
-        // 5) Persistir sesión del lado del front si es necesario
-        // Si usas algún helper tipo AuthUser().setToken(user, null, rol), úsalo aquí:
-        // const { setToken } = AuthUser(); setToken(user, null, rol);
+        console.log("Usuario autenticado:", fullUser);
+        console.log("Rol asignado:", rol);
+
+        // 7. Guardar en sessionStorage
+        setToken(fullUser, null, rol);
 
         setStatus("success");
 
-        // 6) Redirigir por rol
+        // 8. Esperar un momento antes de redirigir
         setTimeout(() => {
           if (rol === "admin") {
             navigate("/admin", { replace: true });
           } else {
             navigate("/", { replace: true });
           }
-        }, 800);
+        }, 1000);
       } catch (err) {
         console.error("Error en callback OAuth:", err);
         setStatus("error");
-        setTimeout(() => navigate("/login", { replace: true }), 1200);
+        setTimeout(() => navigate("/login", { replace: true }), 2000);
       }
     };
 
     handleCallback();
-  }, [navigate, searchParams]);
+  }, [navigate, setToken, searchParams]);
 
   // UI de carga/éxito/error
   return (

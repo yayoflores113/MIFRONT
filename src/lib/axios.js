@@ -1,7 +1,7 @@
 import Axios from "axios";
 
 const axios = Axios.create({
-  baseURL: `${import.meta.env.VITE_BACKEND_URL}/api/v1`,
+  baseURL: import.meta.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com",
   timeout: 60000,
   withCredentials: true, // Envía cookies en todas las peticiones
   withXSRFToken: true,   // Envía token CSRF automáticamente
