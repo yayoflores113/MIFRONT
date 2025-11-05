@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardBody,
@@ -22,6 +22,8 @@ import {
   FunnelIcon,
   LinkIcon,
 } from "@heroicons/react/24/outline";
+import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
+import { StarIcon as StarOutline } from "@heroicons/react/24/outline";
 import { AcademicCapIcon, StarIcon } from "@heroicons/react/24/solid";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -33,55 +35,25 @@ const PAGE_SIZE = 9;
 const uniq = (arr) => Array.from(new Set(arr.filter(Boolean)));
 const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
 
-/** ========= helper de imágenes =========
- *  - Acepta base64 y URL absoluta
-<<<<<<< HEAD
- *  - Si viene sólo el nombre de archivo, construye ${BACKEND_BASE}/img/universidades/<archivo>
- *  - BACKEND_BASE: intenta sacar del baseURL de axios o de VITE_BACKEND_URL
-=======
- *  - Si viene sólo el nombre de archivo, construye `${ORIGEN_BACK}/img/universidades/<archivo>`
- *  - ORIGEN_BACK: intenta sacar del baseURL de axios o de VITE_BACKEND_URL
->>>>>>> d0cff049c7d38dcd075dc7a1d189e32065000e9c
- */
+/** ========= helper de imágenes ========= */
 const logoImgSrc = (val) => {
   if (!val) return "";
   const v = String(val).trim();
   if (v.startsWith("data:image")) return v;
   if (/^https?:\/\//i.test(v)) return v;
-
-  // intenta leer baseURL de axios global si existe
-  const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
-  const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
-<<<<<<< HEAD
-
-  // variable de entorno como respaldo
-  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
-
-  const backendOrigin = fromAxios || fromEnv || "";
-  const backendBase = backendOrigin.replace(/\/$/, "");
-
-  if (backendBase) {
-    return backendBase + "/img/universidades/" + v;
-  }
-  return "/img/universidades/" + v;
-=======
-  // variable de entorno como respaldo
-  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
-
-  const backendOrigin = fromAxios || fromEnv || "";
-  const backendBase = backendOrigin.replace(/\/$/, ""); // 👈 nombre cambiado (antes era origin)
-
-  return backendBase
-    ? `${backendBase}/img/universidades/${v}`
-    : `/img/universidades/${v}`;
->>>>>>> d0cff049c7d38dcd075dc7a1d189e32065000e9c
+  const backendUrl =
+    import.meta.env.VITE_BACKEND_URL || "https://miback-1333.onrender.com";
+  const origin = backendUrl.replace(/\/$/, "");
+  return `${origin}/img/universidades/${v}`;
 };
 
 const Universities = () => {
+  // Data
   const [universities, setUniversities] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
 
+  // Search & filters
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedCountry, setSelectedCountry] = React.useState(null);
   const [selectedState, setSelectedState] = React.useState(null);
@@ -89,8 +61,44 @@ const Universities = () => {
   const [onlyWithLogo, setOnlyWithLogo] = React.useState(false);
   const [sortKey, setSortKey] = React.useState("relevance");
 
+  // Pagination
   const [page, setPage] = React.useState(1);
 
+  // Favoritos
+  const [favIds, setFavIds] = React.useState(new Set());
+  const toInt = (v) => Number.parseInt(v, 10);
+
+  // al montar, sincroniza favoritos
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await Config.getFavorites("university");
+        const ids = (Array.isArray(data) ? data : [])
+          .map((x) => toInt(x?.item?.id))
+          .filter(Number.isFinite);
+        setFavIds(new Set(ids));
+      } catch {}
+    })();
+  }, []);
+
+  const onToggleFav = async (u) => {
+    try {
+      await Config.toggleFavorite({
+        favoritable_type: "university",
+        favoritable_id: u.id,
+      });
+      setFavIds((prev) => {
+        const next = new Set(prev);
+        const id = toInt(u.id);
+        next.has(id) ? next.delete(id) : next.add(id);
+        return next;
+      });
+    } catch (e) {
+      console.error("favorite error", e);
+    }
+  };
+
+  // Fetch inicial
   React.useEffect(() => {
     let active = true;
     (async () => {
@@ -104,7 +112,8 @@ const Universities = () => {
           : Array.isArray(data?.data)
           ? data.data
           : [];
-        setUniversities(list);
+        // Asegura que todos los IDs de universidades sean number
+        setUniversities(list.map((u) => ({ ...u, id: toInt(u.id) })));
       } catch (e) {
         console.error("Universities fetch error:", e);
         if (!active) return;
@@ -119,6 +128,7 @@ const Universities = () => {
     };
   }, []);
 
+  // Opciones dependientes
   const countries = React.useMemo(
     () => uniq(universities.map((u) => u.country)),
     [universities]
@@ -136,6 +146,7 @@ const Universities = () => {
     return uniq(base.map((u) => u.city));
   }, [universities, selectedCountry, selectedState]);
 
+  // Filtros + búsqueda + orden
   const filtered = React.useMemo(() => {
     let res = universities.slice();
 
@@ -185,6 +196,7 @@ const Universities = () => {
     sortKey,
   ]);
 
+  // Paginación
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = clamp(page, 1, totalPages);
   const pageItems = React.useMemo(() => {
@@ -192,6 +204,7 @@ const Universities = () => {
     return filtered.slice(start, start + PAGE_SIZE);
   }, [filtered, currentPage]);
 
+  // Reset de hijos al cambiar padres
   React.useEffect(() => {
     setSelectedState(null);
     setSelectedCity(null);
@@ -203,6 +216,7 @@ const Universities = () => {
   return (
     <section className="w-full py-16 px-4 bg-[#FEFEFE]">
       <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
             <h1 className="text-4xl font-bold mb-2">Universidades</h1>
@@ -212,7 +226,7 @@ const Universities = () => {
           </div>
         </div>
 
-        {/* Buscador y orden */}
+        {/* Search + Sort */}
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4 mb-6">
           <div className="flex-1">
             <Input
@@ -289,7 +303,7 @@ const Universities = () => {
           </Button>
         </div>
 
-        {/* Filtros */}
+        {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-8">
           {/* País */}
           <Dropdown>
@@ -374,7 +388,7 @@ const Universities = () => {
             </DropdownMenu>
           </Dropdown>
 
-          {/* Solo con logo */}
+          {/* Con logo */}
           <div className="flex gap-2">
             <Button
               variant={onlyWithLogo ? "solid" : "flat"}
@@ -392,7 +406,7 @@ const Universities = () => {
           </div>
         </div>
 
-        {/* Limpieza de filtros */}
+        {/* Reset */}
         <div className="flex items-center gap-3 mb-6">
           {(selectedCountry ||
             selectedState ||
@@ -417,16 +431,17 @@ const Universities = () => {
           )}
         </div>
 
-        {/* Texto de estado */}
+        {/* Count */}
         <div className="mb-6">
           <p className="text-default-500">
             Mostrando {filtered.length}{" "}
             {filtered.length === 1 ? "universidad" : "universidades"}
             {selectedCountry ? ` en ${selectedCountry}` : ""}{" "}
-            {searchQuery ? ` que coinciden con "${searchQuery}"` : ""}
+            {searchQuery ? ` que coinciden con “${searchQuery}”` : ""}
           </p>
         </div>
 
+        {/* Loading / Error */}
         {loading && (
           <div className="flex items-center gap-3 text-default-500 mb-6">
             <Spinner size="sm" /> Cargando universidades…
@@ -434,7 +449,7 @@ const Universities = () => {
         )}
         {!!error && <p className="text-warning mb-4">{error}</p>}
 
-        {/* Grid de universidades */}
+        {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {pageItems.map((u, index) => (
             <motion.div
@@ -445,7 +460,7 @@ const Universities = () => {
             >
               <Card className="border border-default-200 shadow-sm h-full overflow-visible">
                 <CardBody className="p-0">
-                  <Link to={"/universities/" + u.slug} className="block">
+                  <Link to={`/universities/${u.slug}`} className="block">
                     <div className="relative h-40 bg-default-100 rounded-large overflow-hidden">
                       {u.logo_url ? (
                         <Image
@@ -487,7 +502,7 @@ const Universities = () => {
                   <div className="p-5">
                     <div className="flex justify-between items-start mb-2">
                       <div className="min-w-0">
-                        <Link to={"/universities/" + u.slug}>
+                        <Link to={`/universities/${u.slug}`}>
                           <h3
                             className="font-bold text-xl truncate"
                             title={u.name}
@@ -510,8 +525,8 @@ const Universities = () => {
                     <div className="flex items-center gap-2 text-default-500 text-sm mb-4">
                       <MapPinIcon className="w-4" />
                       <span className="truncate">
-                        {u.city ? u.city + ", " : ""}
-                        {u.state ? u.state + ", " : ""}
+                        {u.city ? `${u.city}, ` : ""}
+                        {u.state ? `${u.state}, ` : ""}
                         {u.country || ""}
                       </span>
                     </div>
@@ -526,8 +541,24 @@ const Universities = () => {
 
                 <CardFooter className="flex justify-between p-5 pt-0">
                   <Button
+                    isIconOnly
+                    variant="light"
+                    onPress={() => onToggleFav(u)}
+                    aria-label={
+                      favIds.has(toInt(u.id))
+                        ? "Quitar de favoritos"
+                        : "Agregar a favoritos"
+                    }
+                  >
+                    {favIds.has(toInt(u.id)) ? (
+                      <StarSolid className="w-5 text-yellow-500" />
+                    ) : (
+                      <StarOutline className="w-5 text-default-500" />
+                    )}
+                  </Button>
+                  <Button
                     as={Link}
-                    to={"/universities/" + u.slug}
+                    to={`/universities/${u.slug}`}
                     variant="light"
                     className="text-[#2CBFF0]"
                     startContent={<LinkIcon className="w-4" />}
@@ -543,61 +574,48 @@ const Universities = () => {
           ))}
         </div>
 
+        {/* Empty */}
         {!loading && filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <AcademicCapIcon className="w-12 text-default-400 mb-3" />
-            <p className="text-default-500 text-lg">
-              No se encontraron universidades que coincidan con tu búsqueda.
+            <MagnifyingGlassIcon className="text-default-300 mb-4 w-12" />
+            <h3 className="text-xl font-semibold mb-2">
+              No se encontraron universidades
+            </h3>
+            <p className="text-default-500 max-w-md mb-6">
+              Ajusta los filtros o el término de búsqueda para ver más
+              resultados.
             </p>
+            <Button
+              variant="flat"
+              color="primary"
+              onPress={() => {
+                setSelectedCountry(null);
+                setSelectedState(null);
+                setSelectedCity(null);
+                setOnlyWithLogo(false);
+                setSearchQuery("");
+                setSortKey("relevance");
+                setPage(1);
+              }}
+            >
+              Limpiar filtros
+            </Button>
           </div>
         )}
 
-<<<<<<< HEAD
-        {/* Paginación */}
-        {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-10">
-            <Button
-              variant="flat"
-              isDisabled={currentPage <= 1}
-              onPress={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Anterior
-            </Button>
-            <span className="text-default-500">
-              Página {currentPage} de {totalPages}
-            </span>
-            <Button
-              variant="flat"
-              isDisabled={currentPage >= totalPages}
-              onPress={() =>
-                setPage((p) => Math.min(totalPages, p + 1))
-              }
-            >
-              Siguiente
-=======
         {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-12">
-            <Button
-              size="sm"
-              variant="light"
-              isDisabled={currentPage === 1}
-              onPress={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              ← Anterior
-            </Button>
-            <span className="text-default-600 text-sm">
-              Página {currentPage} de {totalPages}
-            </span>
-            <Button
-              size="sm"
-              variant="light"
-              isDisabled={currentPage === totalPages}
-              onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
-            >
-              Siguiente →
->>>>>>> d0cff049c7d38dcd075dc7a1d189e32065000e9c
-            </Button>
+        {filtered.length > 0 && (
+          <div className="flex justify-center mt-12 flex-wrap gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <Button
+                key={p}
+                variant={p === currentPage ? "flat" : "light"}
+                className="mx-0.5"
+                onPress={() => setPage(p)}
+              >
+                {p}
+              </Button>
+            ))}
           </div>
         )}
       </div>
