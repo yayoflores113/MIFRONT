@@ -5,7 +5,7 @@ import Config from "../Config";
 import { Form, Input, Button, Image, Alert, Divider } from "@heroui/react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
-//Genera la cookie CSRF en la RAÍZ del backend (no en /api/v1)
+//Genera la cookie CSRF en la RAÍZ del backend (no /api/v1)
 const getCsrfCookie = async () => {
   const API_ORIGIN = (import.meta.env.VITE_BACKEND_URL || "").replace(
     /\/+$/,
