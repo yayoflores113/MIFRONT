@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Config from "../Config";
 import AuthUser from "./AuthUser";
-import axios from "../lib/axios";
-
+import { ensureSanctum } from "../lib/axios";
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -23,39 +22,42 @@ export default function AuthCallback() {
           return;
         }
 
-        // 2. Obtener datos codificados
-        const encodedData = searchParams.get("data");
-        if (!encodedData) {
-          console.error("No hay datos del usuario");
+        // 2. Verificar que la autenticación fue exitosa
+        const success = searchParams.get("success");
+        if (!success) {
+          console.error("No se confirmó la autenticación");
           setStatus("error");
           setTimeout(() => navigate("/login", { replace: true }), 2000);
           return;
         }
 
-        // 3. Decodificar datos
-        const userData = JSON.parse(atob(encodedData));
-        console.log("Datos recibidos de OAuth:", userData);
-
-        // 4. Asegurar cookie CSRF
+        // 3. Asegurar cookie CSRF (la sesión ya debería estar establecida)
         await ensureSanctum();
 
-        // 5. Verificar sesión con el backend
+        // 4. Obtener datos del usuario desde el backend
         const resp = await Config.getMe();
         const data = resp?.data || {};
 
-        // 6. Extraer user completo del backend
-        const fullUser = data.user ?? data.data ?? data;
-        const rol = userData.rol || fullUser?.roles?.[0]?.name || "user";
+        if (!data.success || !data.user) {
+          console.error("No se pudo obtener datos del usuario");
+          setStatus("error");
+          setTimeout(() => navigate("/login", { replace: true }), 2000);
+          return;
+        }
 
-        console.log("Usuario autenticado:", fullUser);
+        // 5. Extraer usuario y rol
+        const user = data.user;
+        const rol = data.user.rol || user.roles?.[0]?.name || "user";
+
+        console.log("Usuario autenticado:", user);
         console.log("Rol asignado:", rol);
 
-        // 7. Guardar en sessionStorage
-        setToken(fullUser, null, rol);
+        // 6. Guardar en sessionStorage
+        setToken(user, null, rol);
 
         setStatus("success");
 
-        // 8. Esperar un momento antes de redirigir
+        // 7. Redirigir según rol
         setTimeout(() => {
           if (rol === "admin") {
             navigate("/admin", { replace: true });

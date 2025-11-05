@@ -1,112 +1,149 @@
-// src/config/api.js
-import axios from "../lib/axios";
+import axios from "./lib/axios";
 
-// -------------------- AUTH --------------------
+const base_api_url = "/api/v1"; // axios.js ya tiene baseURL
+
+// ============================================
+// AUTH (con Sanctum stateful)
+// ============================================
 const Auth = {
-  register: (data) => axios.post("/auth/register", data),
-  login: (data) => axios.post("/auth/login", data),
-  logout: () => axios.post("/auth/logout"),
-  me: () => axios.get("/auth/me"),
+  register: (data) => axios.post(`${base_api_url}/auth/register`, data),
+  login: (data) => axios.post(`${base_api_url}/auth/login`, data),
+  logout: () => axios.post(`${base_api_url}/auth/logout`),
+  me: () => axios.get(`${base_api_url}/auth/me`),
 };
 
-// -------------------- ADMIN USERS --------------------
+// ============================================
+// ADMIN - Users
+// ============================================
 const AdminUsers = {
-  getAll: () => axios.get("/admin/users"),
-  getById: (id) => axios.get(`/admin/users/${id}`),
-  update: (id, data) => axios.put(`/admin/users/${id}`, data),
-  delete: (id) => axios.delete(`/admin/users/${id}`),
+  getAll: () => axios.get(`${base_api_url}/admin/users`),
+  getById: (id) => axios.get(`${base_api_url}/admin/users/${id}`),
+  update: (id, data) => axios.put(`${base_api_url}/admin/users/${id}`, data),
+  delete: (id) => axios.delete(`${base_api_url}/admin/users/${id}`),
 };
 
-// -------------------- ADMIN UNIVERSITIES --------------------
+// ============================================
+// ADMIN - Universities
+// ============================================
 const AdminUniversities = {
-  getAll: () => axios.get("/admin/universities"),
-  create: (data) => axios.post("/admin/universities", data),
-  getById: (id) => axios.get(`/admin/universities/${id}`),
-  update: (id, data) => axios.put(`/admin/universities/${id}`, data),
-  delete: (id) => axios.delete(`/admin/universities/${id}`),
+  getAll: () => axios.get(`${base_api_url}/admin/universities`),
+  create: (data) => axios.post(`${base_api_url}/admin/universities`, data),
+  getById: (id) => axios.get(`${base_api_url}/admin/universities/${id}`),
+  update: (id, data) =>
+    axios.put(`${base_api_url}/admin/universities/${id}`, data),
+  delete: (id) => axios.delete(`${base_api_url}/admin/universities/${id}`),
 };
 
-// -------------------- ADMIN CAREERS --------------------
+// ============================================
+// ADMIN - Careers
+// ============================================
 const AdminCareers = {
-  getAll: () => axios.get("/admin/careers"),
-  create: (data) => axios.post("/admin/careers", data),
-  getById: (id) => axios.get(`/admin/careers/${id}`),
-  update: (id, data) => axios.put(`/admin/careers/${id}`, data),
-  delete: (id) => axios.delete(`/admin/careers/${id}`),
+  getAll: () => axios.get(`${base_api_url}/admin/careers`),
+  create: (data) => axios.post(`${base_api_url}/admin/careers`, data),
+  getById: (id) => axios.get(`${base_api_url}/admin/careers/${id}`),
+  update: (id, data) => axios.put(`${base_api_url}/admin/careers/${id}`, data),
+  delete: (id) => axios.delete(`${base_api_url}/admin/careers/${id}`),
 };
 
-// -------------------- ADMIN COURSES --------------------
+// ============================================
+// ADMIN - Courses
+// ============================================
 const AdminCourses = {
-  getAll: () => axios.get("/admin/courses"),
-  create: (data) => axios.post("/admin/courses", data),
-  getById: (id) => axios.get(`/admin/courses/${id}`),
-  update: (id, data) => axios.put(`/admin/courses/${id}`, data),
-  delete: (id) => axios.delete(`/admin/courses/${id}`),
+  getAll: () => axios.get(`${base_api_url}/admin/courses`),
+  create: (data) => axios.post(`${base_api_url}/admin/courses`, data),
+  getById: (id) => axios.get(`${base_api_url}/admin/courses/${id}`),
+  update: (id, data) => axios.put(`${base_api_url}/admin/courses/${id}`, data),
+  delete: (id) => axios.delete(`${base_api_url}/admin/courses/${id}`),
 };
 
-// -------------------- ADMIN PLANS --------------------
+// ============================================
+// ADMIN - Plans
+// ============================================
 const AdminPlans = {
-  getAll: () => axios.get("/admin/plans"),
-  create: (data) => axios.post("/admin/plans", data),
-  getById: (id) => axios.get(`/admin/plans/${id}`),
-  update: (id, data) => axios.put(`/admin/plans/${id}`, data),
-  delete: (id) => axios.delete(`/admin/plans/${id}`),
+  getAll: () => axios.get(`${base_api_url}/admin/plans`),
+  create: (data) => axios.post(`${base_api_url}/admin/plans`, data),
+  getById: (id) => axios.get(`${base_api_url}/admin/plans/${id}`),
+  update: (id, data) => axios.put(`${base_api_url}/admin/plans/${id}`, data),
+  delete: (id) => axios.delete(`${base_api_url}/admin/plans/${id}`),
 };
 
-// -------------------- ADMIN SUBSCRIPTIONS --------------------
+// ============================================
+// ADMIN - Subscriptions
+// ============================================
 const AdminSubscriptions = {
-  getAll: (params) => axios.get("/admin/subscriptions", { params }),
-  getById: (id) => axios.get(`/admin/subscriptions/${id}`),
-  create: (data) => axios.post("/admin/subscriptions", data),
-  update: (id, data) => axios.put(`/admin/subscriptions/${id}`, data),
-  delete: (id) => axios.delete(`/admin/subscriptions/${id}`),
+  getAll: (params) =>
+    axios.get(`${base_api_url}/user/subscriptions`, { params }),
+  getById: (id) => axios.get(`${base_api_url}/user/subscriptions/${id}`),
+  create: (data) => axios.post(`${base_api_url}/admin/subscriptions`, data),
+  update: (id, data) =>
+    axios.put(`${base_api_url}/admin/subscriptions/${id}`, data),
+  delete: (id) => axios.delete(`${base_api_url}/admin/subscriptions/${id}`),
 };
 
-// -------------------- PUBLIC UNIVERSITIES --------------------
+// ============================================
+// PUBLIC - Universities
+// ============================================
 const PublicUniversities = {
-  getAll: (quantity = 10) => axios.get(`/public/universities/${quantity}`),
-  getBySlug: (slug) => axios.get(`/public/universities/${slug}`),
+  getAll: (quantity) =>
+    axios.get(`${base_api_url}/public/universities/${quantity}`),
+  getBySlug: (slug) => axios.get(`${base_api_url}/public/universities/${slug}`),
 };
 
-// -------------------- PUBLIC CAREERS --------------------
+// ============================================
+// PUBLIC - Careers
+// ============================================
 const PublicCareers = {
-  getAll: (quantity = 10) => axios.get(`/public/careers/${quantity}`),
-  getBySlug: (slug) => axios.get(`/public/careers/${slug}`),
+  getAll: (quantity) => axios.get(`${base_api_url}/public/careers/${quantity}`),
+  getBySlug: (slug) => axios.get(`${base_api_url}/public/careers/${slug}`),
 };
 
-// -------------------- PUBLIC COURSES --------------------
+// ============================================
+// PUBLIC - Courses
+// ============================================
 const PublicCourses = {
   getAll: (quantity = 120, params = {}) =>
-    axios.get("/public/courses", { params: { quantity, ...params } }),
-  getBySlug: (slug) => axios.get(`/public/courses/${slug}`),
+    axios.get(`${base_api_url}/public/courses`, {
+      params: { quantity, ...params },
+    }),
+  getBySlug: (slug) => axios.get(`${base_api_url}/public/courses/${slug}`),
 };
 
-// -------------------- PUBLIC PLANS --------------------
+// ============================================
+// PUBLIC - Plans
+// ============================================
 const PublicPlans = {
   getAll: (quantity = 4, params = {}) =>
-    axios.get("/public/plans", { params: { quantity, ...params } }),
-  getBySlug: (slug) => axios.get(`/public/plans/${slug}`),
+    axios.get(`${base_api_url}/public/plans`, {
+      params: { quantity, ...params },
+    }),
+  getBySlug: (slug) => axios.get(`${base_api_url}/public/plans/${slug}`),
 };
 
-// -------------------- PUBLIC TESTS --------------------
+// ============================================
+// PUBLIC - Tests
+// ============================================
 const PublicTests = {
-  getActive: () => axios.get("/public/tests/active"),
-  getAll: () => axios.get("/public/tests"),
-  getById: (id) => axios.get(`/public/tests/${id}`),
-  getQuestions: (params = {}) => axios.get("/public/questions", { params }),
+  getActive: () => axios.get(`${base_api_url}/public/tests/active`),
+  getAll: () => axios.get(`${base_api_url}/public/tests`),
+  getById: (id) => axios.get(`${base_api_url}/public/tests/${id}`),
+  getQuestions: (params = {}) =>
+    axios.get(`${base_api_url}/public/questions`, { params }),
   getAnswerOptions: (params = {}) =>
-    axios.get("/public/answer-options", { params }),
+    axios.get(`${base_api_url}/public/answer-options`, { params }),
 };
 
-// -------------------- TEST ATTEMPTS --------------------
+// ============================================
+// USER - Test Attempts (privado)
+// ============================================
 const TestAttempts = {
-  create: (data) => axios.post("/user/test-attempts", data),
-  getMy: () => axios.get("/user/test-attempts"),
-  getById: (id) => axios.get(`/user/test-attempts/${id}`),
-  answer: (id, data) => axios.post(`/user/test-attempts/${id}/answer`, data),
-  finish: (id) => axios.post(`/user/test-attempts/${id}/finish`, data),
+  create: (data) => axios.post(`${base_api_url}/user/test-attempts`, data),
+  getMy: () => axios.get(`${base_api_url}/user/test-attempts`),
+  getById: (id) => axios.get(`${base_api_url}/user/test-attempts/${id}`),
+  answer: (id, data) =>
+    axios.post(`${base_api_url}/user/test-attempts/${id}/answer`, data),
+  finish: (id) => axios.post(`${base_api_url}/user/test-attempts/${id}/finish`),
   getRecommendations: (id) =>
-    axios.get(`/user/test-attempts/${id}/recommendations`),
+    axios.get(`${base_api_url}/user/test-attempts/${id}/recommendations`),
 };
 
 // -------------------- FAVORITES --------------------
