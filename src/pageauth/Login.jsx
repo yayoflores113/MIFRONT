@@ -1,10 +1,22 @@
 import React, { useEffect, useState } from "react";
 import AuthUser from "./AuthUser";
 import { useNavigate, Link, useLocation } from "react-router-dom";
-import Config from "../Config";
+import { getLogin } from "../Config";
 import { Form, Input, Button, Image, Alert, Divider } from "@heroui/react";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
-import { ensureSanctum } from "../lib/axios";
+
+// Mejor pide el CSRF en la RAÍZ del backend (no bajo /api/v1)
+const getCsrfCookie = async () => {
+  const API_ORIGIN = (import.meta.env.VITE_BACKEND_URL || "").replace(
+    /\/+$/,
+    ""
+  );
+  await fetch(`${API_ORIGIN}/sanctum/csrf-cookie`, {
+    method: "GET",
+    credentials: "include",
+    headers: { "X-Requested-With": "XMLHttpRequest" },
+  });
+};
 
 const Login = () => {
   const { setToken, getToken } = AuthUser();
@@ -36,11 +48,11 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // 1. Obtener cookie CSRF
-      await ensureSanctum();
+      // 1) Generar cookies CSRF + sesión en el ORIGEN del backend
+      await getCsrfCookie();
 
       // 2. Hacer login
-      const resp = await Config.getLogin({ email, password });
+      const resp = await getLogin({ email, password });
       const res = resp?.data || {};
 
       if (res.success) {

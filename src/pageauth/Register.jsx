@@ -3,7 +3,19 @@ import Config from "../Config";
 import { useNavigate } from "react-router-dom";
 import AuthUser from "./AuthUser";
 import { Input, Button, Image } from "@heroui/react";
-import { ensureSanctum } from "../lib/axios";
+
+// Pide el CSRF en la **raíz** del backend (no bajo /api/v1)
+const getCsrfCookie = async () => {
+  const API_ORIGIN = (import.meta.env.VITE_BACKEND_URL || "").replace(
+    /\/+$/,
+    ""
+  );
+  await fetch(`${API_ORIGIN}/sanctum/csrf-cookie`, {
+    method: "GET",
+    credentials: "include",
+    headers: { "X-Requested-With": "XMLHttpRequest" },
+  });
+};
 
 // Base de API para catálogos - Usa VITE_BACKEND_URL sin /api/v1
 const BACKEND_URL =
@@ -72,8 +84,8 @@ const Register = () => {
     e.preventDefault();
 
     try {
-      // 1. Asegurar cookie CSRF
-      await ensureSanctum();
+      // 1) Generar cookies CSRF + sesión en el ORIGEN del backend
+      await getCsrfCookie();
 
       // 2. Hacer registro
       const { data } = await Config.getRegister({
