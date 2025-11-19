@@ -43,19 +43,25 @@ const getCourseIcon = (courseName) => {
   return BookOpenIcon;
 };
 
-// ✅ Componente de gráfica DINÁMICA de ejercicios
-const ExerciseActivityChart = () => {
+// ✅ Componente de gráfica DINÁMICA de ejercicios con ANIMACIÓN
+const ExerciseActivityChart = ({ refreshKey }) => {
   const [exerciseStats, setExerciseStats] = useState([]);
   const [recentExercises, setRecentExercises] = useState([]);
+  const [isAnimating, setIsAnimating] = useState(true);
 
   useEffect(() => {
     // Cargar datos dinámicamente
-    const stats = activityTracker.getExerciseStatsByDay(7);
-    const exercises = activityTracker.getRecentExercises(7);
+    setIsAnimating(true);
     
-    setExerciseStats(stats);
-    setRecentExercises(exercises);
-  }, []);
+    setTimeout(() => {
+      const stats = activityTracker.getExerciseStatsByDay(7);
+      const exercises = activityTracker.getRecentExercises(7);
+      
+      setExerciseStats(stats);
+      setRecentExercises(exercises);
+      setIsAnimating(false);
+    }, 300);
+  }, [refreshKey]);
 
   // Calcular máximos para escalas
   const maxTime = Math.max(...exerciseStats.map(d => d.totalTime), 1);
@@ -77,22 +83,35 @@ const ExerciseActivityChart = () => {
         <div className="flex items-end justify-between gap-2 h-40">
           {exerciseStats.map((day, index) => (
             <motion.div
-              key={day.date}
+              key={`${day.date}-${refreshKey}`}
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ 
+                delay: index * 0.1,
+                duration: 0.5,
+                ease: "easeOut"
+              }}
               className="flex-1 flex flex-col items-center gap-2"
             >
               {day.totalTime > 0 && (
-                <div className="text-xs font-semibold text-gray-600">
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 + 0.3 }}
+                  className="text-xs font-semibold text-gray-600"
+                >
                   {day.totalTime}m
-                </div>
+                </motion.div>
               )}
               <motion.div
                 initial={{ scaleY: 0 }}
                 animate={{ scaleY: 1 }}
-                transition={{ delay: index * 0.1 + 0.2 }}
-                className="w-full bg-gradient-to-t from-blue-400 to-blue-600 rounded-t-lg relative group cursor-pointer"
+                transition={{ 
+                  delay: index * 0.1 + 0.2,
+                  duration: 0.8,
+                  ease: "easeOut"
+                }}
+                className="w-full bg-gradient-to-t from-blue-400 to-blue-600 rounded-t-lg relative group cursor-pointer origin-bottom"
                 style={{ 
                   height: `${(day.totalTime / maxTime) * 120}px`,
                   minHeight: day.totalTime > 0 ? '8px' : '0px'
@@ -105,9 +124,14 @@ const ExerciseActivityChart = () => {
                   </div>
                 )}
               </motion.div>
-              <div className="text-xs font-medium text-gray-500 capitalize">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: index * 0.1 + 0.4 }}
+                className="text-xs font-medium text-gray-500 capitalize"
+              >
                 {day.dayName}
-              </div>
+              </motion.div>
             </motion.div>
           ))}
         </div>
@@ -132,22 +156,34 @@ const ExerciseActivityChart = () => {
             
             return (
               <motion.div
-                key={day.date + '-diff'}
+                key={`${day.date}-diff-${refreshKey}`}
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ 
+                  delay: index * 0.1,
+                  duration: 0.5
+                }}
                 className="flex-1 flex flex-col items-center gap-2"
               >
                 {day.avgDifficulty > 0 && (
-                  <div className="text-xs font-semibold text-gray-600">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.1 + 0.3 }}
+                    className="text-xs font-semibold text-gray-600"
+                  >
                     {day.avgDifficulty.toFixed(1)}⭐
-                  </div>
+                  </motion.div>
                 )}
                 <motion.div
                   initial={{ scaleY: 0 }}
                   animate={{ scaleY: 1 }}
-                  transition={{ delay: index * 0.1 + 0.2 }}
-                  className={`w-full bg-gradient-to-t ${difficultyColor} rounded-t-lg relative group cursor-pointer`}
+                  transition={{ 
+                    delay: index * 0.1 + 0.2,
+                    duration: 0.8,
+                    ease: "easeOut"
+                  }}
+                  className={`w-full bg-gradient-to-t ${difficultyColor} rounded-t-lg relative group cursor-pointer origin-bottom`}
                   style={{ 
                     height: `${difficultyHeight}px`,
                     minHeight: day.avgDifficulty > 0 ? '6px' : '0px'
@@ -159,9 +195,14 @@ const ExerciseActivityChart = () => {
                     </div>
                   )}
                 </motion.div>
-                <div className="text-xs font-medium text-gray-500 capitalize">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: index * 0.1 + 0.4 }}
+                  className="text-xs font-medium text-gray-500 capitalize"
+                >
                   {day.dayName}
-                </div>
+                </motion.div>
               </motion.div>
             );
           })}
@@ -186,10 +227,13 @@ const ExerciseActivityChart = () => {
             
             return (
               <motion.div
-                key={day.date + '-results'}
+                key={`${day.date}-results-${refreshKey}`}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ 
+                  delay: index * 0.1,
+                  duration: 0.5
+                }}
                 className="flex items-center gap-3"
               >
                 <div className="w-16 text-xs font-medium text-gray-600 capitalize">
@@ -200,7 +244,11 @@ const ExerciseActivityChart = () => {
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${correctPercent}%` }}
-                      transition={{ delay: index * 0.1 + 0.2, duration: 0.5 }}
+                      transition={{ 
+                        delay: index * 0.1 + 0.2, 
+                        duration: 0.8,
+                        ease: "easeOut"
+                      }}
                       className="bg-gradient-to-r from-green-400 to-green-600 flex items-center justify-center text-white text-xs font-bold group relative"
                     >
                       {day.correctCount > 0 && (
@@ -215,7 +263,11 @@ const ExerciseActivityChart = () => {
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${incorrectPercent}%` }}
-                      transition={{ delay: index * 0.1 + 0.3, duration: 0.5 }}
+                      transition={{ 
+                        delay: index * 0.1 + 0.3, 
+                        duration: 0.8,
+                        ease: "easeOut"
+                      }}
                       className="bg-gradient-to-r from-red-400 to-red-600 flex items-center justify-center text-white text-xs font-bold group relative"
                     >
                       {day.incorrectCount > 0 && (
@@ -239,50 +291,70 @@ const ExerciseActivityChart = () => {
       {/* Estadísticas rápidas MEJORADAS */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.5, type: "spring" }}
           className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 text-center"
         >
-          <div className="text-3xl font-bold text-green-700 mb-1">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+            className="text-3xl font-bold text-green-700 mb-1"
+          >
             {totalCorrect}
-          </div>
+          </motion.div>
           <div className="text-xs text-green-600 font-medium">✓ Correctos</div>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.6, type: "spring" }}
           className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4 text-center"
         >
-          <div className="text-3xl font-bold text-red-700 mb-1">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="text-3xl font-bold text-red-700 mb-1"
+          >
             {totalIncorrect}
-          </div>
+          </motion.div>
           <div className="text-xs text-red-600 font-medium">✗ Incorrectos</div>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.7, type: "spring" }}
           className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 text-center"
         >
-          <div className="text-3xl font-bold text-purple-700 mb-1">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9 }}
+            className="text-3xl font-bold text-purple-700 mb-1"
+          >
             {avgDifficulty}⭐
-          </div>
+          </motion.div>
           <div className="text-xs text-purple-600 font-medium">Dificultad Avg</div>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.8, type: "spring" }}
           className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 text-center"
         >
-          <div className="text-3xl font-bold text-blue-700 mb-1">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+            className="text-3xl font-bold text-blue-700 mb-1"
+          >
             {totalCorrect + totalIncorrect}
-          </div>
+          </motion.div>
           <div className="text-xs text-blue-600 font-medium">Total Ejercicios</div>
         </motion.div>
       </div>
@@ -290,8 +362,8 @@ const ExerciseActivityChart = () => {
   );
 };
 
-// ✅ Componente de gráfica de tiempo de estudio DINÁMICA
-const StudyTimeChart = () => {
+// ✅ Componente de gráfica de tiempo de estudio DINÁMICA con ANIMACIÓN
+const StudyTimeChart = ({ refreshKey }) => {
   const [last7Days, setLast7Days] = useState([]);
 
   useEffect(() => {
@@ -312,7 +384,7 @@ const StudyTimeChart = () => {
     }
     
     setLast7Days(days);
-  }, []);
+  }, [refreshKey]);
 
   const maxTime = Math.max(...last7Days.map(d => d.timeSpent), 1);
 
@@ -327,28 +399,45 @@ const StudyTimeChart = () => {
         <div className="flex items-end justify-between gap-2 h-32">
           {last7Days.map((day, index) => (
             <motion.div
-              key={day.date + '-time'}
+              key={`${day.date}-time-${refreshKey}`}
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ 
+                delay: index * 0.1,
+                duration: 0.5
+              }}
               className="flex-1 flex flex-col items-center gap-2"
             >
-              <div className="text-xs font-semibold text-gray-600">
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 + 0.2 }}
+                className="text-xs font-semibold text-gray-600"
+              >
                 {day.timeSpent > 0 ? `${day.timeSpent}m` : ''}
-              </div>
+              </motion.div>
               <motion.div
                 initial={{ scaleY: 0 }}
                 animate={{ scaleY: 1 }}
-                transition={{ delay: index * 0.1 + 0.2 }}
-                className="w-full bg-gradient-to-t from-blue-400 to-blue-600 rounded-t-lg"
+                transition={{ 
+                  delay: index * 0.1 + 0.2,
+                  duration: 0.8,
+                  ease: "easeOut"
+                }}
+                className="w-full bg-gradient-to-t from-blue-400 to-blue-600 rounded-t-lg origin-bottom"
                 style={{ 
                   height: `${(day.timeSpent / maxTime) * 100}px`,
                   minHeight: day.timeSpent > 0 ? '6px' : '0px'
                 }}
               />
-              <div className="text-xs font-medium text-gray-500 capitalize">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: index * 0.1 + 0.4 }}
+                className="text-xs font-medium text-gray-500 capitalize"
+              >
                 {day.dayName}
-              </div>
+              </motion.div>
             </motion.div>
           ))}
         </div>
@@ -356,24 +445,54 @@ const StudyTimeChart = () => {
 
       {/* Estadísticas rápidas */}
       <div className="grid grid-cols-3 gap-4 pt-4">
-        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 text-center">
-          <div className="text-2xl font-bold text-green-700">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.5, type: "spring" }}
+          className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 text-center"
+        >
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+            className="text-2xl font-bold text-green-700"
+          >
             {last7Days.reduce((sum, d) => sum + d.timeSpent, 0)}
-          </div>
+          </motion.div>
           <div className="text-xs text-green-600 font-medium">Minutos Totales</div>
-        </div>
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 text-center">
-          <div className="text-2xl font-bold text-blue-700">
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.6, type: "spring" }}
+          className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 text-center"
+        >
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="text-2xl font-bold text-blue-700"
+          >
             {Math.round(last7Days.reduce((sum, d) => sum + d.timeSpent, 0) / 7)}
-          </div>
+          </motion.div>
           <div className="text-xs text-blue-600 font-medium">Promedio/Día</div>
-        </div>
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 text-center">
-          <div className="text-2xl font-bold text-purple-700">
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.7, type: "spring" }}
+          className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 text-center"
+        >
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9 }}
+            className="text-2xl font-bold text-purple-700"
+          >
             {last7Days.filter(d => d.timeSpent > 0).length}
-          </div>
+          </motion.div>
           <div className="text-xs text-purple-600 font-medium">Días Activos</div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
@@ -385,20 +504,43 @@ const UserDashboard = () => {
   const [coursesProgress, setCoursesProgress] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [showNotification, setShowNotification] = useState(false);
 
   useEffect(() => {
     activityTracker.startSession();
     loadDashboardData();
     
+    // ✅ NUEVO: Escuchar cuando se completa un ejercicio
+    const handleExerciseCompleted = (event) => {
+      console.log('🎉 Dashboard detectó ejercicio completado:', event.detail);
+      
+      // Mostrar confetti
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 3000);
+      
+      // Mostrar notificación
+      setShowNotification(true);
+      setTimeout(() => setShowNotification(false), 4000);
+      
+      // Recargar datos del dashboard
+      setTimeout(() => {
+        loadDashboardData();
+        setRefreshKey(prev => prev + 1);
+      }, 500);
+    };
+    
+    window.addEventListener('exerciseCompleted', handleExerciseCompleted);
+    
     return () => {
       activityTracker.endSession();
+      window.removeEventListener('exerciseCompleted', handleExerciseCompleted);
     };
   }, []);
 
   const loadDashboardData = () => {
     setLoading(true);
     
-    // ✅ Simular carga asíncrona para efecto dinámico
     setTimeout(() => {
       const stats = activityTracker.getStats();
       const heatmap = activityTracker.getHeatmapData();
@@ -409,8 +551,12 @@ const UserDashboard = () => {
       setCoursesProgress(courses);
       setLoading(false);
       
-      console.log('📊 Dashboard cargado:', { stats, heatmap, courses });
-    }, 500);
+      console.log('📊 Dashboard actualizado:', { 
+        stats, 
+        ejerciciosHoy: stats.exercises_completed,
+        racha: stats.current_streak 
+      });
+    }, 300);
   };
 
   if (loading) {
@@ -482,6 +628,30 @@ const UserDashboard = () => {
         )}
       </AnimatePresence>
 
+      {/* ✅ NUEVO: Notificación de ejercicio completado */}
+      <AnimatePresence>
+        {showNotification && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, x: '-50%' }}
+            animate={{ opacity: 1, y: 20 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="fixed top-0 left-1/2 -translate-x-1/2 z-50"
+          >
+            <Card className="bg-gradient-to-r from-green-500 to-emerald-600 border-2 border-white shadow-2xl">
+              <CardBody className="py-3 px-6">
+                <div className="flex items-center gap-3">
+                  <CheckCircleIcon className="w-6 h-6 text-white" />
+                  <div className="text-white">
+                    <p className="font-bold">¡Dashboard actualizado!</p>
+                    <p className="text-xs text-white/90">Tu progreso se ha guardado</p>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header con animación - MEJORADO */}
         <motion.div 
@@ -511,7 +681,10 @@ const UserDashboard = () => {
                 <Button 
                   size="sm" 
                   variant="flat" 
-                  onClick={loadDashboardData}
+                  onClick={() => {
+                    loadDashboardData();
+                    setRefreshKey(prev => prev + 1);
+                  }}
                   startContent={<ArrowPathIcon className="w-4 h-4" />}
                   className="ml-2"
                 >
@@ -711,7 +884,7 @@ const UserDashboard = () => {
                   </h2>
                 </CardHeader>
                 <CardBody className="px-6 pb-6">
-                  <ExerciseActivityChart />
+                  <ExerciseActivityChart refreshKey={refreshKey} />
                 </CardBody>
               </Card>
             </motion.div>
@@ -730,7 +903,7 @@ const UserDashboard = () => {
                   </h2>
                 </CardHeader>
                 <CardBody className="px-6 pb-6">
-                  <StudyTimeChart />
+                  <StudyTimeChart refreshKey={refreshKey} />
                 </CardBody>
               </Card>
             </motion.div>
