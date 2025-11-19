@@ -20,7 +20,7 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/solid";
 import Config from "../Config";
-import activityTracker from "../utils/ActivityTracker"; // ✅ NUEVO
+import activityTracker from "../utils/ActivityTracker";
 
 const DailyExerciseModal = ({ isOpen, onClose }) => {
   const [exercise, setExercise] = useState(null);
@@ -31,10 +31,12 @@ const DailyExerciseModal = ({ isOpen, onClose }) => {
   const [error, setError] = useState(null);
   const [timeSpent, setTimeSpent] = useState(0);
   const [startTime] = useState(Date.now());
+  const [attempts, setAttempts] = useState(0); // ✅ NUEVO - Trackear intentos
 
   useEffect(() => {
     if (isOpen) {
       fetchTodayExercise();
+      setAttempts(0); // Resetear intentos al abrir
     }
   }, [isOpen]);
 
@@ -88,8 +90,10 @@ const DailyExerciseModal = ({ isOpen, onClose }) => {
   const handleSubmit = async () => {
     if (!userAnswer.trim()) return;
 
+    setAttempts(prev => prev + 1); // ✅ NUEVO - Incrementar intentos
     setSubmitting(true);
     setError(null);
+    
     try {
       const response = await Config.submitExerciseAnswer({
         exercise_id: exercise.id,
@@ -100,12 +104,22 @@ const DailyExerciseModal = ({ isOpen, onClose }) => {
       console.log("✅ Submit response:", response.data);
       setResult(response.data);
 
-      // ✅ NUEVO - Trackear el ejercicio completado
+      // ✅ MEJORADO - Trackear el ejercicio completado con TODA la info
       activityTracker.trackExerciseCompleted(
-        exercise.id,
-        Math.floor(timeSpent / 60), // Convertir segundos a minutos
-        response.data.correct || false
+        exercise.id,                          // ID del ejercicio
+        Math.floor(timeSpent / 60) || 1,     // Tiempo en minutos (mínimo 1)
+        response.data.correct || false,      // ¿Fue correcto?
+        exercise.difficulty || 3,            // Dificultad (1-5)
+        attempts                             // Número de intentos
       );
+
+      console.log("📊 Ejercicio trackeado:", {
+        id: exercise.id,
+        tiempo: Math.floor(timeSpent / 60),
+        correcto: response.data.correct,
+        dificultad: exercise.difficulty,
+        intentos: attempts
+      });
 
     } catch (error) {
       console.error("❌ Error submitting answer:", error);
