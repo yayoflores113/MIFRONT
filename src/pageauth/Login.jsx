@@ -20,8 +20,10 @@ const Login = () => {
   const location = useLocation();
   const nextPath = location.state?.next || "/";
 
-  // ✅ URL base según entorno
-  const API_BASE_URL = (import.meta?.env?.VITE_API_BASE_URL || "https://miback-1333.onrender.com/api/v1").trim().replace('/api/v1', '');
+  // ✅ CORREGIDO - Sin romper la URL
+  const API_BASE_URL = import.meta?.env?.VITE_API_BASE_URL 
+    ? import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '')
+    : "https://miback-1333.onrender.com";
 
   useEffect(() => {
     if (getToken()) {
@@ -36,7 +38,6 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // ✅ Login directo - SIN CSRF porque lo excluimos en el backend
       const resp = await Config.getLogin({ email, password });
       const res = resp?.data || {};
 
@@ -68,7 +69,6 @@ const Login = () => {
       console.error("Error login:", err);
       setStatus("danger");
       
-      // ✅ Mensajes de error específicos
       if (err.response?.status === 401) {
         setMessage("Correo o contraseña incorrectos.");
       } else if (err.response?.status === 422) {
@@ -91,14 +91,12 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-[#FEFEFE] text-[#181818]">
-      {/* Fondo sutil */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute -top-36 -left-24 h-80 w-80 rounded-full bg-[#2CBFF0] opacity-[0.08] blur-3xl" />
         <div className="absolute -bottom-28 -right-24 h-96 w-96 rounded-full bg-[#181818] opacity-[0.06] blur-3xl" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 min-h-screen">
-        {/* Formulario */}
         <section className="flex items-center justify-center px-6 md:px-12 py-10">
           <div className="w-full max-w-sm">
             <div>
@@ -249,7 +247,6 @@ const Login = () => {
           </div>
         </section>
 
-        {/* Imagen lateral */}
         <aside className="relative hidden md:block overflow-hidden">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#181818] via-[#252526]/70 to-[#181818]" />
           <div className="pointer-events-none absolute -top-10 -left-10 h-56 w-56 rounded-full bg-white/15 blur-2xl" />
