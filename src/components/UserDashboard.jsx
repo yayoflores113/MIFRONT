@@ -396,132 +396,6 @@ const UserDashboard = () => {
     }, 500);
   };
 
-  const generateDemoData = () => {
-    const today = new Date();
-    
-    // Generar ejercicios con diferentes características
-    // Hoy
-    activityTracker.trackExerciseCompleted('ex-js-1', 8, true, 2, 1);
-    activityTracker.trackExerciseCompleted('ex-js-2', 12, true, 3, 1);
-    activityTracker.trackExerciseCompleted('ex-py-1', 15, false, 4, 2); // incorrecto, intentó 2 veces
-    
-    // Ayer
-    const data = activityTracker.getData();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    data.exercises_history.push({
-      id: 'ex-react-1',
-      date: yesterday.toISOString(),
-      dateStr: yesterday.toISOString().split('T')[0],
-      timeSpent: 10,
-      isCorrect: true,
-      difficulty: 3,
-      attempts: 1,
-      timestamp: yesterday.getTime()
-    });
-    
-    data.exercises_history.push({
-      id: 'ex-css-1',
-      date: yesterday.toISOString(),
-      dateStr: yesterday.toISOString().split('T')[0],
-      timeSpent: 6,
-      isCorrect: false,
-      difficulty: 2,
-      attempts: 3, // intentó 3 veces
-      timestamp: yesterday.getTime()
-    });
-    
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-    data.daily_activities[yesterdayStr] = {
-      exercises: 2,
-      time_spent: 45,
-      courses_viewed: ['js-101']
-    };
-    
-    // Hace 2 días
-    const day2 = new Date(today);
-    day2.setDate(day2.getDate() - 2);
-    data.exercises_history.push({
-      id: 'ex-algo-1',
-      date: day2.toISOString(),
-      dateStr: day2.toISOString().split('T')[0],
-      timeSpent: 20,
-      isCorrect: true,
-      difficulty: 5,
-      attempts: 1,
-      timestamp: day2.getTime()
-    });
-    
-    const day2Str = day2.toISOString().split('T')[0];
-    data.daily_activities[day2Str] = {
-      exercises: 1,
-      time_spent: 30,
-      courses_viewed: ['react-advanced']
-    };
-    
-    // Hace 3 días
-    const day3 = new Date(today);
-    day3.setDate(day3.getDate() - 3);
-    data.exercises_history.push({
-      id: 'ex-db-1',
-      date: day3.toISOString(),
-      dateStr: day3.toISOString().split('T')[0],
-      timeSpent: 14,
-      isCorrect: true,
-      difficulty: 3,
-      attempts: 1,
-      timestamp: day3.getTime()
-    });
-    
-    const day3Str = day3.toISOString().split('T')[0];
-    data.daily_activities[day3Str] = {
-      exercises: 1,
-      time_spent: 60,
-      courses_viewed: ['python-ml']
-    };
-    
-    // Hace 5 días
-    const day5 = new Date(today);
-    day5.setDate(day5.getDate() - 5);
-    data.exercises_history.push({
-      id: 'ex-web-1',
-      date: day5.toISOString(),
-      dateStr: day5.toISOString().split('T')[0],
-      timeSpent: 9,
-      isCorrect: false,
-      difficulty: 4,
-      attempts: 2,
-      timestamp: day5.getTime()
-    });
-    
-    const day5Str = day5.toISOString().split('T')[0];
-    data.daily_activities[day5Str] = {
-      exercises: 1,
-      time_spent: 38,
-      courses_viewed: ['design-systems']
-    };
-    
-    activityTracker.saveData(data);
-    
-    // Cursos
-    activityTracker.trackCourseViewed('js-101', 'JavaScript Fundamentos', 45);
-    activityTracker.trackCourseProgress('js-101', 35);
-    
-    activityTracker.trackCourseViewed('react-advanced', 'React Avanzado', 30);
-    activityTracker.trackCourseProgress('react-advanced', 15);
-    
-    activityTracker.trackCourseViewed('python-ml', 'Python para Machine Learning', 60);
-    activityTracker.trackCourseProgress('python-ml', 55);
-    
-    activityTracker.trackCourseViewed('design-systems', 'Design Systems UI/UX', 25);
-    activityTracker.trackCourseProgress('design-systems', 70);
-    
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 3000);
-    loadDashboardData();
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
@@ -592,7 +466,7 @@ const UserDashboard = () => {
       </AnimatePresence>
 
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header con animación */}
+        {/* Header con animación - MEJORADO */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -602,10 +476,10 @@ const UserDashboard = () => {
             <div>
               <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2 flex items-center gap-3">
                 <SparklesIcon className="w-10 h-10 text-yellow-500" />
-                Mi Progreso
+                ¡Hola! Hora de Revisar tus Avances
               </h1>
-              <p className="text-gray-600 text-lg">
-                Seguimiento en tiempo real de tu aventura de aprendizaje 🚀
+              <p className="text-gray-600 text-lg md:text-xl font-medium mt-2">
+                Cada quien avanza a su propio ritmo - Lo importante es seguir aprendiendo 🌱
               </p>
               <motion.div 
                 initial={{ opacity: 0 }}
@@ -615,7 +489,7 @@ const UserDashboard = () => {
               >
                 <LightBulbIcon className="w-5 h-5 text-yellow-500" />
                 <span className="text-gray-500">
-                  Datos guardados localmente - Actualización automática
+                  Tu progreso se actualiza automáticamente mientras aprendes
                 </span>
                 <Button 
                   size="sm" 
@@ -631,7 +505,7 @@ const UserDashboard = () => {
           </div>
         </motion.div>
 
-        {/* Mensaje si no hay datos - MEJORADO */}
+        {/* Mensaje si no hay datos - MEJORADO SIN DEMO */}
         {!hasData && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -661,31 +535,51 @@ const UserDashboard = () => {
                 </motion.div>
                 
                 <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                  ¡Comienza tu Aventura de Aprendizaje!
+                  Tu Aventura de Aprendizaje Comienza Aquí
                 </h3>
-                <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
-                  Completa ejercicios, explora cursos y observa cómo tu progreso cobra vida en este dashboard interactivo
+                <p className="text-white/90 text-lg mb-6 max-w-2xl mx-auto">
+                  Aún no tienes actividad registrada, pero no te preocupes...
+                </p>
+                <p className="text-white font-semibold text-xl mb-8 max-w-xl mx-auto">
+                  "El mejor momento para empezar fue ayer. El segundo mejor momento es ahora." 🌟
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button 
                     size="lg"
                     className="bg-white text-indigo-600 font-bold shadow-xl hover:shadow-2xl transition-all hover:scale-105"
-                    onClick={generateDemoData}
-                   startContent={<SparklesIcon className="w-5 h-5" />}
+                    as="a"
+                    href="/courses"
+                    startContent={<BookOpenIcon className="w-5 h-5" />}
                   >
-                    Generar Datos de Demostración
+                    Explorar Cursos
                   </Button>
                   <Button 
                     size="lg"
                     variant="bordered"
                     className="border-2 border-white text-white font-bold hover:bg-white/10 transition-all"
                     as="a"
-                    href="/courses"
+                    href="/tests"
+                    startContent={<AcademicCapIcon className="w-5 h-5" />}
                   >
-                    Explorar Cursos
+                    Hacer un Test
                   </Button>
                 </div>
+
+                {/* Pequeña nota motivacional */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="mt-12 max-w-md mx-auto"
+                >
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+                    <p className="text-white/90 text-sm">
+                      💡 <strong>Consejo:</strong> Tu progreso se irá llenando automáticamente conforme uses la plataforma. 
+                      ¡No necesitas hacer nada especial, solo aprende!
+                    </p>
+                  </div>
+                </motion.div>
               </CardBody>
             </Card>
           </motion.div>
