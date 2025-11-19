@@ -17,8 +17,10 @@ import {
   TrophyIcon,
   CheckCircleIcon,
   XCircleIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/solid";
 import Config from "../Config";
+import activityTracker from "../utils/ActivityTracker"; // ✅ NUEVO
 
 const DailyExerciseModal = ({ isOpen, onClose }) => {
   const [exercise, setExercise] = useState(null);
@@ -26,6 +28,7 @@ const DailyExerciseModal = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
   const [timeSpent, setTimeSpent] = useState(0);
   const [startTime] = useState(Date.now());
 
@@ -46,8 +49,13 @@ const DailyExerciseModal = ({ isOpen, onClose }) => {
 
   const fetchTodayExercise = async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await Config.getTodayExercise();
+      
+      console.log("✅ Response completo:", response);
+      console.log("✅ Response.data:", response.data);
+      
       if (response.data.completed) {
         setResult({ 
           alreadyCompleted: true, 
@@ -57,7 +65,21 @@ const DailyExerciseModal = ({ isOpen, onClose }) => {
         setExercise(response.data.exercise);
       }
     } catch (error) {
-      console.error("Error fetching exercise:", error);
+      console.error("❌ Error fetching exercise:", error);
+      console.error("❌ Error response:", error.response);
+      console.error("❌ Error data:", error.response?.data);
+      
+      if (error.response?.data && typeof error.response.data === 'string') {
+        console.error("❌ HTML Response (primeros 500 caracteres):", 
+          error.response.data.substring(0, 500)
+        );
+      }
+      
+      setError(
+        error.response?.data?.message || 
+        error.message || 
+        "Error al cargar el ejercicio. Verifica la consola."
+      );
     } finally {
       setLoading(false);
     }
@@ -67,6 +89,7 @@ const DailyExerciseModal = ({ isOpen, onClose }) => {
     if (!userAnswer.trim()) return;
 
     setSubmitting(true);
+    setError(null);
     try {
       const response = await Config.submitExerciseAnswer({
         exercise_id: exercise.id,
@@ -74,9 +97,25 @@ const DailyExerciseModal = ({ isOpen, onClose }) => {
         time_spent: timeSpent,
       });
 
+      console.log("✅ Submit response:", response.data);
       setResult(response.data);
+
+      // ✅ NUEVO - Trackear el ejercicio completado
+      activityTracker.trackExerciseCompleted(
+        exercise.id,
+        Math.floor(timeSpent / 60), // Convertir segundos a minutos
+        response.data.correct || false
+      );
+
     } catch (error) {
-      console.error("Error submitting answer:", error);
+      console.error("❌ Error submitting answer:", error);
+      console.error("❌ Error response:", error.response);
+      
+      setError(
+        error.response?.data?.message || 
+        error.message || 
+        "Error al enviar la respuesta"
+      );
     } finally {
       setSubmitting(false);
     }
@@ -137,6 +176,22 @@ const DailyExerciseModal = ({ isOpen, onClose }) => {
             </ModalHeader>
 
             <ModalBody>
+              {/* Error Display */}
+              {error && (
+                <Card className="bg-gradient-to-br from-danger-50 to-danger-100 border-2 border-danger-200 mb-4">
+                  <CardBody className="text-center py-6">
+                    <ExclamationTriangleIcon className="w-12 h-12 text-danger-500 mx-auto mb-3" />
+                    <h3 className="text-lg font-bold text-danger-700 mb-2">
+                      Error
+                    </h3>
+                    <p className="text-sm text-danger-600">{error}</p>
+                    <p className="text-xs text-default-500 mt-2">
+                      Revisa la consola del navegador (F12) para más detalles
+                    </p>
+                  </CardBody>
+                </Card>
+              )}
+
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-4">
                   <Progress
@@ -207,6 +262,34 @@ const DailyExerciseModal = ({ isOpen, onClose }) => {
                       </CardBody>
                     </Card>
                   )}
+
+                  {result.streak && (
+                    <Card>
+                      <CardBody>
+                        <h4 className="font-bold mb-3 text-center">📊 Tu Progreso</h4>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="text-center">
+                            <p className="text-2xl font-bold text-primary">
+                              {result.streak.current}
+                            </p>
+                            <p className="text-xs text-default-500">Racha actual</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-2xl font-bold text-warning">
+                              {result.streak.longest}
+                            </p>
+                            <p className="text-xs text-default-500">Mejor racha</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-2xl font-bold text-success">
+                              {result.streak.total_points}
+                            </p>
+                            <p className="text-xs text-default-500">Puntos totales</p>
+                          </div>
+                        </div>
+                      </CardBody>
+                    </Card>
+                  )}
                 </div>
               ) : exercise ? (
                 <div className="space-y-6">
@@ -232,7 +315,10 @@ const DailyExerciseModal = ({ isOpen, onClose }) => {
 
                       <div className="bg-default-100 p-4 rounded-lg">
                         <pre className="whitespace-pre-wrap text-sm">
-                          {JSON.stringify(exercise.content, null, 2)}
+                          {typeof exercise.content === 'string' 
+                            ? exercise.content 
+                            : JSON.stringify(exercise.content, null, 2)
+                          }
                         </pre>
                       </div>
                     </CardBody>
@@ -256,7 +342,17 @@ const DailyExerciseModal = ({ isOpen, onClose }) => {
             </ModalBody>
 
             <ModalFooter>
-              {!result && exercise && (
+              {error && !result && (
+                <>
+                  <Button variant="light" onPress={onModalClose}>
+                    Cerrar
+                  </Button>
+                  <Button color="primary" onPress={fetchTodayExercise}>
+                    Reintentar
+                  </Button>
+                </>
+              )}
+              {!result && !error && exercise && (
                 <>
                   <Button variant="light" onPress={onModalClose}>
                     Más tarde

@@ -29,6 +29,7 @@ import { StarIcon, AcademicCapIcon } from "@heroicons/react/24/solid";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import Config from "../Config";
+import activityTracker from "../utils/ActivityTracker"; // ✅ NUEVO
 
 const DEFAULT_QUANTITY = 120;
 const PAGE_SIZE = 9;
@@ -36,7 +37,6 @@ const PAGE_SIZE = 9;
 const uniq = (arr) => Array.from(new Set(arr.filter(Boolean)));
 const clamp = (n, min, max) => Math.min(Math.max(n, min), max);
 
-// Helper para obtener el origen de la API
 const apiOrigin = () => {
   const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
   const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
@@ -91,19 +91,21 @@ const Courses = () => {
   // Pagination
   const [page, setPage] = React.useState(1);
 
-  // 🔥 Función para manejar checkout de cursos
+  // ✅ NUEVA FUNCIÓN - Trackear cuando hacen clic en un curso
+  const handleCourseClick = (course) => {
+    activityTracker.trackCourseViewed(
+      course.id || course.slug,
+      course.title,
+      0 // 0 minutos porque solo están viendo la lista
+    );
+  };
+
+  // Función para manejar checkout de cursos
   const handleCourseCheckout = async (course) => {
-    // 🔍 DEBUG: Ver TODO el objeto del curso
     console.log("🔍 Curso completo:", course);
     console.log("🔍 price_cents RAW:", course.price_cents);
-    console.log("🔍 price_cents TYPE:", typeof course.price_cents);
-    console.log("🔍 is_free:", course.is_free);
-    console.log("🔍 is_premium:", course.is_premium);
     
-    // Validar que el curso tenga precio
     const amountCents = Number(course.price_cents || 0);
-    
-    console.log("🔍 amountCents convertido:", amountCents);
     
     if (amountCents <= 0 || course.is_free) {
       alert(`Este curso no tiene precio válido.\n\nDatos:\n- price_cents: ${course.price_cents}\n- is_free: ${course.is_free}\n- Convertido: ${amountCents}`);
@@ -141,8 +143,6 @@ const Courses = () => {
       const origin = apiOrigin();
       const url = `${origin}/api/v1/checkout`;
       
-      // 🔍 DEBUG: Ver qué URL se está usando
-      console.log("🔵 API Origin:", origin);
       console.log("🔵 Checkout URL completa:", url);
       console.log("🔵 Body a enviar:", JSON.stringify(body, null, 2));
       
@@ -154,15 +154,12 @@ const Courses = () => {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          // Si usas autenticación con token:
-          // "Authorization": `Bearer ${tu_token}`
         },
         body: JSON.stringify(body),
       });
 
       console.log("🔵 Response status:", res.status);
       
-      // Intentar leer la respuesta como JSON
       let data;
       const contentType = res.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
@@ -644,7 +641,11 @@ const Courses = () => {
                         <div className="flex flex-col flex-grow p-5">
                           <div className="flex flex-col md:flex-row justify-between">
                             <div className="flex-grow pr-4">
-                              <Link to={`/courses/${c.slug}`}>
+                              {/* ✅ MODIFICADO - Agregado onClick */}
+                              <Link 
+                                to={`/courses/${c.slug}`}
+                                onClick={() => handleCourseClick(c)}
+                              >
                                 <h3 className="font-bold text-xl mb-2 line-clamp-2 hover:text-[#2CBFF0] transition">
                                   {c.title}
                                 </h3>
@@ -740,9 +741,11 @@ const Courses = () => {
                                   </Button>
                                 )}
 
+                                {/* ✅ MODIFICADO - Agregado onClick */}
                                 <Button
                                   as={Link}
                                   to={`/courses/${c.slug}`}
+                                  onClick={() => handleCourseClick(c)}
                                   variant="light"
                                   className="text-[#2CBFF0]"
                                 >
@@ -806,6 +809,7 @@ const Courses = () => {
           </main>
         </div>
       </div>
+           
     </section>
   );
 };

@@ -17,11 +17,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/24/solid";
 import Config from "../Config";
-
-/** Helper de imagen (mismo criterio que tu catálogo de cursos)
- * - base64 o URL absoluta → se usa tal cual
- * - nombre de archivo → construye `${backend}/img/cursos/<archivo>`
- */
+import activityTracker from "../utils/ActivityTracker"; // ✅ NUEVO
 
 // Helper para stripe
 const apiOrigin = () => {
@@ -29,7 +25,7 @@ const apiOrigin = () => {
   const fromAxiosOrigin = axiosBase
     ? axiosBase.replace(/\/api\/?.*$/i, "")
     : "";
-const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
+  const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "https://miback-1333.onrender.com").trim();
   const backendOrigin = (fromAxiosOrigin || fromEnv || "").replace(/\/$/, "");
   return backendOrigin || "";
 };
@@ -58,7 +54,7 @@ const Course = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
 
-  const [detail, setDetail] = React.useState(null); // { course, related }
+  const [detail, setDetail] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
 
@@ -84,21 +80,31 @@ const Course = () => {
     };
   }, [slug]);
 
+  // ✅ NUEVO - Trackear tiempo en el curso
+  React.useEffect(() => {
+    if (!detail?.course) return;
+
+    const course = detail.course;
+    const startTime = Date.now();
+    const courseId = course.id || course.slug;
+    const courseName = course.title;
+
+    // Registrar que se visitó el curso
+    activityTracker.trackCourseViewed(courseId, courseName, 0);
+
+    // Al salir del curso, calcular tiempo total
+    return () => {
+      const timeSpentMinutes = Math.floor((Date.now() - startTime) / 1000 / 60);
+      if (timeSpentMinutes > 0) {
+        activityTracker.trackCourseViewed(courseId, courseName, timeSpentMinutes);
+      }
+    };
+  }, [detail]);
+
   const c = detail?.course;
   const related = detail?.related || [];
   const career = c?.career;
   const university = c?.career?.university;
-
-  // handler stripe
-  const apiOrigin = () => {
-    const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
-    const fromAxiosOrigin = axiosBase
-      ? axiosBase.replace(/\/api\/?.*$/i, "")
-      : "";
-    const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "").trim();
-    const backendOrigin = (fromAxiosOrigin || fromEnv || "").replace(/\/$/, "");
-    return backendOrigin || "";
-  };
 
   const handleBuyCourse = async () => {
     if (!detail?.course) return;
@@ -109,7 +115,7 @@ const Course = () => {
 
     const body = {
       mode: "payment",
-      amount_cents: Number(detail.course.price_cents || 0), // en centavos
+      amount_cents: Number(detail.course.price_cents || 0),
       currency: (detail.course.currency || "MXN").toUpperCase(),
       product_name: detail.course.title || "Curso",
       success_url: success,
@@ -130,7 +136,7 @@ const Course = () => {
 
     const data = await res.json();
     if (data?.url) {
-      window.location.href = data.url; // Stripe Checkout
+      window.location.href = data.url;
     } else {
       console.error("Stripe checkout error:", data);
       alert("No se pudo iniciar el pago. Intenta nuevamente.");
@@ -264,6 +270,7 @@ const Course = () => {
                 )}
 
                 <div className="flex flex-wrap gap-2">
+                  {/* ✅ CORREGIDO - Etiqueta <a> completa */}
                   {c.url && (
                     <a
                       href={c.url}

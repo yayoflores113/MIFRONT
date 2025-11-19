@@ -41,6 +41,7 @@ import AuthCallback from "./pageauth/AuthCallback";
 
 // ROLE USUARIO (Perfil)
 import PagePerfil from "./PagePerfil/PagePerfil";
+import UserDashboard from "./components/UserDashboard"; // ✅ NUEVO
 
 // ROLE ADMIN
 import UserAll from "./PageAdmin/UserAll";
@@ -120,6 +121,7 @@ const App = () => {
         <Route path="/user" element={<LayoutClient />}>
           <Route index element={<PagePerfil />} />
           <Route path="profile" element={<PagePerfil />} />
+          <Route path="dashboard" element={<UserDashboard />} /> {/* ✅ NUEVO */}
         </Route>
       </Routes>
     </Router>

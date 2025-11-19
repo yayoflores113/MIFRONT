@@ -1,32 +1,45 @@
 import axios from "axios";
 
-const base_api_url = (import.meta?.env?.VITE_API_BASE_URL || "https://miback-1333.onrender.com/api/v1").trim();
+const base_api_url = (import.meta?.env?.VITE_API_BASE_URL || "https://miback-1333.onrender.com/api").trim();
 
-// ❌ QUITAR - No necesitas cookies para API con Bearer tokens
-// axios.defaults.withCredentials = true;
-
-// 🔥 INTERCEPTOR MEJORADO - Sin JSON.parse innecesario
+// 🔥 INTERCEPTOR PARA ENVIAR EL TOKEN AUTOMÁTICAMENTE
 axios.interceptors.request.use(
   (config) => {
-    // Intentar obtener el token de sessionStorage o localStorage
+    // Obtener token de sessionStorage o localStorage
     let token = sessionStorage.getItem('token') || localStorage.getItem('token');
     
-    // Si el token está en formato JSON, parsearlo
-    try {
-      if (token && token.startsWith('{')) {
-        token = JSON.parse(token);
-      }
-    } catch (e) {
-      // Si falla el parse, usar el token tal cual
-    }
-    
     if (token) {
+      // Limpiar comillas si existen
+      token = token.replace(/^"|"$/g, '');
+      
+      // Si parece JSON, parsearlo
+      if (token.startsWith('{') || token.startsWith('[')) {
+        try {
+          token = JSON.parse(token);
+        } catch (e) {
+          console.warn('⚠️ Token no es JSON válido, usando como string');
+        }
+      }
+      
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Interceptor de respuestas para manejar errores 401
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      console.error('❌ 401: Token inválido o expirado');
+      // Opcional: Limpiar sesión y redirigir
+      // sessionStorage.clear();
+      // window.location.href = '/login';
+    }
     return Promise.reject(error);
   }
 );
@@ -40,13 +53,7 @@ export default {
   // AUTH
   getRegister: (data) => axios.post(`${base_api_url}/auth/register`, data),
   getLogin: (data) => axios.post(`${base_api_url}/auth/login`, data),
-  getLogout: () => axios.post(`${base_api_url}/auth/logout`), // ✅ Sin 'data' innecesario
-
-  // ❌ ELIMINAR - Ya no necesitas CSRF
-  // getCsrfToken: () => {
-  //   const backendUrl = base_api_url.replace('/api/v1', '');
-  //   return axios.get(`${backendUrl}/sanctum/csrf-cookie`);
-  // },
+  getLogout: () => axios.post(`${base_api_url}/auth/logout`),
 
   // ROL ADMIN
   getUserAll: () => axios.get(`${base_api_url}/admin/users`),
@@ -162,15 +169,33 @@ export default {
   // 🎯 DAILY EXERCISES (privado)
   // ========================================
   
+  /**
+   * Obtener el ejercicio del día para el usuario autenticado
+   * @returns {Promise} Ejercicio disponible o información de completado
+   */
   getTodayExercise: () => 
     axios.get(`${base_api_url}/user/daily-exercise/today`),
 
+  /**
+   * Enviar respuesta del usuario para un ejercicio
+   * @param {Object} data - { exercise_id, answer, time_spent }
+   * @returns {Promise} Resultado de la validación
+   */
   submitExerciseAnswer: (data) =>
     axios.post(`${base_api_url}/user/daily-exercise/submit`, data),
 
+  /**
+   * Obtener la racha actual del usuario
+   * @returns {Promise} Información de racha y puntos
+   */
   getUserStreak: () => 
     axios.get(`${base_api_url}/user/streak`),
 
+  /**
+   * Obtener historial de ejercicios completados
+   * @param {Object} params - Parámetros de filtrado opcionales
+   * @returns {Promise} Lista de ejercicios completados
+   */
   getUserExerciseHistory: (params = {}) =>
     axios.get(`${base_api_url}/user/daily-exercise/history`, { params }),
 
@@ -178,18 +203,78 @@ export default {
   // 🔧 ADMIN - DAILY EXERCISES
   // ========================================
   
+  /**
+   * ADMIN: Obtener todos los ejercicios
+   * @param {Object} params - Filtros opcionales (course_id, difficulty, etc.)
+   */
   getExercisesAll: (params = {}) => 
     axios.get(`${base_api_url}/admin/daily-exercises`, { params }),
 
+  /**
+   * ADMIN: Crear un nuevo ejercicio
+   * @param {Object} data - Datos del ejercicio
+   */
   createExercise: (data) =>
     axios.post(`${base_api_url}/admin/daily-exercises`, data),
 
+  /**
+   * ADMIN: Obtener ejercicio por ID
+   * @param {Number} id - ID del ejercicio
+   */
   getExerciseById: (id) =>
     axios.get(`${base_api_url}/admin/daily-exercises/${id}`),
 
+  /**
+   * ADMIN: Actualizar ejercicio
+   * @param {Number} id - ID del ejercicio
+   * @param {Object} data - Datos actualizados
+   */
   updateExercise: (id, data) =>
     axios.put(`${base_api_url}/admin/daily-exercises/${id}`, data),
 
+  /**
+   * ADMIN: Eliminar ejercicio
+   * @param {Number} id - ID del ejercicio
+   */
   deleteExercise: (id) =>
     axios.delete(`${base_api_url}/admin/daily-exercises/${id}`),
+
+  // ========================================
+  // 📊 DASHBOARD DE PROGRESO
+  // ========================================
+  
+  /**
+   * Obtener resumen general del usuario
+   * @returns {Promise} Estadísticas generales (cursos, tiempo, ejercicios, racha)
+   */
+  getDashboardOverview: () => 
+    axios.get(`${base_api_url}/user/dashboard/overview`),
+
+  /**
+   * Obtener heatmap de actividad (últimos 12 meses)
+   * @returns {Promise} Datos de actividad diaria tipo GitHub
+   */
+  getDashboardHeatmap: () => 
+    axios.get(`${base_api_url}/user/dashboard/heatmap`),
+
+  /**
+   * Obtener progreso de cursos
+   * @returns {Promise} Lista de cursos con % de avance y tiempo estimado
+   */
+  getDashboardCoursesProgress: () => 
+    axios.get(`${base_api_url}/user/dashboard/courses-progress`),
+
+  /**
+   * Obtener estadísticas por categoría/carrera
+   * @returns {Promise} Tiempo y cursos por categoría
+   */
+  getDashboardStatsByCategory: () => 
+    axios.get(`${base_api_url}/user/dashboard/stats-by-category`),
+
+  /**
+   * Comparación con otros usuarios (anónima)
+   * @returns {Promise} Percentil y ranking del usuario
+   */
+  getDashboardComparison: () => 
+    axios.get(`${base_api_url}/user/dashboard/comparison`),
 };
