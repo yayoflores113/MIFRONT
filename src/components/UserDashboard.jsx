@@ -43,19 +43,27 @@ const getCourseIcon = (courseName) => {
   return BookOpenIcon;
 };
 
-// Componente de gráfica MEJORADA de ejercicios
+// ✅ Componente de gráfica DINÁMICA de ejercicios
 const ExerciseActivityChart = () => {
-  const exerciseStats = activityTracker.getExerciseStatsByDay(7);
-  
+  const [exerciseStats, setExerciseStats] = useState([]);
+  const [recentExercises, setRecentExercises] = useState([]);
+
+  useEffect(() => {
+    // Cargar datos dinámicamente
+    const stats = activityTracker.getExerciseStatsByDay(7);
+    const exercises = activityTracker.getRecentExercises(7);
+    
+    setExerciseStats(stats);
+    setRecentExercises(exercises);
+  }, []);
+
   // Calcular máximos para escalas
   const maxTime = Math.max(...exerciseStats.map(d => d.totalTime), 1);
 
-  // Obtener ejercicios recientes individuales
-  const recentExercises = activityTracker.getRecentExercises(7);
   const totalCorrect = recentExercises.filter(ex => ex.isCorrect).length;
   const totalIncorrect = recentExercises.filter(ex => ex.isCorrect === false).length;
   const avgDifficulty = recentExercises.length > 0 
-    ? (recentExercises.reduce((sum, ex) => sum + ex.difficulty, 0) / recentExercises.length).toFixed(1)
+    ? (recentExercises.reduce((sum, ex) => sum + (ex.difficulty || 3), 0) / recentExercises.length).toFixed(1)
     : 0;
 
   return (
@@ -282,23 +290,29 @@ const ExerciseActivityChart = () => {
   );
 };
 
-// Componente de gráfica de tiempo de estudio
+// ✅ Componente de gráfica de tiempo de estudio DINÁMICA
 const StudyTimeChart = () => {
-  const dailyData = activityTracker.getData()?.daily_activities || {};
-  
-  // Preparar datos de los últimos 7 días
-  const last7Days = [];
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    const dateStr = date.toISOString().split('T')[0];
-    const dayData = dailyData[dateStr] || { time_spent: 0 };
-    last7Days.push({
-      date: dateStr,
-      dayName: date.toLocaleDateString('es-MX', { weekday: 'short' }),
-      timeSpent: dayData.time_spent
-    });
-  }
+  const [last7Days, setLast7Days] = useState([]);
+
+  useEffect(() => {
+    const dailyData = activityTracker.getData()?.daily_activities || {};
+    
+    // Preparar datos de los últimos 7 días
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      const dayData = dailyData[dateStr] || { time_spent: 0 };
+      days.push({
+        date: dateStr,
+        dayName: date.toLocaleDateString('es-MX', { weekday: 'short' }),
+        timeSpent: dayData.time_spent
+      });
+    }
+    
+    setLast7Days(days);
+  }, []);
 
   const maxTime = Math.max(...last7Days.map(d => d.timeSpent), 1);
 
@@ -384,6 +398,7 @@ const UserDashboard = () => {
   const loadDashboardData = () => {
     setLoading(true);
     
+    // ✅ Simular carga asíncrona para efecto dinámico
     setTimeout(() => {
       const stats = activityTracker.getStats();
       const heatmap = activityTracker.getHeatmapData();
@@ -393,6 +408,8 @@ const UserDashboard = () => {
       setHeatmapData(heatmap);
       setCoursesProgress(courses);
       setLoading(false);
+      
+      console.log('📊 Dashboard cargado:', { stats, heatmap, courses });
     }, 500);
   };
 

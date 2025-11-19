@@ -14,7 +14,7 @@ class ActivityTracker {
         courses_completed: [],
         courses_progress: {},
         daily_activities: {},
-        exercises_history: [], // ✅ NUEVO: Historial detallado de ejercicios
+        exercises_history: [], // ✅ Historial detallado de ejercicios
         total_time_spent: 0,
         streak_data: {
           current: 0,
@@ -24,8 +24,9 @@ class ActivityTracker {
         session_start: new Date().toISOString(),
       };
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(initialData));
+      console.log('✅ Storage inicializado');
     } else {
-      // ✅ NUEVO: Migrar datos antiguos si no tienen exercises_history
+      // ✅ Migrar datos antiguos si no tienen exercises_history
       const data = this.getData();
       if (!data.exercises_history) {
         data.exercises_history = [];
@@ -48,12 +49,12 @@ class ActivityTracker {
   // EJERCICIOS - CON DETALLES COMPLETOS
   // ==========================================
   
-  trackExerciseCompleted(exerciseId, timeSpent = 5, isCorrect = true, difficulty = 2, attempts = 1) {
+  trackExerciseCompleted(exerciseId, timeSpent = 5, isCorrect = true, difficulty = 3, attempts = 1) {
     const data = this.getData();
     data.exercises_completed += 1;
     data.total_time_spent += timeSpent;
     
-    // ✅ NUEVO: Guardar ejercicio en historial con todos los detalles
+    // ✅ Guardar ejercicio en historial con todos los detalles
     const exerciseRecord = {
       id: exerciseId,
       date: new Date().toISOString(),
@@ -88,14 +89,16 @@ class ActivityTracker {
     
     this.saveData(data);
     console.log('✅ Ejercicio completado:', exerciseRecord);
+    console.log('🔥 Racha actual:', data.streak_data.current, 'días');
     
     return {
       success: true,
-      message: '✅ Ejercicio registrado correctamente'
+      message: '✅ Ejercicio registrado correctamente',
+      streak: data.streak_data.current
     };
   }
 
-  // ✅ NUEVO: Obtener ejercicios de los últimos N días
+  // ✅ Obtener ejercicios de los últimos N días
   getRecentExercises(days = 7) {
     const data = this.getData();
     if (!data.exercises_history) {
@@ -111,7 +114,7 @@ class ActivityTracker {
     });
   }
 
-  // ✅ NUEVO: Obtener estadísticas de ejercicios por día
+  // ✅ Obtener estadísticas de ejercicios por día
   getExerciseStatsByDay(days = 7) {
     const recentExercises = this.getRecentExercises(days);
     const statsByDay = {};
@@ -223,38 +226,58 @@ class ActivityTracker {
   }
 
   // ==========================================
-  // RACHA (STREAK)
+  // RACHA (STREAK) - ✅ CORREGIDO
   // ==========================================
   
   updateStreak(data) {
     const today = new Date().toISOString().split('T')[0];
     const lastActivity = data.streak_data.last_activity;
     
-    if (lastActivity) {
-      const lastDate = new Date(lastActivity);
-      const todayDate = new Date(today);
-      const diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
-      
-      if (diffDays === 0) {
-        // Mismo día, no hacer nada
-      } else if (diffDays === 1) {
-        // Día consecutivo, aumentar racha
-        data.streak_data.current += 1;
-      } else {
-        // Perdió la racha
-        data.streak_data.current = 1;
-      }
-    } else {
+    if (!lastActivity) {
       // Primera actividad
       data.streak_data.current = 1;
+      data.streak_data.last_activity = today;
+      
+      if (data.streak_data.current > data.streak_data.best) {
+        data.streak_data.best = data.streak_data.current;
+      }
+      
+      console.log('🔥 Primera actividad - Racha iniciada:', data.streak_data.current);
+      return;
+    }
+    
+    // ✅ Agregar T00:00:00 para evitar problemas de zona horaria
+    const lastDate = new Date(lastActivity + 'T00:00:00');
+    const todayDate = new Date(today + 'T00:00:00');
+    const diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+    
+    console.log('🔥 Calculando racha:', {
+      today,
+      lastActivity,
+      diffDays,
+      currentStreak: data.streak_data.current
+    });
+    
+    if (diffDays === 0) {
+      // ✅ Mismo día - no cambiar la racha
+      console.log('📅 Actividad en el mismo día, racha se mantiene:', data.streak_data.current);
+    } else if (diffDays === 1) {
+      // ✅ Día consecutivo - aumentar racha
+      data.streak_data.current += 1;
+      data.streak_data.last_activity = today;
+      console.log('🔥 ¡Racha aumentada!:', data.streak_data.current);
+    } else if (diffDays > 1) {
+      // ❌ Perdió la racha - reiniciar
+      console.log('💔 Racha perdida. Reiniciando...');
+      data.streak_data.current = 1;
+      data.streak_data.last_activity = today;
     }
     
     // Actualizar mejor racha
     if (data.streak_data.current > data.streak_data.best) {
       data.streak_data.best = data.streak_data.current;
+      console.log('🏆 ¡Nueva mejor racha!:', data.streak_data.best);
     }
-    
-    data.streak_data.last_activity = today;
   }
 
   // ==========================================
@@ -317,21 +340,21 @@ class ActivityTracker {
     const data = this.getData();
     const heatmapData = [];
     
-    // Generar últimos 90 días para el heatmap
-    for (let i = 89; i >= 0; i--) {
+    // Generar últimos 365 días para el heatmap (1 año completo)
+    for (let i = 364; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
       
       const activity = data.daily_activities[dateStr];
       const count = activity 
-        ? (activity.exercises || 0) + (activity.courses_viewed?.length || 0)
+        ? (activity.exercises || 0)
         : 0;
       
       heatmapData.push({
         date: dateStr,
         count: count,
-        level: count === 0 ? 0 : count <= 2 ? 1 : count <= 5 ? 2 : count <= 10 ? 3 : 4,
+        level: count === 0 ? 0 : count <= 2 ? 1 : count <= 5 ? 2 : count <= 8 ? 3 : 4,
         time_spent: activity?.time_spent || 0,
       });
     }
@@ -344,6 +367,9 @@ class ActivityTracker {
     const courses = [];
     
     Object.entries(data.courses_progress || {}).forEach(([courseId, course]) => {
+      // Solo mostrar cursos no completados
+      if (course.progress >= 100) return;
+      
       const daysActive = Math.floor(
         (new Date() - new Date(course.started_at)) / (1000 * 60 * 60 * 24)
       ) || 1;
@@ -364,11 +390,11 @@ class ActivityTracker {
         course_image: `https://via.placeholder.com/80x80?text=${(course.name || 'C').charAt(0)}`,
         progress_percentage: course.progress || 0,
         time_spent: course.time_spent || 0,
-        time_spent_hours: ((course.time_spent || 0) / 60).toFixed(1),
+        time_spent_hours: Math.round((course.time_spent || 0) / 60),
         started_at: course.started_at,
         last_viewed: course.last_viewed,
-        completed_at: course.progress >= 100 ? course.last_viewed : null,
-        is_completed: course.progress >= 100,
+        completed_at: null,
+        is_completed: false,
         estimated_completion: estimatedCompletion,
       });
     });
@@ -514,10 +540,12 @@ class ActivityTracker {
     const data = this.getData();
     console.group('🔍 ActivityTracker Debug');
     console.log('📊 Stats:', this.getStats());
-    console.log('📅 Recent Exercises:', this.getRecentExercises(7));
+    console.log('📅 Recent Exercises (7 días):', this.getRecentExercises(7));
     console.log('📈 Exercise Stats by Day:', this.getExerciseStatsByDay(7));
     console.log('🎯 Activity Summary:', this.getActivitySummary());
     console.log('📚 Courses Progress:', this.getCoursesProgress());
+    console.log('🔥 Streak Data:', data.streak_data);
+    console.log('🗓️ Daily Activities:', data.daily_activities);
     console.log('🗄️ Raw Data:', data);
     console.groupEnd();
   }
@@ -526,11 +554,15 @@ class ActivityTracker {
 // Exportar instancia única
 const activityTracker = new ActivityTracker();
 
-// Hacer disponible en ventana para debugging (solo en desarrollo)
-if (typeof window !== 'undefined' && import.meta.env.DEV) {
+// Hacer disponible en ventana para debugging
+if (typeof window !== 'undefined') {
   window.activityTracker = activityTracker;
   console.log('🔧 ActivityTracker disponible en window.activityTracker');
-  console.log('💡 Usa activityTracker.debug() para ver todos los datos');
+  console.log('💡 Comandos útiles:');
+  console.log('   - activityTracker.debug() → Ver todos los datos');
+  console.log('   - activityTracker.getStats() → Ver estadísticas');
+  console.log('   - activityTracker.reset() → Resetear datos');
+  console.log('   - activityTracker.exportData() → Exportar backup');
 }
 
 export default activityTracker;
