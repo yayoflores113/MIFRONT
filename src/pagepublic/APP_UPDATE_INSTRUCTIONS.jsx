@@ -1,3 +1,19 @@
+// ========================================
+// AGREGAR ESTA LÍNEA EN TUS IMPORTS
+// ========================================
+import Certificates from "./pagepublic/Certificates";
+
+// ========================================
+// AGREGAR ESTA RUTA DENTRO DE <Route path="/" element={<LayoutPublic />}>
+// DESPUÉS DE LA LÍNEA DE LearningPathDetail
+// ========================================
+<Route path="/certificates" element={<Certificates />} />
+
+// ========================================
+// EJEMPLO COMPLETO DE CÓMO DEBERÍA VERSE TU App.jsx
+// ========================================
+
+/*
 import React from "react";
 
 // LAYOUTS
@@ -74,7 +90,7 @@ const App = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           
-          {/* Catálogos */}
+          {/* Catálogos * /}
           <Route path="/universities" element={<Universities />} />
           <Route path="/universities/:slug" element={<Universitie />} />
           <Route path="/careers" element={<Careers />} />
@@ -83,10 +99,10 @@ const App = () => {
           <Route path="/courses/:slug" element={<Course />} />
           <Route path="/learning-paths" element={<LearningPaths />} />
           <Route path="/learning-paths/:slug" element={<LearningPathDetail />} />
-          <Route path="/certificates" element={<Certificates />} /> {/* ✅ NUEVO */}
+          <Route path="/certificates" element={<Certificates />} /> {/* ✅ NUEVO * /}
           <Route path="/plans" element={<Plan />} />
           
-          {/* Tests */}
+          {/* Tests * /}
           <Route path="/tests" element={<Test />} />
           <Route path="/tests/:slug" element={<TestRunner />} />
           <Route path="/results" element={<TestResults />} />
@@ -94,11 +110,11 @@ const App = () => {
           <Route path="/question" element={<TestQuestion />} />
           <Route path="/openchat" element={<OpenRouterChat />} />
           
-          {/* Metabase */}
+          {/* Metabase * /}
           <Route path="/meta" element={<MetaBase />} />
           <Route path="/metadashboard" element={<MetaBaseDashboard />} />
           
-          {/* 404 not found */}
+          {/* 404 not found * /}
           <Route path="/*" element={<NotFound />} />
         </Route>
 
@@ -136,3 +152,4 @@ const App = () => {
 };
 
 export default App;
+*/

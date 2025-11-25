@@ -493,7 +493,7 @@ const UserDashboard = () => {
             <div>
               <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2 flex items-center gap-3">
                 <SparklesIcon className="w-10 h-10 text-yellow-500" />
-                ¡Hola! Hora de Revisar tus Avances
+                ¡MI PROGRESO
               </h1>
               <p className="text-gray-600 text-lg md:text-xl font-medium mt-2">
                 Cada quien avanza a su propio ritmo - Lo importante es seguir aprendiendo 🌱
