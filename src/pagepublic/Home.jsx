@@ -11,6 +11,8 @@ import {
   ChatBubbleLeftRightIcon,
   ArrowRightIcon,
   LightBulbIcon,
+  ChartPieIcon, // ✅ NUEVO
+  SparklesIcon, // ✅ NUEVO
 } from "@heroicons/react/24/outline";
 import { StarIcon } from "@heroicons/react/20/solid";
 import { motion, useReducedMotion } from "framer-motion";
@@ -73,6 +75,12 @@ const Home = () => {
   
   const [loading, setLoading] = useState(false);
   const [hasShownModal, setHasShownModal] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // ✅ NUEVO
+
+  // ✅ NUEVO: Verificar si está autenticado
+  useEffect(() => {
+    setIsAuthenticated(!!getToken());
+  }, [getToken]);
 
   // useEffect para mostrar el modal al cargar
   useEffect(() => {
@@ -151,6 +159,42 @@ const Home = () => {
         .animate-float { animation: floatY 6s ease-in-out infinite; }
       `}</style>
 
+      {/* ✅ NUEVO: Banner de Dashboard (solo si está autenticado) */}
+      {isAuthenticated && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 text-white"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                  <ChartPieIcon className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">¡Hola! 👋 ¿Listo para aprender hoy?</h3>
+                  <p className="text-sm text-white/90">
+                    Revisa tu progreso, completa ejercicios y alcanza tus metas
+                  </p>
+                </div>
+              </div>
+              
+              <Button
+                as={Link}
+                to="/user/dashboard"
+                size="lg"
+                className="bg-white text-indigo-600 font-bold shadow-xl hover:shadow-2xl transition-all hover:scale-105"
+                startContent={<SparklesIcon className="w-5 h-5" />}
+              >
+                Ver mi Dashboard
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* --------------------------- Hero (Test Vocacional) --------------------------- */}
       <section className="bg-[#FEFEFE] text-[#181818] py-16 md:py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
@@ -175,7 +219,7 @@ const Home = () => {
                 adapten a ti.
               </p>
 
-              <div className="mt-4">
+              <div className="mt-4 flex flex-col sm:flex-row gap-4">
                 <motion.div
                   whileHover={{ scale: loading ? 1 : 1.03 }}
                   whileTap={{ scale: loading ? 1 : 0.97 }}
@@ -202,6 +246,26 @@ const Home = () => {
                     {loading ? "Preparando tu test..." : "Hacer el test ahora"}
                   </Button>
                 </motion.div>
+
+                {/* ✅ NUEVO: Botón alternativo al dashboard (visible siempre) */}
+                {isAuthenticated && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <Button
+                      as={Link}
+                      to="/user/dashboard"
+                      size="lg"
+                      variant="bordered"
+                      className="px-8 py-6 text-lg font-medium border-2 border-[#2CBFF0] text-[#2CBFF0] hover:bg-[#2CBFF0] hover:text-white transition-all"
+                      startContent={<ChartPieIcon className="w-5 h-5" />}
+                    >
+                      Mi Progreso
+                    </Button>
+                  </motion.div>
+                )}
               </div>
             </motion.div>
 
@@ -367,7 +431,50 @@ const Home = () => {
         </div>
       </section>
 
-     
+      {/* ✅ NUEVO: CTA final al Dashboard (solo si está autenticado) */}
+      {isAuthenticated && (
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-16"
+        >
+          <div className="max-w-4xl mx-auto text-center text-white">
+            <motion.div
+              animate={{ 
+                scale: [1, 1.1, 1],
+                rotate: [0, 5, -5, 0]
+              }}
+              transition={{ 
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="inline-block mb-6"
+            >
+              <ChartPieIcon className="w-20 h-20 mx-auto" />
+            </motion.div>
+            
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              ¿Listo para ver tu progreso? 📊
+            </h2>
+            <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+              Accede a tu dashboard personalizado y descubre cuánto has avanzado en tu camino de aprendizaje
+            </p>
+            
+            <Button
+              as={Link}
+              to="/user/dashboard"
+              size="lg"
+              className="bg-white text-indigo-600 font-bold px-10 py-6 text-lg shadow-2xl hover:shadow-3xl hover:scale-105 transition-all"
+              startContent={<SparklesIcon className="w-6 h-6" />}
+              endContent={<ArrowRightIcon className="w-6 h-6" />}
+            >
+              Ir a Mi Dashboard
+            </Button>
+          </div>
+        </motion.section>
+      )}
     </>
   );
 };

@@ -1,63 +1,34 @@
 import axios from "axios";
 
+// ✅ CORREGIDO - Ahora tiene /api/v1 al final
 const base_api_url = (import.meta?.env?.VITE_API_BASE_URL || "https://miback-1333.onrender.com/api/v1").trim();
 
-// 🔥 INTERCEPTOR MEJORADO - Mejor manejo del token
+// ❌ QUITAR - No necesitas cookies para API con Bearer tokens
+// axios.defaults.withCredentials = true;
+
+// 🔥 INTERCEPTOR MEJORADO - Sin JSON.parse innecesario
 axios.interceptors.request.use(
   (config) => {
-    // Intentar obtener el token de sessionStorage o localStorage
+    // Obtener token de sessionStorage o localStorage
     let token = sessionStorage.getItem('token') || localStorage.getItem('token');
     
     console.log("🔑 Token original:", token ? token.substring(0, 50) + "..." : "NO HAY TOKEN");
     
     // Si el token está en formato JSON, parsearlo
-    if (token) {
-      try {
-        // Verificar si el token está envuelto en JSON
-        if (token.startsWith('{') || token.startsWith('"')) {
-          const parsed = JSON.parse(token);
-          // Si es un objeto, buscar la propiedad token
-          if (typeof parsed === 'object' && parsed.token) {
-            token = parsed.token;
-          } else if (typeof parsed === 'string') {
-            token = parsed;
-          }
-        }
-        
-        // Limpiar comillas si las tiene
-        token = token.replace(/^["']|["']$/g, '');
-        
-        console.log("🔑 Token limpio:", token.substring(0, 50) + "...");
-        config.headers.Authorization = `Bearer ${token}`;
-        console.log("✅ Header Authorization configurado");
-      } catch (e) {
-        console.error("❌ Error parseando token:", e);
-        // Intentar usar el token tal cual
-        config.headers.Authorization = `Bearer ${token}`;
+    try {
+      if (token && token.startsWith('{')) {
+        token = JSON.parse(token);
       }
-    } else {
-      console.warn("⚠️ No se encontró token en storage");
+    } catch (e) {
+      // Si falla el parse, usar el token tal cual
     }
     
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// 🔥 INTERCEPTOR DE RESPUESTA - Capturar errores de autenticación
-axios.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      console.error("❌ Error 401: No autenticado - Redirigiendo al login");
-      // Limpiar storage
-      sessionStorage.removeItem('token');
-      localStorage.removeItem('token');
-      // Redirigir al login
-      window.location.href = '/login';
-    }
     return Promise.reject(error);
   }
 );
@@ -187,15 +158,33 @@ export default {
   // 🎯 DAILY EXERCISES (privado)
   // ========================================
   
+  /**
+   * Obtener el ejercicio del día para el usuario autenticado
+   * @returns {Promise} Ejercicio disponible o información de completado
+   */
   getTodayExercise: () => 
     axios.get(`${base_api_url}/user/daily-exercise/today`),
 
+  /**
+   * Enviar respuesta del usuario para un ejercicio
+   * @param {Object} data - { exercise_id, answer, time_spent }
+   * @returns {Promise} Resultado de la validación
+   */
   submitExerciseAnswer: (data) =>
     axios.post(`${base_api_url}/user/daily-exercise/submit`, data),
 
+  /**
+   * Obtener la racha actual del usuario
+   * @returns {Promise} Información de racha y puntos
+   */
   getUserStreak: () => 
     axios.get(`${base_api_url}/user/streak`),
 
+  /**
+   * Obtener historial de ejercicios completados
+   * @param {Object} params - Parámetros de filtrado opcionales
+   * @returns {Promise} Lista de ejercicios completados
+   */
   getUserExerciseHistory: (params = {}) =>
     axios.get(`${base_api_url}/user/daily-exercise/history`, { params }),
 
@@ -203,18 +192,78 @@ export default {
   // 🔧 ADMIN - DAILY EXERCISES
   // ========================================
   
+  /**
+   * ADMIN: Obtener todos los ejercicios
+   * @param {Object} params - Filtros opcionales (course_id, difficulty, etc.)
+   */
   getExercisesAll: (params = {}) => 
     axios.get(`${base_api_url}/admin/daily-exercises`, { params }),
 
+  /**
+   * ADMIN: Crear un nuevo ejercicio
+   * @param {Object} data - Datos del ejercicio
+   */
   createExercise: (data) =>
     axios.post(`${base_api_url}/admin/daily-exercises`, data),
 
+  /**
+   * ADMIN: Obtener ejercicio por ID
+   * @param {Number} id - ID del ejercicio
+   */
   getExerciseById: (id) =>
     axios.get(`${base_api_url}/admin/daily-exercises/${id}`),
 
+  /**
+   * ADMIN: Actualizar ejercicio
+   * @param {Number} id - ID del ejercicio
+   * @param {Object} data - Datos actualizados
+   */
   updateExercise: (id, data) =>
     axios.put(`${base_api_url}/admin/daily-exercises/${id}`, data),
 
+  /**
+   * ADMIN: Eliminar ejercicio
+   * @param {Number} id - ID del ejercicio
+   */
   deleteExercise: (id) =>
     axios.delete(`${base_api_url}/admin/daily-exercises/${id}`),
+
+  // ========================================
+  // 📊 DASHBOARD DE PROGRESO
+  // ========================================
+  
+  /**
+   * Obtener resumen general del usuario
+   * @returns {Promise} Estadísticas generales (cursos, tiempo, ejercicios, racha)
+   */
+  getDashboardOverview: () => 
+    axios.get(`${base_api_url}/user/dashboard/overview`),
+
+  /**
+   * Obtener heatmap de actividad (últimos 12 meses)
+   * @returns {Promise} Datos de actividad diaria tipo GitHub
+   */
+  getDashboardHeatmap: () => 
+    axios.get(`${base_api_url}/user/dashboard/heatmap`),
+
+  /**
+   * Obtener progreso de cursos
+   * @returns {Promise} Lista de cursos con % de avance y tiempo estimado
+   */
+  getDashboardCoursesProgress: () => 
+    axios.get(`${base_api_url}/user/dashboard/courses-progress`),
+
+  /**
+   * Obtener estadísticas por categoría/carrera
+   * @returns {Promise} Tiempo y cursos por categoría
+   */
+  getDashboardStatsByCategory: () => 
+    axios.get(`${base_api_url}/user/dashboard/stats-by-category`),
+
+  /**
+   * Comparación con otros usuarios (anónima)
+   * @returns {Promise} Percentil y ranking del usuario
+   */
+  getDashboardComparison: () => 
+    axios.get(`${base_api_url}/user/dashboard/comparison`),
 };

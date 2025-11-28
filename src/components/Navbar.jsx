@@ -213,6 +213,24 @@ const Navbar = () => {
           </Link>
         </NavbarItem>
 
+        {/* ✅ NUEVO: Certificados */}
+        <NavbarItem isActive={pathname === "/certificates"}>
+          <Link
+            href="/certificates"
+            aria-current={pathname === "/certificates" ? "page" : undefined}
+            className={`group relative text-[#181818]/80 hover:text-[#181818] transition-colors ${
+              isActive("/certificates") && "text-[#181818]"
+            }`}
+          >
+            Certificados
+            <span
+              className={`pointer-events-none absolute -bottom-1 left-0 h-[2px] w-0 bg-[#2CBFF0] transition-[width] duration-200 group-hover:w-full ${
+                isActive("/certificates") && "w-full"
+              }`}
+            />
+          </Link>
+        </NavbarItem>
+
         <NavbarItem isActive={pathname === "/plans"}>
           <Link
             href="/plans"
@@ -308,6 +326,20 @@ const Navbar = () => {
             }`}
           >
             Rutas de Aprendizaje
+          </Link>
+        </NavbarMenuItem>
+
+        {/* ✅ NUEVO: Certificados (mobile) */}
+        <NavbarMenuItem isActive={pathname === "/certificates"}>
+          <Link
+            href="/certificates"
+            size="lg"
+            aria-current={pathname === "/certificates" ? "page" : undefined}
+            className={`block rounded-lg px-2 py-2 text-[#181818]/90 hover:bg-black/5 ${
+              isActive("/certificates") && "bg-black/[0.04] font-medium"
+            }`}
+          >
+            Certificados
           </Link>
         </NavbarMenuItem>
 
