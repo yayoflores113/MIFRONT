@@ -21,7 +21,6 @@ const Navbar = () => {
 
   const { pathname } = useLocation();
 
-  // (1) Hooks siempre se declaran en todas las renderizaciones
   useEffect(() => {
     const onScroll = () => setHasScrolled(window.scrollY > 0);
     onScroll();
@@ -29,7 +28,7 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // (2) Guard de rutas: ahora SÍ después de los hooks
+  // No mostrar navbar en login/register
   if (pathname === "/login" || pathname === "/register") return null;
 
   const logoutUser = () => {
@@ -38,9 +37,12 @@ const Navbar = () => {
       .catch((error) => console.error(error));
   };
 
+  const currentUser = user ?? getUser();
+  const isLoggedIn = Boolean(getToken());
+  const isActive = (to) => (pathname === to ? "active" : "");
+
   const renderLinks = () => {
-    const currentUser = user ?? getUser();
-    if (getToken()) {
+    if (isLoggedIn) {
       return (
         <>
           <NavbarItem>
@@ -55,14 +57,14 @@ const Navbar = () => {
               </span>
             </Link>
           </NavbarItem>
-          
+
           {/* Icono de notificaciones - Solo para utm@gmail.com */}
           {currentUser?.email === "utm@gmail.com" && (
             <NavbarItem>
               <NotificationCenter />
             </NavbarItem>
           )}
-          
+
           <NavbarItem>
             <Link
               href="#"
@@ -87,8 +89,6 @@ const Navbar = () => {
       );
     }
   };
-
-  const isActive = (to) => (pathname === to ? "active" : "");
 
   return (
     <UINavbar
@@ -229,6 +229,26 @@ const Navbar = () => {
             />
           </Link>
         </NavbarItem>
+
+        {/* 🔒 Certificados solo si hay sesión */}
+        {isLoggedIn && (
+          <NavbarItem isActive={pathname === "/certificates"}>
+            <Link
+              href="/certificates"
+              aria-current={pathname === "/certificates" ? "page" : undefined}
+              className={`group relative text-[#181818]/80 hover:text-[#181818] transition-colors ${
+                isActive("/certificates") && "text-[#181818]"
+              }`}
+            >
+              Certificados
+              <span
+                className={`pointer-events-none absolute -bottom-1 left-0 h-[2px] w-0 bg-[#2CBFF0] transition-[width] duration-200 group-hover:w-full ${
+                  isActive("/certificates") && "w-full"
+                }`}
+              />
+            </Link>
+          </NavbarItem>
+        )}
       </NavbarContent>
 
       {/* Acciones derecha (desktop) */}
@@ -324,9 +344,25 @@ const Navbar = () => {
           </Link>
         </NavbarMenuItem>
 
-        {/* Acciones (mobile) — misma lógica tuya */}
+        {/* 🔒 Certificados en mobile solo si hay sesión */}
+        {isLoggedIn && (
+          <NavbarMenuItem isActive={pathname === "/certificates"}>
+            <Link
+              href="/certificates"
+              size="lg"
+              aria-current={pathname === "/certificates" ? "page" : undefined}
+              className={`block rounded-lg px-2 py-2 text-[#181818]/90 hover:bg-black/5 ${
+                isActive("/certificates") && "bg-black/[0.04] font-medium"
+              }`}
+            >
+              Certificados
+            </Link>
+          </NavbarMenuItem>
+        )}
+
+        {/* Acciones (mobile) */}
         <div className="mt-3 border-t border-black/5 pt-3">
-          {getToken() ? (
+          {isLoggedIn ? (
             <>
               <NavbarMenuItem>
                 <Link
@@ -334,19 +370,19 @@ const Navbar = () => {
                   className="block rounded-lg px-2 py-2 text-[#181818] hover:bg-black/5"
                 >
                   Administración <span className="mx-1">|</span>{" "}
-                  {(user ?? getUser())?.name ?? "Usuario"}
+                  {currentUser?.name ?? "Usuario"}
                 </Link>
               </NavbarMenuItem>
-              
+
               {/* Notificaciones en mobile - Solo para utm@gmail.com */}
-              {(user ?? getUser())?.email === "utm@gmail.com" && (
+              {currentUser?.email === "utm@gmail.com" && (
                 <NavbarMenuItem>
                   <div className="px-2 py-2">
                     <NotificationCenter />
                   </div>
                 </NavbarMenuItem>
               )}
-              
+
               <NavbarMenuItem>
                 <Link
                   href="#"
