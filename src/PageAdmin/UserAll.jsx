@@ -1,7 +1,6 @@
 // UserAll.jsx — mismo componente/lógica, contenedor alineado al Sidebar (menos espacio perdido)
 import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
-import Config from "../Config";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -31,35 +30,30 @@ const UserAll = () => {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    getUserAll();
+    // 🔥 Usuarios estáticos (los que quieres)
+    const staticUsers = [
+      { id: 1, name: "Juan Pérez", email: "juan@example.com" },
+      { id: 2, name: "María López", email: "maria@example.com" },
+      { id: 3, name: "Carlos García", email: "carlos@example.com" },
+      { id: 4, name: "Ana Torres", email: "ana@example.com" },
+    ];
+
+    setUsers(staticUsers);
   }, []);
 
-  const getUserAll = async () => {
-    const response = await Config.getUserAll();
-    setUsers(response.data);
-  };
-
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
     const ok = window.confirm("¿Seguro que deseas eliminar este usuario?");
     if (!ok) return;
-    try {
-      await Config.getUserDelete(id);
-      setUsers((prev) => prev.filter((u) => u.id !== id));
-    } catch (error) {
-      console.error(error);
-      alert("No se pudo eliminar el usuario");
-    }
+
+    setUsers((prev) => prev.filter((u) => u.id !== id));
   };
 
   return (
     <div className="bg-content1 min-h-screen">
-      {/* Sidebar fixed (no se toca) */}
+      {/* Sidebar fijo */}
       <Sidebar />
 
-      {/* 🔑 Alinear contenido al Sidebar:
-          - Antes: max-w-screen-2xl mx-auto px-4 pl-20 md:pl-64
-          - Ahora: ml-20 md:ml-64 (sin mx-auto ni max-w) para evitar espacio innecesario
-      */}
+      {/* Alinear al Sidebar */}
       <div className="px-4 ml-20 md:ml-64 transition-[margin] duration-300">
         <div className="py-6">
           <motion.div
@@ -115,42 +109,36 @@ const UserAll = () => {
                       </div>
                     }
                   >
-                    {!users ? (
-                      <TableRow>
-                        <TableCell colSpan={4}>...loading</TableCell>
+                    {users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>{user.id}</TableCell>
+                        <TableCell>{user.name}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-2 text-nowrap">
+                            <Button
+                              as={Link}
+                              to={`/admin/user/edit/${user.id}`}
+                              color="primary"
+                              size="sm"
+                              startContent={
+                                <PencilSquareIcon className="h-4 w-4" />
+                              }
+                            >
+                              Editar
+                            </Button>
+                            <Button
+                              color="danger"
+                              size="sm"
+                              startContent={<TrashIcon className="h-4 w-4" />}
+                              onPress={() => handleDelete(user.id)}
+                            >
+                              Eliminar
+                            </Button>
+                          </div>
+                        </TableCell>
                       </TableRow>
-                    ) : (
-                      users.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell>{user.id}</TableCell>
-                          <TableCell>{user.name}</TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell>
-                            <div className="flex justify-end gap-2 text-nowrap">
-                              <Button
-                                as={Link}
-                                to={`/admin/user/edit/${user.id}`}
-                                color="primary"
-                                size="sm"
-                                startContent={
-                                  <PencilSquareIcon className="h-4 w-4" />
-                                }
-                              >
-                                Editar
-                              </Button>
-                              <Button
-                                color="danger"
-                                size="sm"
-                                startContent={<TrashIcon className="h-4 w-4" />}
-                                onPress={() => handleDelete(user.id)}
-                              >
-                                Eliminar
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
+                    ))}
                   </TableBody>
                 </Table>
               </CardBody>

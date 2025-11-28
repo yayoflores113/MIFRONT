@@ -1,8 +1,7 @@
-// CursosAll.jsx — mismo diseño que Users/Universidades/Carreras, sin cambiar tu lógica
+// CursosAll.jsx — versión con cursos estáticos
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import Config from "../Config";
 import { motion } from "framer-motion";
 import {
   Card,
@@ -28,60 +27,61 @@ import {
 
 const CursosAll = () => {
   const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  const load = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const { data } = await Config.getCursosAll(); // GET /admin/courses
-      setItems(Array.isArray(data) ? data : []);
-    } catch (e) {
-      setError("No se pudo cargar el listado de cursos.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Tus 20 cursos estáticos
+  const staticCourses = [
+    "Desarrollo Web con PHP",
+    "Fundamentos de Python",
+    "UX Research y Testing",
+    "Design Systems Profesionales",
+    "Prototipado y Animaciones",
+    "Figma de Cero a Experto",
+    "Teoría del Color y Tipografía",
+    "Fundamentos de Diseño UI",
+    "Deep Learning con TensorFlow",
+    "Machine Learning con Scikit-learn",
+    "Visualización de Datos",
+    "Pandas y NumPy Avanzado",
+    "Matemáticas para Data Science",
+    "Python para Principiantes",
+    "Deployment y DevOps",
+    "APIs RESTful Profesionales",
+    "Bases de Datos SQL y NoSQL",
+    "Node.js y Express Backend",
+    "React.js Moderno",
+    "JavaScript Fundamental",
+    "HTML y CSS Desde Cero",
+  ];
 
   useEffect(() => {
-    load();
+    // Convertimos la lista a objetos como los que usa tu tabla
+    const formatted = staticCourses.map((title, i) => ({
+      id: i + 1,
+      career_id: "-",
+      title,
+      card_image_url: "", // sin imagen
+      level: "Básico",
+      difficulty: "Normal",
+      hours: "10",
+      provider: "Interno",
+      rating_avg: "5.0",
+    }));
+
+    setItems(formatted);
   }, []);
 
-  const onDelete = async (id) => {
-    if (!window.confirm("¿Eliminar este curso definitivamente?")) return;
-    try {
-      await Config.getCursosDestroy(id); // DELETE /admin/courses/{id}
-      setItems((prev) => prev.filter((x) => x.id !== id));
-    } catch {
-      alert("No se pudo eliminar. Revisa tu conexión o permisos.");
-    }
+  const onDelete = (id) => {
+    if (!window.confirm("¿Eliminar este curso?")) return;
+    setItems((prev) => prev.filter((c) => c.id !== id));
   };
 
-  // Resuelve la imagen de portada:
-  // - base64 o URL absoluta → usar tal cual
-  // - nombre de archivo → /img/cursos/{archivo} en el backend
-  const cardImgSrc = (val) => {
-    if (!val) return "";
-    if (val.startsWith("data:image")) return val;
-    if (/^https?:\/\//i.test(val)) return val;
-
-    const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
-    const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
-    const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "").trim();
-    const backendOrigin = fromAxios || fromEnv || "";
-
-    return backendOrigin
-      ? `${backendOrigin.replace(/\/$/, "")}/img/cursos/${val}`
-      : `/img/cursos/${val}`;
-  };
+  // Mantengo tu función por si luego agregas imágenes
+  const cardImgSrc = (val) => val || "";
 
   return (
     <div className="bg-content1 min-h-screen">
-      {/* Sidebar fijo */}
       <Sidebar />
 
-      {/* Contenido alineado al sidebar (sin espacio perdido) */}
       <div className="px-4 ml-20 md:ml-64 transition-[margin] duration-300">
         <div className="py-6">
           <motion.div
@@ -89,7 +89,6 @@ const CursosAll = () => {
             animate={{ opacity: 1 }}
             className="flex-1 p-0 sm:p-2"
           >
-            {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
               <div>
                 <h1 className="text-2xl font-bold text-[#181818]">Cursos</h1>
@@ -97,6 +96,7 @@ const CursosAll = () => {
                   Administrar cursos registrados
                 </p>
               </div>
+
               <Button
                 as={Link}
                 to="/admin/courses/create"
@@ -108,7 +108,6 @@ const CursosAll = () => {
               </Button>
             </div>
 
-            {/* Card principal */}
             <Card isBlurred shadow="sm" radius="lg">
               <CardHeader className="flex items-center gap-3 px-6 py-4">
                 <BookOpenIcon className="h-6 w-6 text-gray-500" />
@@ -118,19 +117,7 @@ const CursosAll = () => {
               <Divider />
 
               <CardBody className="p-0">
-                {error && (
-                  <div className="px-6 pt-4">
-                    <Chip color="danger" variant="flat">
-                      {error}
-                    </Chip>
-                  </div>
-                )}
-
-                <Table
-                  aria-label="Listado de Cursos"
-                  removeWrapper
-                  bottomContent={loading ? "Cargando..." : null}
-                >
+                <Table aria-label="Listado de Cursos" removeWrapper>
                   <TableHeader>
                     <TableColumn>ID</TableColumn>
                     <TableColumn>CARRERA</TableColumn>
@@ -144,19 +131,18 @@ const CursosAll = () => {
                     <TableColumn className="text-right">ACCIÓN</TableColumn>
                   </TableHeader>
 
-                  <TableBody emptyContent={!loading ? "Sin registros" : null}>
-                    {items.map((courses) => (
-                      <TableRow key={courses.id}>
-                        <TableCell>{courses.id}</TableCell>
-                        <TableCell>{courses.career_id}</TableCell>
-                        <TableCell>{courses.title}</TableCell>
+                  <TableBody emptyContent="Sin registros">
+                    {items.map((c) => (
+                      <TableRow key={c.id}>
+                        <TableCell>{c.id}</TableCell>
+                        <TableCell>{c.career_id}</TableCell>
+                        <TableCell>{c.title}</TableCell>
 
-                        {/* Portada 96x60 */}
                         <TableCell>
-                          {courses.card_image_url ? (
+                          {c.card_image_url ? (
                             <Image
-                              alt={courses.title}
-                              src={cardImgSrc(courses.card_image_url)}
+                              alt={c.title}
+                              src={cardImgSrc(c.card_image_url)}
                               className="w-[95px] h-[60px] object-cover"
                               radius="sm"
                               removeWrapper
@@ -166,16 +152,17 @@ const CursosAll = () => {
                           )}
                         </TableCell>
 
-                        <TableCell>{courses.level || "-"}</TableCell>
-                        <TableCell>{courses.difficulty || "-"}</TableCell>
-                        <TableCell>{courses.hours ?? "-"}</TableCell>
-                        <TableCell>{courses.provider || "-"}</TableCell>
-                        <TableCell>{courses.rating_avg ?? "—"}</TableCell>
+                        <TableCell>{c.level}</TableCell>
+                        <TableCell>{c.difficulty}</TableCell>
+                        <TableCell>{c.hours}</TableCell>
+                        <TableCell>{c.provider}</TableCell>
+                        <TableCell>{c.rating_avg}</TableCell>
+
                         <TableCell>
                           <div className="flex justify-end gap-2 text-nowrap">
                             <Button
                               as={Link}
-                              to={`/admin/courses/${courses.id}/edit`}
+                              to={`/admin/courses/${c.id}/edit`}
                               color="primary"
                               size="sm"
                               startContent={
@@ -184,11 +171,12 @@ const CursosAll = () => {
                             >
                               Editar
                             </Button>
+
                             <Button
                               color="danger"
                               size="sm"
                               startContent={<TrashIcon className="h-4 w-4" />}
-                              onPress={() => onDelete(courses.id)}
+                              onPress={() => onDelete(c.id)}
                             >
                               Eliminar
                             </Button>
