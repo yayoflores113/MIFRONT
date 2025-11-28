@@ -1,7 +1,6 @@
-// UserAll.jsx — mismo componente/lógica, contenedor alineado al Sidebar (menos espacio perdido)
+// UserAll.jsx — Componente con usuarios estáticos
 import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
-import Config from "../Config";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -17,6 +16,7 @@ import {
   TableCell,
   Button,
   Input,
+  Chip,
 } from "@heroui/react";
 import {
   UserPlusIcon,
@@ -28,27 +28,112 @@ import {
 } from "@heroicons/react/24/outline";
 
 const UserAll = () => {
-  const [users, setUsers] = useState([]);
+  // Usuarios estáticos
+  const [users, setUsers] = useState([
+    {
+      id: 1,
+      name: "admin",
+      email: "admin@gmail.com",
+      role_id: 1,
+      roles: [{ name: "admin" }],
+      university: { name: "Universidad Tecnológica de México" },
+    },
+    {
+      id: 2,
+      name: "María García",
+      email: "maria.garcia@gmail.com",
+      role_id: 2,
+      roles: [{ name: "user" }],
+      // university: { name: "UNAM" },
+    },
+    {
+      id: 3,
+      name: "Carlos López",
+      email: "carlos.lopez@gmail.com",
+      role_id: 2,
+      roles: [{ name: "user" }],
+      university: null,
+    },
+    {
+      id: 4,
+      name: "Ana Martínez",
+      email: "ana.martinez@gmail.com",
+      role_id: 3,
+      roles: [{ name: "user" }],
+      university: { name: "Instituto Politécnico Nacional" },
+    },
+    {
+      id: 5,
+      name: "Luis Hernández",
+      email: "luis.hernandez@gmail.com",
+      role_id: 2,
+      roles: [{ name: "user" }],
+      university: { name: "Universidad Tecnológica de México" },
+    },
+    {
+      id: 6,
+      name: "Patricia Rodríguez",
+      email: "patricia.rodriguez@gmail.com",
+      role_id: 2,
+      roles: [{ name: "user" }],
+      university: { name: "ITESM" },
+    },
+    {
+      id: 7,
+      name: "Roberto Sánchez",
+      email: "roberto.sanchez@gmail.com",
+      role_id: 1,
+      roles: [{ name: "user" }],
+      university: null,
+    },
+    {
+      id: 8,
+      name: "Laura Ramírez",
+      email: "laura.ramirez@gmail.com",
+      role_id: 2,
+      roles: [{ name: "user" }],
+      university: { name: "Universidad Anáhuac" },
+    },
+  ]);
 
-  useEffect(() => {
-    getUserAll();
-  }, []);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const getUserAll = async () => {
-    const response = await Config.getUserAll();
-    setUsers(response.data);
-  };
-
-  const handleDelete = async (id) => {
+  const handleDelete = (id) => {
     const ok = window.confirm("¿Seguro que deseas eliminar este usuario?");
     if (!ok) return;
-    try {
-      await Config.getUserDelete(id);
-      setUsers((prev) => prev.filter((u) => u.id !== id));
-    } catch (error) {
-      console.error(error);
-      alert("No se pudo eliminar el usuario");
+    
+    // Eliminar sin animación
+    setUsers((prev) => prev.filter((u) => u.id !== id));
+  };
+
+  // Filtrar usuarios según búsqueda
+  const filteredUsers = users.filter((user) => {
+    if (!searchTerm) return true;
+    const search = searchTerm.toLowerCase();
+    return (
+      user.name?.toLowerCase().includes(search) ||
+      user.email?.toLowerCase().includes(search) ||
+      user.id?.toString().includes(search)
+    );
+  });
+
+  // Función para obtener el rol del usuario
+  const getUserRole = (user) => {
+    if (user.roles && user.roles.length > 0) {
+      return user.roles[0].name;
     }
+    return "Usuario";
+  };
+
+  // Función para obtener el color del chip según el rol
+  const getRoleColor = (role) => {
+    const colors = {
+      admin: "danger",
+      moderator: "warning",
+      user: "primary",
+      student: "success",
+    };
+    return colors[role?.toLowerCase()] || "default";
   };
 
   return (
@@ -56,10 +141,7 @@ const UserAll = () => {
       {/* Sidebar fixed (no se toca) */}
       <Sidebar />
 
-      {/* 🔑 Alinear contenido al Sidebar:
-          - Antes: max-w-screen-2xl mx-auto px-4 pl-20 md:pl-64
-          - Ahora: ml-20 md:ml-64 (sin mx-auto ni max-w) para evitar espacio innecesario
-      */}
+      {/* Contenido alineado al Sidebar */}
       <div className="px-4 ml-20 md:ml-64 transition-[margin] duration-300">
         <div className="py-6">
           <motion.div
@@ -72,25 +154,41 @@ const UserAll = () => {
               <div>
                 <h1 className="text-2xl font-bold text-[#181818]">Usuarios</h1>
                 <p className="text-gray-500 text-sm">
-                  Administrar Usuarios registrados
+                  Administrar usuarios registrados ({users.length} total)
                 </p>
               </div>
+              <Button
+                as={Link}
+                to="/admin/user/create"
+                color="primary"
+                startContent={<UserPlusIcon className="h-5 w-5" />}
+              >
+                Nuevo Usuario
+              </Button>
             </div>
 
             {/* Card principal */}
             <Card className="mb-6" isBlurred shadow="sm" radius="lg">
               <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-6 py-4">
-                <h2 className="text-lg font-semibold">User Management</h2>
+                <h2 className="text-lg font-semibold">Gestión de Usuarios</h2>
                 <div className="flex w-full sm:w-auto gap-2">
                   <Input
-                    placeholder="Search users..."
+                    placeholder="Buscar usuarios..."
+                    value={searchTerm}
+                    onValueChange={setSearchTerm}
                     startContent={
                       <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
                     }
                     size="sm"
                     className="w-full sm:max-w-xs"
+                    isClearable
+                    onClear={() => setSearchTerm("")}
                   />
-                  <Button variant="flat" size="sm" isIconOnly>
+                  <Button 
+                    variant="flat" 
+                    size="sm" 
+                    isIconOnly
+                  >
                     <FunnelIcon className="h-5 w-5" />
                   </Button>
                 </div>
@@ -99,11 +197,18 @@ const UserAll = () => {
               <Divider />
 
               <CardBody className="p-0">
-                <Table aria-label="Listado de usuarios" removeWrapper>
+                <Table 
+                  aria-label="Listado de usuarios" 
+                  removeWrapper
+                  classNames={{
+                    th: "bg-gray-50 text-gray-600 font-semibold",
+                  }}
+                >
                   <TableHeader>
                     <TableColumn>ID</TableColumn>
                     <TableColumn>NOMBRE</TableColumn>
                     <TableColumn>CORREO</TableColumn>
+                    <TableColumn>ROL</TableColumn>
                     <TableColumn className="text-right">ACCIÓN</TableColumn>
                   </TableHeader>
 
@@ -111,50 +216,83 @@ const UserAll = () => {
                     emptyContent={
                       <div className="flex flex-col items-center justify-center text-gray-400 py-8">
                         <UsersIcon className="h-12 w-12 mb-2" />
-                        <p>Sin registros</p>
+                        <p className="font-semibold">Sin usuarios</p>
+                        <p className="text-sm">
+                          {searchTerm 
+                            ? "No se encontraron usuarios con ese criterio" 
+                            : "No hay usuarios registrados"}
+                        </p>
                       </div>
                     }
                   >
-                    {!users ? (
-                      <TableRow>
-                        <TableCell colSpan={4}>...loading</TableCell>
+                    {filteredUsers.map((user) => (
+                      <TableRow key={user.id} className="hover:bg-gray-50">
+                        <TableCell>
+                          <span className="font-mono text-sm">
+                            #{user.id}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{user.name || "Sin nombre"}</span>
+                            {user.university && (
+                              <span className="text-xs text-gray-500">
+                                {user.university.name || user.university}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm">{user.email}</span>
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            size="sm" 
+                            color={getRoleColor(getUserRole(user))}
+                            variant="flat"
+                          >
+                            {getUserRole(user)}
+                          </Chip>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-2 text-nowrap">
+                            <Button
+                              as={Link}
+                              to={`/admin/user/edit/${user.id}`}
+                              color="primary"
+                              size="sm"
+                              variant="flat"
+                              startContent={
+                                <PencilSquareIcon className="h-4 w-4" />
+                              }
+                            >
+                              Editar
+                            </Button>
+                            <Button
+                              color="danger"
+                              size="sm"
+                              variant="flat"
+                              startContent={<TrashIcon className="h-4 w-4" />}
+                              onPress={() => handleDelete(user.id)}
+                            >
+                              Eliminar
+                            </Button>
+                          </div>
+                        </TableCell>
                       </TableRow>
-                    ) : (
-                      users.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell>{user.id}</TableCell>
-                          <TableCell>{user.name}</TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell>
-                            <div className="flex justify-end gap-2 text-nowrap">
-                              <Button
-                                as={Link}
-                                to={`/admin/user/edit/${user.id}`}
-                                color="primary"
-                                size="sm"
-                                startContent={
-                                  <PencilSquareIcon className="h-4 w-4" />
-                                }
-                              >
-                                Editar
-                              </Button>
-                              <Button
-                                color="danger"
-                                size="sm"
-                                startContent={<TrashIcon className="h-4 w-4" />}
-                                onPress={() => handleDelete(user.id)}
-                              >
-                                Eliminar
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
+                    ))}
                   </TableBody>
                 </Table>
               </CardBody>
             </Card>
+
+            {/* Información adicional */}
+            {filteredUsers.length > 0 && (
+              <div className="text-sm text-gray-500 text-center">
+                Mostrando {filteredUsers.length} de {users.length} usuarios
+                {searchTerm && ` (filtrado por: "${searchTerm}")`}
+              </div>
+            )}
           </motion.div>
         </div>
       </div>

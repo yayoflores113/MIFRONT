@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import AuthUser from "../pageauth/AuthUser";
 import Config from "../Config";
+import NotificationCenter from "./NotificationCenter";
 import {
   Navbar as UINavbar,
   NavbarBrand,
@@ -54,6 +55,14 @@ const Navbar = () => {
               </span>
             </Link>
           </NavbarItem>
+          
+          {/* Icono de notificaciones - Solo para utm@gmail.com */}
+          {currentUser?.email === "utm@gmail.com" && (
+            <NavbarItem>
+              <NotificationCenter />
+            </NavbarItem>
+          )}
+          
           <NavbarItem>
             <Link
               href="#"
@@ -328,6 +337,16 @@ const Navbar = () => {
                   {(user ?? getUser())?.name ?? "Usuario"}
                 </Link>
               </NavbarMenuItem>
+              
+              {/* Notificaciones en mobile - Solo para utm@gmail.com */}
+              {(user ?? getUser())?.email === "utm@gmail.com" && (
+                <NavbarMenuItem>
+                  <div className="px-2 py-2">
+                    <NotificationCenter />
+                  </div>
+                </NavbarMenuItem>
+              )}
+              
               <NavbarMenuItem>
                 <Link
                   href="#"
