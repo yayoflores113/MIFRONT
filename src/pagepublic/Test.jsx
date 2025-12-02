@@ -11,6 +11,7 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
+  Chip,
 } from "@heroui/react";
 import {
   ArrowLeftIcon,
@@ -27,6 +28,11 @@ import Config from "../Config";
 import TestQuestion from "./TestQuestion";
 import TestResults from "./TestResults";
 import OpenRouterChat from "./OpenRouterChat";
+import {
+  getRecommendedCareers,
+  getRecommendedUniversities,
+  generateAnalysisSummary,
+} from "./testAnalyzer";
 
 const Test = () => {
   // Cambia esto si tu test activo tiene otro id
@@ -40,9 +46,8 @@ const Test = () => {
   const [questions, setQuestions] = React.useState([]);
   const [recommendedCareers, setRecommendedCareers] = React.useState([]);
   const [recommendedCourses, setRecommendedCourses] = React.useState([]);
-  const [recommendedUniversities, setRecommendedUniversities] = React.useState(
-    []
-  );
+  const [recommendedUniversities, setRecommendedUniversities] = React.useState([]);
+  const [analysisSummary, setAnalysisSummary] = React.useState(null);
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
@@ -95,34 +100,41 @@ const Test = () => {
 
   const handleOptionSelect = (questionId, option) => {
     setAnswers((prev) => ({ ...prev, [questionId]: option }));
-    // Si luego quieres persistir cada respuesta:
-    // Config.answerAttempt(attemptId, { question_id: questionId, answer_option_id: Number(option.id) })
   };
 
-  // carbar a datos reales (mock de resultados + modal)
+  // Calcular resultados reales basados en respuestas
   const calculateResults = () => {
-    const mockCareers = [
-      "Ingeniería en Software (UADY)",
-      "Diseño Digital (Modelo)",
-      "Psicología (UADY)",
-      "Administración de Empresas (UADY)",
-      "Arquitectura (UADY)",
-    ];
-    setRecommendedCareers(mockCareers);
-    setRecommendedCourses([]);
-    setRecommendedUniversities([]);
+    console.log("📊 Analizando respuestas:", answers);
+
+    // Obtener carreras recomendadas (YA vienen formateadas como strings)
+    const careers = getRecommendedCareers(answers, 5);
+    console.log("🎓 Carreras recomendadas:", careers);
+
+    // Obtener universidades relacionadas (YA vienen como strings)
+    const universities = getRecommendedUniversities(careers);
+    console.log("🏛️ Universidades:", universities);
+
+    // Generar resumen del análisis
+    const summary = generateAnalysisSummary(answers);
+    console.log("📈 Resumen:", summary);
+
+    // Usar directamente los resultados (YA están formateados)
+    setRecommendedCareers(careers);
+    setRecommendedUniversities(universities);
+    setRecommendedCourses([]); // Por ahora vacío
+    setAnalysisSummary(summary);
+
     onOpen();
   };
 
   const restartTest = () => {
     setCurrentStep(questions.length ? 1 : 0);
     setAnswers({});
+    setRecommendedCareers([]);
+    setRecommendedUniversities([]);
+    setRecommendedCourses([]);
+    setAnalysisSummary(null);
     onOpenChange(false);
-  };
-
-  // navegar a /profile
-  const navigateToProfile = () => {
-    navigate("/user");
   };
 
   if (loading) {
@@ -252,49 +264,67 @@ const Test = () => {
       <Modal
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        size="lg"
+        size="5xl"
         backdrop="blur"
+        scrollBehavior="inside"
+        classNames={{
+          body: "py-8 px-8",
+          base: "max-h-[90vh]"
+        }}
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1 text-center">
-                <SparklesIcon className="w-6 h-6 text-[#2CBFF0] mx-auto mb-2" />
-                <h2 className="text-2xl font-bold">¡Tus recomendaciones!</h2>
+              <ModalHeader className="flex flex-col gap-1 text-center pb-2">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <SparklesIcon className="w-8 h-8 text-[#2CBFF0]" />
+                  <h2 className="text-3xl font-bold text-[#181818]">
+                    ¡Tus Recomendaciones!
+                  </h2>
+                </div>
+                {analysisSummary && analysisSummary.topAreas.length > 0 && (
+                  <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+                    <span className="text-sm text-slate-600">
+                      Áreas de interés:
+                    </span>
+                    {analysisSummary.topAreas.map((area, idx) => (
+                      <Chip
+                        key={idx}
+                        size="sm"
+                        variant="flat"
+                        className="bg-[#2CBFF0]/20 text-[#2CBFF0] font-medium"
+                      >
+                        {area}
+                      </Chip>
+                    ))}
+                  </div>
+                )}
               </ModalHeader>
-              <ModalBody>
+              <ModalBody className="px-6">
                 <TestResults
                   careers={recommendedCareers}
                   courses={recommendedCourses}
                   universities={recommendedUniversities}
                 />
-                <div className="mt-6 bg-slate-50 p-4 rounded-medium">
-                  <h3 className="text-md font-medium mb-3 flex items-center gap-2">
+                <div className="mt-4 bg-slate-50 p-4 rounded-xl border-2 border-slate-200">
+                  <h3 className="text-md font-semibold mb-3 flex items-center gap-2 text-[#181818]">
                     <ChatBubbleLeftRightIcon className="w-5 h-5 text-[#2CBFF0]" />
-                    <span>Consulta con nuestro asistente</span>
+                    <span>¿Tienes dudas? Consulta con nuestro asistente</span>
                   </h3>
                   <OpenRouterChat />
                 </div>
               </ModalBody>
-              <ModalFooter>
+              <ModalFooter className="pt-4 border-t justify-center">
                 <Button
-                  className="bg-[#FEFEFE] shadow-sm border border-slate-200"
+                  variant="flat"
+                  size="lg"
+                  className="bg-slate-100 hover:bg-slate-200"
                   onPress={() => {
                     onClose();
                     restartTest();
                   }}
                 >
                   Realizar test nuevamente
-                </Button>
-                <Button
-                  color="primary"
-                  className="bg-[#2CBFF0]"
-                  onPress={() => {
-                    onClose();
-                    navigateToProfile(); // navega a /profile
-                  }}
-                >
-                  Visitar perfil
                 </Button>
               </ModalFooter>
             </>
