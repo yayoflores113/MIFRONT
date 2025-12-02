@@ -64,6 +64,8 @@ import SubscriptionsAll from "./PageAdmin/SubscriptionsAll";
 import SubscriptionsStore from "./PageAdmin/SubscriptionsStore";
 import SubscriptionsUpdate from "./PageAdmin/SubscriptionsUpdate";
 
+import SupersetDashboard from "./components/SupersetDashboard";
+
 const App = () => {
   return (
     <Router>
@@ -73,7 +75,6 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
-          
           {/* Catálogos */}
           <Route path="/universities" element={<Universities />} />
           <Route path="/universities/:slug" element={<Universitie />} />
@@ -82,10 +83,13 @@ const App = () => {
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:slug" element={<Course />} />
           <Route path="/learning-paths" element={<LearningPaths />} />
-          <Route path="/learning-paths/:slug" element={<LearningPathDetail />} />
-          <Route path="/certificates" element={<Certificates />} /> {/* ✅ NUEVO */}
+          <Route
+            path="/learning-paths/:slug"
+            element={<LearningPathDetail />}
+          />
+          <Route path="/certificates" element={<Certificates />} />{" "}
+          {/* ✅ NUEVO */}
           <Route path="/plans" element={<Plan />} />
-          
           {/* Tests */}
           <Route path="/tests" element={<Test />} />
           <Route path="/tests/:slug" element={<TestRunner />} />
@@ -93,11 +97,11 @@ const App = () => {
           <Route path="/recommendations" element={<Recommendations />} />
           <Route path="/question" element={<TestQuestion />} />
           <Route path="/openchat" element={<OpenRouterChat />} />
-          
           {/* Metabase */}
           <Route path="/meta" element={<MetaBase />} />
           <Route path="/metadashboard" element={<MetaBaseDashboard />} />
-          
+          {/* Superset */}
+          <Route path="/superset" element={<SupersetDashboard />} />
           {/* 404 not found */}
           <Route path="/*" element={<NotFound />} />
         </Route>
@@ -110,7 +114,10 @@ const App = () => {
           <Route path="user/edit/:id" element={<UserUpdate />} />
           <Route path="universities" element={<UniversidadesAll />} />
           <Route path="universities/create" element={<UniversidadesStore />} />
-          <Route path="universities/edit/:id" element={<UniversidadesUpdate />} />
+          <Route
+            path="universities/edit/:id"
+            element={<UniversidadesUpdate />}
+          />
           <Route path="careers" element={<CarrerasAll />} />
           <Route path="careers/create" element={<CarrerasStore />} />
           <Route path="careers/:id/edit" element={<CarrerasUpdate />} />
@@ -122,7 +129,10 @@ const App = () => {
           <Route path="plans/:id/edit" element={<PlanesUpdate />} />
           <Route path="subscriptions" element={<SubscriptionsAll />} />
           <Route path="subscriptions/create" element={<SubscriptionsStore />} />
-          <Route path="subscriptions/:id/edit" element={<SubscriptionsUpdate />} />
+          <Route
+            path="subscriptions/:id/edit"
+            element={<SubscriptionsUpdate />}
+          />
         </Route>
 
         <Route path="/user" element={<LayoutClient />}>

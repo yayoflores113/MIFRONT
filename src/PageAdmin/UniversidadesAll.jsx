@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import { Link } from "react-router-dom";
-import Config from "../Config";
 import { motion } from "framer-motion";
+
 import {
   Card,
   CardBody,
@@ -15,12 +15,10 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Image,
 } from "@heroui/react";
 
 import {
   BuildingOfficeIcon,
-  AcademicCapIcon,
   PlusIcon,
   TrashIcon,
   PencilSquareIcon,
@@ -30,51 +28,86 @@ const UniversidadesAll = () => {
   const [universities, setUniversities] = useState([]);
 
   useEffect(() => {
-    getUniversidadesAll();
+    // 🔥 Universidades estáticas solicitadas
+    setUniversities([
+      {
+        id: 1,
+        name: "Instituto Tecnológico de Mérida",
+        acronym: "ITM",
+        slug: "instituto-tecnologico-de-merida",
+        country: "México",
+        state: "Yucatán",
+        city: "Mérida",
+        website: "https://www.itmerida.mx",
+        established_year: 1961,
+        logo_url: "", // vacío
+      },
+      {
+        id: 2,
+        name: "Universidad Autónoma de Yucatán",
+        acronym: "UADY",
+        slug: "universidad-autonoma-de-yucatan",
+        country: "México",
+        state: "Yucatán",
+        city: "Mérida",
+        website: "https://www.uady.mx",
+        established_year: 1922,
+        logo_url: "",
+      },
+      {
+        id: 3,
+        name: "Universidad Modelo",
+        acronym: "UM",
+        slug: "universidad-modelo",
+        country: "México",
+        state: "Yucatán",
+        city: "Mérida",
+        website: "https://www.unimodelo.edu.mx",
+        established_year: 1910,
+        logo_url: "",
+      },
+      {
+        id: 4,
+        name: "Universidad Tecnológica Metropolitana",
+        acronym: "UTM",
+        slug: "universidad-tecnologica-metropolitana",
+        country: "México",
+        state: "Yucatán",
+        city: "Mérida",
+        website: "https://www.utmetropolitana.edu.mx",
+        established_year: 1999,
+        logo_url: "",
+      },
+      {
+        id: 5,
+        name: "Universidad Vizcaya de las Américas",
+        acronym: "UVA",
+        slug: "universidad-vizcaya-de-las-americas",
+        country: "México",
+        state: "Yucatán",
+        city: "Mérida",
+        website: "https://www.univizcaya.edu.mx",
+        established_year: 2000,
+        logo_url: "",
+      },
+    ]);
   }, []);
 
-  const getUniversidadesAll = async () => {
-    const response = await Config.getUniversidadesAll();
-    setUniversities(response.data);
-  };
+  // ❌ Ya no borra en BD — solo elimina del estado
+  const _deleteUniversidadesById = (id) => {
+    const isDelete = window.confirm("¿Borrar universidad?");
+    if (!isDelete) return;
 
-  const _deleteUniversidadesById = async (id) => {
-    const isDelete = window.confirm("Borrar Universidad ?");
-    if (isDelete) {
-      await Config.getUniversidadesDeleteById(id);
-      getUniversidadesAll();
-    }
-  };
-
-  // Helper para resolver logo_url
-  const logoImgSrc = (val) => {
-    if (!val) return "";
-    if (val.startsWith("data:image")) return val;
-    if (/^https?:\/\//i.test(val)) return val;
-
-    const axiosBase = (window?.axios?.defaults?.baseURL || "").trim();
-    const fromAxios = axiosBase ? axiosBase.replace(/\/api\/?.*$/i, "") : "";
-    const fromEnv = (import.meta?.env?.VITE_BACKEND_URL || "").trim();
-    const backendOrigin = fromAxios || fromEnv || "";
-
-    return backendOrigin
-      ? `${backendOrigin.replace(/\/$/, "")}/img/universidades/${val}`
-      : `/img/universidades/${val}`;
+    setUniversities((prev) => prev.filter((u) => u.id !== id));
   };
 
   return (
     <div className="bg-content1 min-h-screen">
-      {/* Sidebar fijo */}
       <Sidebar />
 
-      {/* Contenido alineado al sidebar */}
       <div className="px-4 ml-20 md:ml-64 transition-[margin] duration-300">
         <div className="py-6">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex-1 p-0 sm:p-2"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
               <div>
@@ -85,6 +118,7 @@ const UniversidadesAll = () => {
                   Administrar universidades registradas
                 </p>
               </div>
+
               <Button
                 as={Link}
                 to="/admin/universities/create"
@@ -96,7 +130,7 @@ const UniversidadesAll = () => {
               </Button>
             </div>
 
-            {/* Card principal */}
+            {/* Tabla */}
             <Card isBlurred shadow="sm" radius="lg">
               <CardHeader className="flex items-center gap-3 px-6 py-4">
                 <BuildingOfficeIcon className="h-6 w-6 text-gray-500" />
@@ -112,82 +146,65 @@ const UniversidadesAll = () => {
                   <TableHeader>
                     <TableColumn>ID</TableColumn>
                     <TableColumn>NOMBRE</TableColumn>
-                    <TableColumn>LOGO</TableColumn>
                     <TableColumn>ACRÓNIMO</TableColumn>
                     <TableColumn>SLUG</TableColumn>
                     <TableColumn>PAÍS</TableColumn>
                     <TableColumn>ESTADO</TableColumn>
                     <TableColumn>CIUDAD</TableColumn>
                     <TableColumn>WEBSITE</TableColumn>
-                    <TableColumn>AÑO DE FUNDACIÓN</TableColumn>
+                    <TableColumn>AÑO</TableColumn>
                     <TableColumn className="text-right">ACCIÓN</TableColumn>
                   </TableHeader>
 
-                  <TableBody emptyContent="Sin registros">
-                    {!universities ? (
-                      <TableRow>
-                        <TableCell colSpan={11}>...loading</TableCell>
-                      </TableRow>
-                    ) : (
-                      universities.map((u) => (
-                        <TableRow key={u.id}>
-                          <TableCell>{u.id}</TableCell>
-                          <TableCell>{u.name}</TableCell>
-                          <TableCell>
-                            {u.logo_url ? (
-                              <Image
-                                alt={u.name}
-                                src={logoImgSrc(u.logo_url)}
-                                className="object-cover"
-                                radius="sm"
-                                removeWrapper
-                              />
-                            ) : (
-                              "-"
-                            )}
-                          </TableCell>
-                          <TableCell>{u.acronym}</TableCell>
-                          <TableCell>{u.slug}</TableCell>
-                          <TableCell>{u.country}</TableCell>
-                          <TableCell>{u.state}</TableCell>
-                          <TableCell>{u.city}</TableCell>
-                          <TableCell>
-                            <a
-                              href={u.website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary-500"
+                  <TableBody>
+                    {universities.map((u) => (
+                      <TableRow key={u.id}>
+                        <TableCell>{u.id}</TableCell>
+                        <TableCell>{u.name}</TableCell>
+                        <TableCell>{u.acronym}</TableCell>
+                        <TableCell>{u.slug}</TableCell>
+                        <TableCell>{u.country}</TableCell>
+                        <TableCell>{u.state}</TableCell>
+                        <TableCell>{u.city}</TableCell>
+                        <TableCell>
+                          <a
+                            href={u.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary-500"
+                          >
+                            {u.website}
+                          </a>
+                        </TableCell>
+                        <TableCell>{u.established_year}</TableCell>
+
+                        <TableCell>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              as={Link}
+                              to={`/admin/universities/edit/${u.id}`}
+                              size="sm"
+                              color="primary"
+                              startContent={
+                                <PencilSquareIcon className="h-4 w-4" />
+                              }
                             >
-                              {u.website}
-                            </a>
-                          </TableCell>
-                          <TableCell>{u.established_year}</TableCell>
-                          <TableCell>
-                            <div className="flex justify-end gap-2 text-nowrap">
-                              <Button
-                                as={Link}
-                                to={`/admin/universities/edit/${u.id}`}
-                                color="primary"
-                                size="sm"
-                                startContent={
-                                  <PencilSquareIcon className="h-4 w-4" />
-                                }
-                              >
-                                Editar
-                              </Button>
-                              <Button
-                                color="danger"
-                                size="sm"
-                                startContent={<TrashIcon className="h-4 w-4" />}
-                                onPress={() => _deleteUniversidadesById(u.id)}
-                              >
-                                Eliminar
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
+                              Editar
+                            </Button>
+                            <Button
+                              size="sm"
+                              color="danger"
+                              startContent={
+                                <TrashIcon className="h-4 w-4" />
+                              }
+                              onPress={() => _deleteUniversidadesById(u.id)}
+                            >
+                              Eliminar
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </CardBody>
