@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { embedDashboard } from "@superset-ui/embedded-sdk";
 
-const DASHBOARD_ID = "b3b15dc0-58c8-4265-91f2-12197c770993";
+const DASHBOARD_ID = "337bc20f-1655-46ec-8d00-5ac94dc25ea5";
 
 const SupersetDashboard = () => {
   const containerRef = useRef(null);
@@ -12,7 +12,7 @@ const SupersetDashboard = () => {
     embedDashboard({
       id: DASHBOARD_ID,
       supersetDomain:
-        import.meta.env.VITE_SUPERSET_URL || "http://localhost:8088",
+        import.meta.env.VITE_SUPERSET_URL || "http://40.233.27.142:8088",
       mountPoint: containerRef.current,
       fetchGuestToken: async () => {
         const res = await fetch(
@@ -46,7 +46,7 @@ const SupersetDashboard = () => {
 
   return (
     <>
-      {/* Esto fuerza al iframe interno a estirarse sí o sí */}
+      {/* Mantener el iframe expandido dentro de su contenedor */}
       <style>
         {`
           .superset-container iframe {
@@ -58,21 +58,25 @@ const SupersetDashboard = () => {
       </style>
 
       <div
-        className="superset-container"
-        ref={containerRef}
+        className="superset-wrapper"
         style={{
-          width: "100vw",
-          height: "100vh",
-          position: "fixed",
-          top: 0,
-          left: 0,
-          zIndex: 9999,
-          backgroundColor: "#fff",
+          width: "100%",
+          height: "calc(100vh - 64px)", // ajusta 64px si tu navbar es más alto
           margin: 0,
           padding: 0,
           overflow: "hidden",
         }}
-      />
+      >
+        <div
+          className="superset-container"
+          ref={containerRef}
+          style={{
+            width: "100%",
+            height: "100%",
+            backgroundColor: "#fff",
+          }}
+        />
+      </div>
     </>
   );
 };

@@ -250,6 +250,22 @@ const Navbar = () => {
           </NavbarItem>
         )}
       </NavbarContent>
+      <NavbarItem isActive={pathname === "/superset"}>
+        <Link
+          href="/superset"
+          aria-current={pathname === "/superset" ? "page" : undefined}
+          className={`group relative text-[#181818]/80 hover:text-[#181818] transition-colors ${
+            isActive("/superset") && "text-[#181818]"
+          }`}
+        >
+          Superset
+          <span
+            className={`pointer-events-none absolute -bottom-1 left-0 h-[2px] w-0 bg-[#2CBFF0] transition-[width] duration-200 group-hover:w-full ${
+              isActive("/superset") && "w-full"
+            }`}
+          />
+        </Link>
+      </NavbarItem>
 
       {/* Acciones derecha (desktop) */}
       <NavbarContent justify="end" className="hidden lg:flex gap-4">
