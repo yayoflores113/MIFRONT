@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { embedDashboard } from "@superset-ui/embedded-sdk";
 
-const DASHBOARD_ID = "337bc20f-1655-46ec-8d00-5ac94dc25ea5";
+const DASHBOARD_ID = "01f5b498-3574-42c4-9a61-5f9916a53c5d";
 
 const SupersetDashboard = () => {
   const containerRef = useRef(null);
