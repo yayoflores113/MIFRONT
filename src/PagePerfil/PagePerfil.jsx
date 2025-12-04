@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "../lib/axios";
 import {
   Avatar,
   Button,
@@ -7,6 +6,7 @@ import {
   CardBody,
   CardHeader,
   Input,
+  Textarea,
   Tabs,
   Tab,
 } from "@heroui/react";
@@ -15,28 +15,46 @@ import {
   PencilSquareIcon,
   InformationCircleIcon,
   PlusCircleIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 
 const PagePerfil = () => {
   const [tab, setTab] = useState("saved");
   const [user, setUser] = useState(null);
-
   const [savedCourses, setSavedCourses] = useState([]);
-  const [purchasedCourses, setPurchasedCourses] = useState([]);
 
   const [loading, setLoading] = useState({
     user: true,
     courses: false,
-    purchased: false,
   });
+
+  const [availableTags] = useState([
+    "Programación",
+    "Diseño",
+    "Marketing",
+    "IA",
+    "Python",
+    "Web",
+    "Móvil",
+    "BD",
+    "Matemáticas",
+    "Frontend",
+    "Backend",
+  ]);
+
+  const [newTag, setNewTag] = useState("");
 
   const [newCourse, setNewCourse] = useState({
     name: "",
     duration: "",
     category: "",
+    description: "",
+    tags: [],
+    portada: null,
+    pdf: null,
   });
 
-  // ========= USUARIO (SIMULADO)
+  // ==================== CARGA USUARIO SIMULADO ====================
   useEffect(() => {
     setTimeout(() => {
       setUser({
@@ -45,21 +63,16 @@ const PagePerfil = () => {
         email: "utm@gmail.com",
         avatar:
           "https://ui-avatars.com/api/?name=Usuario+Prueba&background=6366f1&color=fff",
-        role: "Estudiante",
-        university: "Universidad Tecnológica de México",
-        country: "México",
-        matricula: "2024001",
-        birthDate: "2000-01-15",
-        bio: "Estudiante apasionado por la tecnología y el aprendizaje continuo.",
       });
 
       setLoading((p) => ({ ...p, user: false }));
     }, 500);
   }, []);
 
-  // ========= CURSOS GUARDADOS (SIMULADO)
+  // ==================== CURSOS GUARDADOS ====================
   useEffect(() => {
     if (!user?.id || tab !== "saved") return;
+
     setTimeout(() => {
       setSavedCourses([
         {
@@ -80,48 +93,58 @@ const PagePerfil = () => {
     }, 200);
   }, [user?.id, tab]);
 
-  // ========= SUSCRIPCIONES (SIMULADO)
-  useEffect(() => {
-    if (!user?.id || tab !== "purchased") return;
-    setTimeout(() => {
-      const subs = [
-        {
-          id: 1,
-          name: "Plan Premium Mensual",
-          status: "active",
-          startDate: "2024-01-15",
-          endDate: "2025-01-15",
-          price: 299,
-        },
-      ];
-      setPurchasedCourses(subs);
+  // ==================== AGREGAR CURSO ====================
+  const handleAddTag = () => {
+    if (!newTag.trim()) return;
+    if (newCourse.tags.includes(newTag)) return;
 
-      setLoading((prev) => ({ ...prev, purchased: false }));
-    }, 200);
-  }, [user?.id, tab]);
+    setNewCourse({
+      ...newCourse,
+      tags: [...newCourse.tags, newTag.trim()],
+    });
 
-  // ========= AGREGAR CURSO
+    setNewTag("");
+  };
+
+  const handleSelectTag = (tag) => {
+    if (newCourse.tags.includes(tag)) return;
+
+    setNewCourse({
+      ...newCourse,
+      tags: [...newCourse.tags, tag],
+    });
+  };
+
+  const handleRemoveTag = (tag) => {
+    setNewCourse({
+      ...newCourse,
+      tags: newCourse.tags.filter((t) => t !== tag),
+    });
+  };
+
   const handleAddCourse = () => {
     if (!newCourse.name.trim()) return;
 
     const nuevo = {
+      ...newCourse,
       id: savedCourses.length + 1,
-      name: newCourse.name,
-      duration: newCourse.duration || "Sin duración",
-      category: newCourse.category || "Sin categoría",
     };
 
     setSavedCourses((prev) => [...prev, nuevo]);
 
+    // limpiar
     setNewCourse({
       name: "",
       duration: "",
       category: "",
+      description: "",
+      tags: [],
+      portada: null,
+      pdf: null,
     });
   };
 
-  // ========= COMPONENTES VISUALES
-
+  // ==================== ESTADO VACÍO ====================
   const EmptyState = ({ text }) => (
     <div className="w-full flex flex-col items-center justify-center py-10 text-gray-500">
       <InformationCircleIcon className="w-8 h-8 mb-2" />
@@ -129,6 +152,7 @@ const PagePerfil = () => {
     </div>
   );
 
+  // ==================== HEADER PERFIL ====================
   const ProfileHeader = () => (
     <Card className="w-full bg-white/70 backdrop-blur-md shadow-lg rounded-3xl overflow-hidden">
       <CardHeader className="flex-col items-start gap-3 bg-gradient-to-r from-indigo-50 to-purple-50 p-6">
@@ -158,7 +182,6 @@ const PagePerfil = () => {
     </Card>
   );
 
-  // ========= RENDER FINAL
   if (loading.user)
     return (
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -174,30 +197,28 @@ const PagePerfil = () => {
     <div className="max-w-6xl mx-auto px-4 py-8">
       <ProfileHeader />
 
-      {/* TABS */}
+      {/* ======== TABS ======== */}
       <div className="mt-6">
         <Tabs
           selectedKey={tab}
           onSelectionChange={(key) => setTab(String(key))}
           variant="underlined"
           color="primary"
-          className="w-full"
         >
           <Tab key="saved" title="Cursos guardados" />
           <Tab key="add" title="Agregar curso" />
-          <Tab key="purchased" title="Suscripciones" />
         </Tabs>
       </div>
 
       <div className="mt-6">
-        {/* ================= CURSOS GUARDADOS ================= */}
+        {/* =============== CURSOS GUARDADOS =============== */}
         {tab === "saved" && (
           <>
             {savedCourses.length === 0 ? (
               <EmptyState text="No tienes cursos guardados." />
             ) : (
               savedCourses.map((c) => (
-                <Card key={c.id} className="mb-4 p-4">
+                <Card key={c.id} className="mb-4 p-4 shadow">
                   <p className="font-semibold">{c.name}</p>
                   <p className="text-sm text-gray-500">{c.duration}</p>
                   <p className="text-xs text-gray-400">{c.category}</p>
@@ -207,9 +228,9 @@ const PagePerfil = () => {
           </>
         )}
 
-        {/* ================= AGREGAR CURSO ================= */}
+        {/* =============== AGREGAR CURSO =============== */}
         {tab === "add" && (
-          <Card className="p-6 space-y-4">
+          <Card className="p-6 space-y-4 shadow">
             <h3 className="text-xl font-semibold mb-2 flex items-center gap-2">
               <PlusCircleIcon className="w-6 h-6 text-indigo-600" />
               Agregar nuevo curso
@@ -242,30 +263,102 @@ const PagePerfil = () => {
               }
             />
 
-            <Button
-              color="primary"
-              className="w-full"
-              onPress={handleAddCourse}
-            >
+            {/* ========== DESCRIPCIÓN ========== */}
+            <Textarea
+              label="Descripción del curso"
+              placeholder="Escribe una descripción completa del curso..."
+              value={newCourse.description}
+              onChange={(e) =>
+                setNewCourse({
+                  ...newCourse,
+                  description: e.target.value,
+                })
+              }
+            />
+
+            {/* ========== ETIQUETAS ========== */}
+            <div>
+              <p className="text-sm font-medium mb-1">Etiquetas</p>
+
+              {/* Añadir etiqueta manual */}
+              <div className="flex gap-2 mb-3">
+                <Input
+                  placeholder="Añadir etiqueta"
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
+                />
+                <Button color="primary" onPress={handleAddTag}>
+                  Agregar
+                </Button>
+              </div>
+
+              {/* Lista de etiquetas disponibles */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                {availableTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => handleSelectTag(tag)}
+                    className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-full"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+
+              {/* Etiquetas seleccionadas */}
+              <div className="flex flex-wrap gap-2">
+                {newCourse.tags.map((tag) => (
+                  <div
+                    key={tag}
+                    className="flex items-center gap-1 px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full"
+                  >
+                    <span className="text-sm">{tag}</span>
+                    <XMarkIcon
+                      className="w-4 h-4 cursor-pointer"
+                      onClick={() => handleRemoveTag(tag)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* PORTADA */}
+            <div>
+              <p className="text-sm font-medium mb-1">Portada del curso</p>
+              <input
+                type="file"
+                accept="image/*"
+                className="w-full border rounded-lg p-2"
+                onChange={(e) =>
+                  setNewCourse({
+                    ...newCourse,
+                    portada: e.target.files[0],
+                  })
+                }
+              />
+            </div>
+
+            {/* PDF */}
+            <div>
+              <p className="text-sm font-medium mb-1">Archivo PDF del curso</p>
+              <input
+                type="file"
+                accept="application/pdf"
+                className="w-full border rounded-lg p-2"
+                onChange={(e) =>
+                  setNewCourse({
+                    ...newCourse,
+                    pdf: e.target.files[0],
+                  })
+                }
+              />
+            </div>
+
+            <Button color="primary" className="w-full" onPress={handleAddCourse}>
               Agregar curso
             </Button>
           </Card>
-        )}
-
-        {/* ================= SUSCRIPCIONES ================= */}
-        {tab === "purchased" && (
-          <>
-            {purchasedCourses.length === 0 ? (
-              <EmptyState text="No tienes suscripciones." />
-            ) : (
-              purchasedCourses.map((p) => (
-                <Card key={p.id} className="mb-4 p-4">
-                  <p className="font-semibold">{p.name}</p>
-                  <p className="text-sm text-gray-500">Activo</p>
-                </Card>
-              ))
-            )}
-          </>
         )}
       </div>
     </div>
